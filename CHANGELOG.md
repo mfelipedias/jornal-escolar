@@ -55,6 +55,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Capa da publicação no painel lateral: enviar nova ou escolher entre as imagens do texto, com legenda; a lista se atualiza após cada salvamento.
 - O documento salvo guarda o endereço de cada imagem calculado pelo servidor, para o editor exibi-la ao reabrir.
 - Notificações no painel (E17): sino com contador e lista das últimas 20, "marcar todas como lidas", página `/painel/notificacoes/`. Avisos quando alguém publica um texto seu, ou quando editor/admin edita ou arquiva (com motivo) um texto seu; salvamentos repetidos atualizam o mesmo aviso não lido.
+- `make release VERSION=x.y.z` (`scripts/release.py`): atualiza `VERSION` e o changelog, faz commit e tag.
 
 ### Alterado
 

@@ -1,13 +1,13 @@
 # Jornal Escolar — atalhos de desenvolvimento.
 # Os comandos são simples de propósito: funcionam no terminal do Windows e no Linux.
-# Novos alvos entram conforme as etapas do docs/26 (build, deploy, release, backup).
+# Novos alvos entram conforme as etapas do docs/26 (build, deploy, backup).
 
 UV = uv run --directory backend
 MANAGE = $(UV) python manage.py
 COMPOSE = docker compose
 
 .DEFAULT_GOAL := help
-.PHONY: help install assets-install assets-dev assets hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser
+.PHONY: help install assets-install assets-dev assets hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser release
 
 help:
 	@echo Jornal Escolar - comandos disponiveis:
@@ -30,6 +30,7 @@ help:
 	@echo   make makemigrations   cria migracoes a partir dos modelos
 	@echo   make shell            abre o shell do Django
 	@echo   make superuser        cria um usuario administrador
+	@echo   make release VERSION=x.y.z   cria a versao: VERSION, CHANGELOG, commit e tag (docs/30)
 
 install: assets-install
 	uv sync --directory backend
@@ -95,3 +96,6 @@ shell:
 
 superuser:
 	$(MANAGE) createsuperuser
+
+release:
+	$(UV) python ../scripts/release.py $(VERSION)

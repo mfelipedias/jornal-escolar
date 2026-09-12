@@ -49,6 +49,12 @@ Enquanto o sistema não está no ar, a versão fica em `0.MENOR.CORREÇÃO`, e c
 5. A imagem Docker recebe a tag da versão (`jornal:1.2.0`) além de `latest`.
 6. Tags no GitHub geram "Releases" automáticas (workflow simples que copia a seção do changelog).
 
+### Implementação
+
+`scripts/release.py` (chamado por `make release VERSION=x.y.z`). Não roda os testes sozinho: o CI e `docker compose exec web uv run pytest` fazem isso antes. Também não faz push; depois de lançar, `git push --follow-tags`.
+
+**Primeira versão lançada:** `v0.3.0`, reunindo os marcos 0.1.0 e 0.2.0, que não foram lançados separadamente. O site "em breve" da Fase 0 ainda depende do túnel da Cloudflare (E06) e ficará registrado numa versão de correção ou menor quando for publicado.
+
 ## Regras
 
 - Nunca editar uma versão já lançada; corrigir com uma versão de correção.
