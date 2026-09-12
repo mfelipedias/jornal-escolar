@@ -1,0 +1,153 @@
+{% comment %}
+  Créditos (docs/04, docs/16): equipe por busca, alunos (com turma e autorização) e outros.
+  Parâmetros: article, contributors, roles, student_roles, credit_error, credit_kind, credit_data, oob.
+{% endcomment %}
+<section id="editor-credits"
+         {% if oob %}hx-swap-oob="true"{% endif %}
+         class="editor-panel"
+         aria-labelledby="credits-title"
+         x-data="{ adding: '{{ credit_kind|default:'' }}' }">
+  <h2 id="credits-title" class="editor-panel-title">Créditos</h2>
+  {% if credit_error %}
+    <p class="mb-2 rounded-field border border-danger/30 bg-danger/5 px-3 py-2 text-meta text-danger"
+       role="alert">{{ credit_error }}</p>
+  {% endif %}
+  <ul class="divide-y divide-line">
+    {% for c in contributors %}
+      <li class="flex items-start justify-between gap-2 py-2">
+        <div class="min-w-0">
+          <p class="truncate text-ui text-ink">{{ c.display_name }}</p>
+          <p class="text-meta text-ink-3">
+            {{ c.get_role_display }}
+            {% if c.is_student %}
+              · aluno{% if c.class_group %}, {{ c.class_group }}{% endif %}
+              {% if not c.consent_ok %}<span class="text-danger">· sem autorização</span>{% endif %}
+            {% elif not c.user_id %}
+              · sem conta
+            {% endif %}
+            {% if c.contribution_note %}· {{ c.contribution_note }}{% endif %}
+          </p>
+        </div>
+        <button type="button"
+                class="btn-ghost shrink-0 px-2 text-meta"
+                hx-delete="{% url 'publications:remove_contributor' article.pk c.pk %}"
+                hx-target="#editor-credits"
+                hx-swap="outerHTML"
+                hx-confirm="Remover {{ c.display_name }} dos créditos?"
+                aria-label="Remover {{ c.display_name }}">Remover</button>
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="mt-3 flex flex-wrap gap-1.5">
+    <button type="button"
+            class="btn-secondary text-meta"
+            @click="adding = adding === 'staff' ? '' : 'staff'"
+            :aria-expanded="adding === 'staff'">+ Colega</button>
+    <button type="button"
+            class="btn-secondary text-meta"
+            @click="adding = adding === 'student' ? '' : 'student'"
+            :aria-expanded="adding === 'student'">+ Aluno</button>
+    <button type="button"
+            class="btn-secondary text-meta"
+            @click="adding = adding === 'guest' ? '' : 'guest'"
+            :aria-expanded="adding === 'guest'">+ Outro</button>
+  </div>
+  {# Colega da equipe #}
+  <div x-show="adding === 'staff'" x-cloak class="mt-3 space-y-2">
+    <label for="credit-search" class="block text-meta font-medium text-ink-2">Buscar colega pelo nome</label>
+    <input id="credit-search"
+           type="search"
+           name="q"
+           autocomplete="off"
+           class="field"
+           placeholder="Digite ao menos 2 letras"
+           hx-get="{% url 'publications:search_users' %}"
+           hx-vals='{"article": "{{ article.pk }}"}'
+           hx-trigger="input changed delay:300ms, search"
+           hx-target="#credit-search-results">
+    <label for="credit-staff-role"
+           class="block text-meta font-medium text-ink-2">Papel</label>
+    <select id="credit-staff-role" name="staff_role" class="field">
+      {% for value, label in roles %}
+        <option value="{{ value }}" {% if value == "coauthor" %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <div id="credit-search-results"></div>
+  </div>
+  {# Aluno #}
+  <form x-show="adding === 'student'"
+        x-cloak
+        class="mt-3 space-y-2"
+        hx-post="{% url 'publications:add_contributor' article.pk %}"
+        hx-target="#editor-credits"
+        hx-swap="outerHTML">
+    <input type="hidden" name="kind" value="student">
+    <label for="credit-student-name"
+           class="block text-meta font-medium text-ink-2">Nome do aluno</label>
+    <input id="credit-student-name"
+           name="name"
+           required
+           maxlength="80"
+           class="field"
+           value="{% if credit_kind == 'student' %}{{ credit_data.name }}{% endif %}"
+           aria-describedby="credit-student-help">
+    <p id="credit-student-help" class="text-meta text-ink-3">Primeiro nome e inicial do sobrenome, ex.: Rafael S.</p>
+    <label for="credit-student-class"
+           class="block text-meta font-medium text-ink-2">Turma</label>
+    <input id="credit-student-class"
+           name="class_group"
+           maxlength="20"
+           placeholder="2ª série B"
+           class="field"
+           value="{% if credit_kind == 'student' %}{{ credit_data.class_group }}{% endif %}">
+    <label for="credit-student-role"
+           class="block text-meta font-medium text-ink-2">Papel</label>
+    <select id="credit-student-role" name="role" class="field">
+      {% for value, label in student_roles %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+    </select>
+    <label class="flex items-start gap-2 text-meta text-ink">
+      <input type="checkbox" name="consent_ok" class="mt-0.5 size-4 accent-accent">
+      Tenho autorização do responsável para publicar o nome deste aluno.
+    </label>
+    <label class="flex items-start gap-2 text-meta text-ink-2">
+      <input type="checkbox"
+             name="full_name_authorized"
+             class="mt-0.5 size-4 accent-accent">
+      A autorização permite usar o nome completo.
+    </label>
+    <button type="submit" class="btn-primary w-full">Adicionar aluno</button>
+  </form>
+  {# Outros sem conta #}
+  <form x-show="adding === 'guest'"
+        x-cloak
+        class="mt-3 space-y-2"
+        hx-post="{% url 'publications:add_contributor' article.pk %}"
+        hx-target="#editor-credits"
+        hx-swap="outerHTML">
+    <input type="hidden" name="kind" value="guest">
+    <label for="credit-guest-name"
+           class="block text-meta font-medium text-ink-2">Nome</label>
+    <input id="credit-guest-name"
+           name="name"
+           required
+           maxlength="80"
+           placeholder="Turma 1ª A, Grêmio Estudantil, convidado…"
+           class="field">
+    <label for="credit-guest-role"
+           class="block text-meta font-medium text-ink-2">Papel</label>
+    <select id="credit-guest-role" name="role" class="field">
+      {% for value, label in roles %}
+        <option value="{{ value }}"
+                {% if value == "collaborator" %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <label for="credit-guest-note"
+           class="block text-meta font-medium text-ink-2">Contribuição (opcional)</label>
+    <input id="credit-guest-note"
+           name="contribution_note"
+           maxlength="80"
+           placeholder="fotos, entrevista…"
+           class="field">
+    <button type="submit" class="btn-primary w-full">Adicionar crédito</button>
+  </form>
+</section>

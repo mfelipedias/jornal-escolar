@@ -83,6 +83,10 @@
     text-rendering: optimizeLegibility;
   }
 
+  [x-cloak] {
+    display: none !important;
+  }
+
   ::selection {
     background-color: var(--color-accent-soft);
   }
@@ -222,6 +226,111 @@
     &:disabled {
       opacity: 0.35;
     }
+  }
+
+  /* Painel lateral do editor e controles de formulário */
+  .editor-panel-title {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-meta);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-ink-2);
+  }
+
+  .field {
+    display: block;
+    width: 100%;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-field);
+    background-color: white;
+    padding: 0.45rem 0.65rem;
+    font-size: var(--text-ui);
+    color: var(--color-ink);
+
+    &:focus {
+      border-color: var(--color-accent);
+      outline: 2px solid color-mix(in oklab, var(--color-accent) 20%, transparent);
+      outline-offset: 0;
+    }
+  }
+
+  .chip {
+    display: inline-flex;
+    cursor: pointer;
+  }
+  .chip-label {
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background-color: white;
+    padding: 0.2rem 0.65rem;
+    font-size: var(--text-meta);
+    color: var(--color-ink-2);
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+  .chip input:checked + .chip-label {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent-2);
+  }
+  .chip input:focus-visible + .chip-label {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: var(--radius-field);
+    padding: 0.4rem 0.85rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-ui);
+    font-weight: 500;
+    transition:
+      background-color 150ms,
+      color 150ms,
+      border-color 150ms;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+  }
+  .btn-primary {
+    background-color: var(--color-accent);
+    color: white;
+    &:hover:not(:disabled) {
+      background-color: var(--color-accent-2);
+    }
+  }
+  .btn-secondary {
+    border: 1px solid var(--color-line);
+    background-color: white;
+    color: var(--color-ink);
+    &:hover:not(:disabled) {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+  }
+  .btn-ghost {
+    color: var(--color-ink-2);
+    &:hover:not(:disabled) {
+      background-color: var(--color-paper-2);
+      color: var(--color-ink);
+    }
+  }
+  .btn-danger {
+    background-color: var(--color-danger);
+    color: white;
   }
 
   .editor-sep {

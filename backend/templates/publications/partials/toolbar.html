@@ -1,0 +1,68 @@
+{% comment %}Barra de ferramentas do editor (docs/16). Os comandos ficam em frontend/src/js/editor.js.{% endcomment %}
+<div class="sticky top-14 z-20 -mx-4 mt-8 border-y border-line bg-paper/95 px-2 py-1.5 backdrop-blur sm:mx-0 sm:rounded-field sm:border"
+     role="toolbar"
+     aria-label="Formatação do texto"
+     aria-controls="editor-body"
+     data-editor-toolbar>
+  <div class="flex flex-wrap items-center gap-0.5">
+    <button type="button"
+            class="editor-btn"
+            data-cmd="paragraph"
+            title="Parágrafo">¶</button>
+    <button type="button"
+            class="editor-btn"
+            data-cmd="h2"
+            title="Título de seção">H2</button>
+    <button type="button" class="editor-btn" data-cmd="h3" title="Subtítulo">H3</button>
+    <span class="editor-sep" aria-hidden="true"></span>
+    <button type="button"
+            class="editor-btn font-bold"
+            data-cmd="bold"
+            title="Negrito (Ctrl+B)">B</button>
+    <button type="button"
+            class="editor-btn italic"
+            data-cmd="italic"
+            title="Itálico (Ctrl+I)">I</button>
+    <button type="button"
+            class="editor-btn"
+            data-cmd="link"
+            title="Link (Ctrl+K)">Link</button>
+    <span class="editor-sep" aria-hidden="true"></span>
+    <button type="button" class="editor-btn" data-cmd="bulletList" title="Lista">• Lista</button>
+    <button type="button"
+            class="editor-btn"
+            data-cmd="orderedList"
+            title="Lista numerada">1. Lista</button>
+    <button type="button"
+            class="editor-btn"
+            data-cmd="blockquote"
+            title="Citação">“ ”</button>
+    <button type="button"
+            class="editor-btn"
+            data-cmd="horizontalRule"
+            title="Separador">—</button>
+    <span class="editor-sep" aria-hidden="true"></span>
+    <button type="button"
+            class="editor-btn"
+            data-cmd="undo"
+            title="Desfazer (Ctrl+Z)">↶</button>
+    <button type="button"
+            class="editor-btn"
+            data-cmd="redo"
+            title="Refazer (Ctrl+Shift+Z)">↷</button>
+  </div>
+  <form class="mt-1.5 flex gap-2 px-1 pb-1" data-link-form hidden>
+    <label for="editor-link" class="sr-only">Endereço do link</label>
+    <input id="editor-link"
+           type="url"
+           placeholder="https://..."
+           class="min-w-0 flex-1 rounded-field border border-line bg-white px-2.5 py-1.5 text-ui focus:border-accent focus:outline-none">
+    <button type="submit"
+            class="rounded-field bg-accent px-3 py-1.5 text-ui text-white hover:bg-accent-2">Aplicar</button>
+    <button type="button"
+            data-link-remove
+            class="rounded-field border border-line px-3 py-1.5 text-ui text-ink-2 hover:border-danger hover:text-danger">
+      Remover
+    </button>
+  </form>
+</div>

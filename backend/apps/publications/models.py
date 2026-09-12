@@ -70,6 +70,14 @@ class Article(TimeStampedModel):
         null=True,
         related_name="created_articles",
     )
+    last_edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="última edição por",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
     submitted_at = models.DateTimeField("enviado para revisão em", null=True, blank=True)
     published_at = models.DateTimeField("publicado em", null=True, blank=True)
     archived_at = models.DateTimeField("arquivado em", null=True, blank=True)

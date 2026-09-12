@@ -147,6 +147,7 @@ export function initEditor(root) {
           // ignora
         }
         setStatus(dirty ? "Alterações não salvas" : `Salvo às ${result.saved_at}`);
+        document.body.dispatchEvent(new CustomEvent("articleSaved")); // atualiza a checklist
       } else if (response.status === 409 || response.status === 403 || response.status === 413) {
         blocked = response.status !== 413;
         setStatus(result.error?.message || "Não foi possível salvar.", "error");
@@ -270,6 +271,31 @@ export function initEditor(root) {
     }
   });
 
+  // O painel lateral (HTMX) também altera a publicação: acompanha o updated_at dele.
+  document.body.addEventListener("articleUpdated", (event) => {
+    if (event.detail?.updatedAt) updatedAt = event.detail.updatedAt;
+  });
+
+  // Antes de publicar, garante que o texto digitado já foi salvo.
+  document.body.addEventListener("htmx:confirm", (event) => {
+    if (!event.target.closest?.("[data-flush-before]")) return;
+    if (!dirty && !saving) return;
+    event.preventDefault();
+    flush().then((ok) => {
+      if (ok) event.detail.issueRequest(true);
+      else setStatus("Salve o texto antes de publicar (verifique a conexão).", "error");
+    });
+  });
+
+  async function flush() {
+    clearTimeout(debounceTimer);
+    for (let i = 0; i < 50 && saving; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    if (dirty) await save();
+    return !dirty && !blocked;
+  }
+
   // Salva ao sair da aba e avisa se ainda há algo pendente.
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") save();
@@ -284,7 +310,7 @@ export function initEditor(root) {
   return editor;
 }
 
-const root = document.querySelector("main");
+const root = document.querySelector("[data-editor-root]");
 if (document.getElementById("editor-data") && root) {
   window.jornalEditor = initEditor(root);
 }

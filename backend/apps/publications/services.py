@@ -5,7 +5,7 @@ PermissionDenied quando o usuário não pode agir.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -16,12 +16,14 @@ from django.utils.text import slugify
 
 from apps.accounts.models import User
 from apps.editorial import permissions
+from apps.taxonomy.models import ArticleType, Discipline, Topic
 
 from . import rendering
 from .credits import student_name_error
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
 
 TITLE_MAX = 120
+REVISION_WINDOW = timedelta(minutes=15)
 
 # Campos que o editor altera diretamente (os demais têm função própria).
 EDITABLE_FIELDS = {
@@ -101,8 +103,7 @@ def update_article(
     current = _locked(article)
     if not permissions.can_edit(user, current):
         raise PermissionDenied
-    if expected_updated_at is not None and current.updated_at != expected_updated_at:
-        raise ConflictError
+    _check_conflict(user, current, expected_updated_at)
     if "title" in fields and len(fields["title"] or "") > TITLE_MAX:
         raise ValidationError({"title": f"O título pode ter até {TITLE_MAX} caracteres."})
 
@@ -112,11 +113,43 @@ def update_article(
     if "body_json" in fields:
         _render_body(user, current)
         columns += ["body_html", "body_text", "reading_minutes"]
-    current.save(update_fields=[*columns, "updated_at"])
+    current.last_edited_by = user
+    current.save(update_fields=[*columns, "last_edited_by", "updated_at"])
     if current.status == Article.Status.PUBLISHED:
-        create_revision(current, user, ArticleRevision.Reason.EDITED_AFTER_PUBLISH)
+        record_edit_revision(current, user)
     _sync(article, current, [*columns, "status", "updated_at"])
     return current
+
+
+def _check_conflict(user: User, current: Article, expected_updated_at: datetime | None) -> None:
+    """Conflito só quando outra pessoa salvou depois da versão carregada no editor.
+
+    Salvamentos da própria pessoa (texto e metadados em paralelo) não geram conflito.
+    """
+    if expected_updated_at is None or current.updated_at == expected_updated_at:
+        return
+    if current.last_edited_by_id not in (None, user.pk):
+        raise ConflictError
+
+
+def record_edit_revision(article: Article, user: User) -> ArticleRevision:
+    """Edição de texto publicado vira versão. Salvamentos seguidos da mesma pessoa em até
+    REVISION_WINDOW atualizam a mesma versão, em vez de criar uma a cada autosave."""
+    latest = article.revisions.order_by("-number").first()
+    if (
+        latest is not None
+        and latest.reason == ArticleRevision.Reason.EDITED_AFTER_PUBLISH
+        and latest.created_by_id == user.pk
+        and timezone.now() - latest.created_at < REVISION_WINDOW
+    ):
+        latest.title, latest.subtitle, latest.body_json = (
+            article.title,
+            article.subtitle,
+            article.body_json,
+        )
+        latest.save(update_fields=["title", "subtitle", "body_json"])
+        return latest
+    return create_revision(article, user, ArticleRevision.Reason.EDITED_AFTER_PUBLISH)
 
 
 def create_revision(article: Article, user: User | None, reason: str) -> ArticleRevision:
@@ -176,6 +209,112 @@ def add_student_credit(
         consent_ok=consent_ok,
         order=_next_order(article),
     )
+
+
+@transaction.atomic
+def add_guest_credit(
+    user: User,
+    article: Article,
+    *,
+    name: str,
+    role: str = ArticleContributor.Role.COLLABORATOR,
+    contribution_note: str = "",
+) -> ArticleContributor:
+    """Crédito sem conta que não é aluno: turma inteira, convidado, Grêmio (docs/04)."""
+    if not permissions.can_edit_credits(user, article):
+        raise PermissionDenied
+    name = " ".join(name.split())
+    if not name:
+        raise ValidationError({"name": "Informe o nome."})
+    if role not in ArticleContributor.Role.values or role == ArticleContributor.Role.REVIEWER:
+        raise ValidationError({"role": "Papel inválido."})
+    return ArticleContributor.objects.create(
+        article=article,
+        display_name=name[:80],
+        role=role,
+        contribution_note=" ".join(contribution_note.split())[:80],
+        order=_next_order(article),
+    )
+
+
+@transaction.atomic
+def remove_credit(user: User, article: Article, contributor: ArticleContributor) -> None:
+    """Toda publicação precisa de ao menos um membro da equipe como autor ou coautor (docs/16)."""
+    if contributor.article_id != article.pk:
+        raise PermissionDenied
+    if not permissions.can_edit_credits(user, article):
+        raise PermissionDenied
+    responsible = article.contributors.filter(
+        user__isnull=False, role__in=ArticleContributor.EDITING_ROLES
+    ).exclude(pk=contributor.pk)
+    is_responsible = contributor.user_id and contributor.role in ArticleContributor.EDITING_ROLES
+    if is_responsible and not responsible.exists():
+        raise ValidationError("A publicação precisa de ao menos um autor ou coautor da equipe.")
+    contributor.delete()
+
+
+@transaction.atomic
+def set_metadata(
+    user: User,
+    article: Article,
+    *,
+    type_id: int | None,
+    discipline_ids: list[int],
+    topic_ids: list[int],
+    event_at: datetime | None,
+    event_location: str,
+    sources: list[dict],
+    comments_enabled: bool = True,
+) -> Article:
+    """Painel lateral do editor: tipo, disciplinas, tópicos, evento, fontes (docs/16)."""
+    current = _locked(article)
+    if not permissions.can_edit(user, current):
+        raise PermissionDenied
+
+    article_type = (
+        ArticleType.objects.filter(pk=type_id, is_active=True).first() if type_id else None
+    )
+    current.type = article_type
+    current.event_at = event_at if article_type and article_type.has_event_date else None
+    current.event_location = event_location[:120] if current.event_at else ""
+    current.sources = clean_sources(sources)
+    current.comments_enabled = comments_enabled
+    current.last_edited_by = user
+    current.save(
+        update_fields=[
+            "type",
+            "event_at",
+            "event_location",
+            "sources",
+            "comments_enabled",
+            "last_edited_by",
+            "updated_at",
+        ]
+    )
+    current.disciplines.set(Discipline.objects.filter(pk__in=discipline_ids, is_active=True))
+    current.topics.set(Topic.objects.filter(pk__in=topic_ids, is_active=True))
+    _sync(article, current, ["type_id", "event_at", "event_location", "sources", "updated_at"])
+    return current
+
+
+def clean_sources(sources: list[dict]) -> list[dict]:
+    """Fontes: título obrigatório e URL http(s) válida; linhas vazias são ignoradas."""
+    cleaned: list[dict] = []
+    errors: list[str] = []
+    for index, source in enumerate(sources[:20], start=1):
+        title = " ".join(str(source.get("title", "")).split())[:200]
+        url = str(source.get("url", "")).strip()[:500]
+        publisher = " ".join(str(source.get("publisher", "")).split())[:120]
+        if not (title or url or publisher):
+            continue
+        if not title:
+            errors.append(f"Fonte {index}: informe o título.")
+        if url and not rendering.safe_href(url, allow_relative=False):
+            errors.append(f"Fonte {index}: use um endereço que comece com https://")
+        cleaned.append({"title": title, "url": url, "publisher": publisher})
+    if errors:
+        raise ValidationError({"sources": errors})
+    return cleaned
 
 
 def _next_order(article: Article) -> int:

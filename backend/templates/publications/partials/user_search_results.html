@@ -1,0 +1,23 @@
+{% comment %}Resultados da busca de colegas para creditar.{% endcomment %}
+{% if results %}
+  <ul class="divide-y divide-line rounded-field border border-line bg-white">
+    {% for member in results %}
+      <li>
+        <form hx-post="{% url 'publications:add_contributor' article.pk %}"
+              hx-target="#editor-credits"
+              hx-swap="outerHTML"
+              hx-include="#credit-staff-role">
+          <input type="hidden" name="kind" value="staff">
+          <input type="hidden" name="user_id" value="{{ member.pk }}">
+          <button type="submit"
+                  class="flex w-full flex-col items-start px-3 py-2 text-left hover:bg-paper-2">
+            <span class="text-ui text-ink">{{ member.public_name }}</span>
+            <span class="text-meta text-ink-3">{{ member.get_staff_kind_display }}</span>
+          </button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% elif query|length >= 2 %}
+  <p class="text-meta text-ink-3">Ninguém encontrado com “{{ query }}”.</p>
+{% endif %}

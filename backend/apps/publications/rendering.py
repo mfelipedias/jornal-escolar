@@ -73,16 +73,16 @@ class RenderResult:
 # --- 1. limpeza do documento ---
 
 
-def safe_href(value: Any) -> str | None:
+def safe_href(value: Any, *, allow_relative: bool = True) -> str | None:
     """Aceita http(s), mailto e caminhos internos. Recusa javascript:, data:, etc."""
     if not isinstance(value, str):
         return None
     href = value.strip()
     if not href or any(ch in href for ch in "\x00\n\r\t"):
         return None
-    if href.startswith("/") and not href.startswith("//"):
+    if allow_relative and href.startswith("/") and not href.startswith("//"):
         return href
-    if href.startswith("#"):
+    if allow_relative and href.startswith("#"):
         return href
     parts = urlsplit(href)
     if parts.scheme.lower() in ("http", "https") and parts.netloc:

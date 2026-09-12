@@ -1,0 +1,30 @@
+{% comment %}
+  Uma fonte (título, endereço, veículo). Linhas vazias são ignoradas ao salvar.
+  Os ids estáveis fazem o HTMX manter o cursor no campo depois de salvar.
+{% endcomment %}
+<div class="space-y-1.5 rounded-field border border-line bg-white p-2.5">
+  <input id="source-title-{{ index }}"
+         type="text"
+         name="source_title"
+         maxlength="200"
+         placeholder="Título"
+         aria-label="Título da fonte {{ index }}"
+         value="{{ source.title|default:'' }}"
+         class="field">
+  <input id="source-url-{{ index }}"
+         type="url"
+         name="source_url"
+         maxlength="500"
+         placeholder="https://..."
+         aria-label="Endereço da fonte {{ index }}"
+         value="{{ source.url|default:'' }}"
+         class="field">
+  <input id="source-publisher-{{ index }}"
+         type="text"
+         name="source_publisher"
+         maxlength="120"
+         placeholder="Veículo (ex.: Agência Brasil)"
+         aria-label="Veículo da fonte {{ index }}"
+         value="{{ source.publisher|default:'' }}"
+         class="field">
+</div>

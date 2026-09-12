@@ -1,0 +1,125 @@
+{% comment %}
+  Metadados da publicação (docs/16). Salva sozinho a cada mudança.
+  Parâmetros: article, types, areas, topics, selected_disciplines, selected_topics, event_at_local,
+  meta_errors, meta_sources.
+{% endcomment %}
+<form id="editor-meta"
+      class="space-y-6"
+      hx-post="{% url 'publications:save_meta' article.pk %}"
+      hx-trigger="change delay:400ms, submit"
+      hx-swap="outerHTML"
+      hx-sync="this:replace"
+      x-data="{ eventType: {{ article.type.has_event_date|yesno:'true,false' }} }">
+  {% if meta_errors %}
+    <div class="rounded-field border border-danger/30 bg-danger/5 px-3 py-2 text-meta text-danger"
+         role="alert">
+      {% for field, errors in meta_errors.items %}
+        {% for error in errors %}<p>{{ error }}</p>{% endfor %}
+      {% endfor %}
+    </div>
+  {% endif %}
+  <section class="editor-panel">
+    <label for="meta-type" class="editor-panel-title">Tipo</label>
+    <select id="meta-type"
+            name="type"
+            class="field"
+            @change="eventType = $event.target.selectedOptions[0]?.dataset.event === 'true'">
+      <option value="">Escolha…</option>
+      {% for type in types %}
+        <option value="{{ type.pk }}"
+                data-event="{{ type.has_event_date|yesno:'true,false' }}"
+                {% if type.pk == article.type_id %}selected{% endif %}>{{ type.name }}</option>
+      {% endfor %}
+    </select>
+    <div x-show="eventType" x-cloak class="mt-3 space-y-2">
+      <label for="meta-event-at" class="block text-meta font-medium text-ink-2">Data e hora do evento</label>
+      <input id="meta-event-at"
+             type="datetime-local"
+             name="event_at"
+             value="{{ event_at_local }}"
+             class="field">
+      <label for="meta-event-location"
+             class="block text-meta font-medium text-ink-2">Local</label>
+      <input id="meta-event-location"
+             type="text"
+             name="event_location"
+             maxlength="120"
+             value="{{ article.event_location }}"
+             class="field">
+    </div>
+  </section>
+  <fieldset class="editor-panel">
+    <legend class="editor-panel-title">Disciplinas</legend>
+    <div class="space-y-3">
+      {% for area in areas %}
+        {% with classes=area.color_classes %}
+          <div>
+            <p class="flex items-center gap-1.5 text-meta font-medium text-ink-2">
+              <span class="size-2 rounded-full {{ classes.solid_bg }}" aria-hidden="true"></span>
+              {{ area.name }}
+            </p>
+            <div class="mt-1.5 flex flex-wrap gap-1.5">
+              {% for discipline in area.disciplines.all %}
+                <label class="chip">
+                  <input id="discipline-{{ discipline.pk }}"
+                         type="checkbox"
+                         name="disciplines"
+                         value="{{ discipline.pk }}"
+                         class="peer sr-only"
+                         {% if discipline.pk in selected_disciplines %}checked{% endif %}>
+                  <span class="chip-label">{{ discipline.name }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        {% endwith %}
+      {% empty %}
+        <p class="text-meta text-ink-3">Nenhuma disciplina cadastrada. Peça ao administrador.</p>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <details class="editor-panel" {% if selected_topics %}open{% endif %}>
+    <summary class="editor-panel-title cursor-pointer">
+      Tópicos
+      {% if selected_topics %}<span class="font-normal text-ink-3">({{ selected_topics|length }})</span>{% endif %}
+    </summary>
+    <div class="mt-2 flex max-h-56 flex-wrap gap-1.5 overflow-y-auto">
+      {% for topic in topics %}
+        <label class="chip">
+          <input id="topic-{{ topic.pk }}"
+                 type="checkbox"
+                 name="topics"
+                 value="{{ topic.pk }}"
+                 class="peer sr-only"
+                 {% if topic.pk in selected_topics %}checked{% endif %}>
+          <span class="chip-label">{{ topic.name }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </details>
+  <details class="editor-panel"
+           {% if article.sources or meta_sources %}open{% endif %}>
+    <summary class="editor-panel-title cursor-pointer">Fontes</summary>
+    <p class="mt-1 text-meta text-ink-3">Preencha uma fonte e outra linha aparece.</p>
+    <div class="mt-2 space-y-3">
+      {% for source in meta_sources|default:article.sources %}
+        {% include "publications/partials/source_row.html" with source=source index=forloop.counter %}
+        {% if forloop.last %}
+          {% include "publications/partials/source_row.html" with source=None index=forloop.counter|add:1 %}
+        {% endif %}
+      {% empty %}
+        {% include "publications/partials/source_row.html" with source=None index=1 %}
+      {% endfor %}
+    </div>
+  </details>
+  <section class="editor-panel">
+    <label class="flex items-center justify-between gap-3 text-ui">
+      <span>Comentários de leitores abertos</span>
+      <input id="meta-comments"
+             type="checkbox"
+             name="comments_enabled"
+             {% if article.comments_enabled %}checked{% endif %}
+             class="size-4 accent-accent">
+    </label>
+  </section>
+</form>

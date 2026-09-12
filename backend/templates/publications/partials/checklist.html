@@ -1,0 +1,50 @@
+{% comment %}Checklist de publicação (docs/04). Parâmetros: checklist, blocking, oob.{% endcomment %}
+<section id="editor-checklist"
+         {% if oob %}hx-swap-oob="true"{% endif %}
+         hx-get="{% url 'publications:checklist' article.pk %}"
+         hx-trigger="articleSaved from:body delay:300ms"
+         hx-swap="none"
+         class="editor-panel"
+         aria-labelledby="checklist-title">
+  <h2 id="checklist-title" class="editor-panel-title">
+    {% if article.status == "published" %}
+      Conferência
+    {% else %}
+      Antes de publicar
+    {% endif %}
+  </h2>
+  {% if not checklist %}
+    <p class="flex items-center gap-2 text-ui text-ok">
+      <span aria-hidden="true">✓</span>
+      {% if article.status == "published" %}
+        Tudo certo.
+      {% else %}
+        Tudo pronto para publicar.
+      {% endif %}
+    </p>
+  {% else %}
+    <ul class="space-y-1.5 text-ui">
+      {% for item in checklist %}
+        <li class="flex gap-2
+                   {% if item.blocking %}text-danger{% else %}text-warn{% endif %}">
+          <span aria-hidden="true" class="w-4 shrink-0 text-center">
+            {% if item.blocking %}
+              ✗
+            {% else %}
+              !
+            {% endif %}
+          </span>
+          <span>
+            <span class="sr-only">
+              {% if item.blocking %}
+                Obrigatório:
+              {% else %}
+                Recomendado:
+              {% endif %}
+            </span>
+          {{ item.message }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>

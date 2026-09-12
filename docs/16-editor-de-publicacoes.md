@@ -133,6 +133,14 @@ Módulo `apps/publications/rendering.py`:
 
 - Tabelas, vídeos, embeds, notas de rodapé, comentários inline no editor (comentários ficam na tela de revisão, ancorados por trecho), edição colaborativa em tempo real, importação de .docx.
 
+## Implementação (E14 e E15)
+
+- Conflito: o autosave envia o `updated_at` que o editor conhece; o servidor só recusa (409) se **outra pessoa** salvou depois (`Article.last_edited_by`). Salvamentos da própria pessoa, como texto e metadados em paralelo, não geram conflito. O painel lateral devolve o novo `updated_at` no cabeçalho `HX-Trigger` (`articleUpdated`).
+- Versões de texto publicado: salvamentos seguidos da mesma pessoa em até 15 minutos atualizam a mesma `ArticleRevision` (`edited_after_publish`), em vez de criar uma por autosave.
+- Painel lateral em HTMX: metadados salvam sozinhos a cada mudança (`/x/articles/<id>/meta/`); a checklist se atualiza depois de cada autosave; "Publicar" salva o texto pendente antes de enviar e fica desativado enquanto houver item obrigatório.
+- Créditos: colega por busca (`/x/users/search/`), aluno (nome validado pela política, turma, autorização e opção de nome completo autorizado) e outros sem conta. A pessoa responsável da equipe (autor ou coautor) não pode ser removida se for a única.
+- Imagens no corpo e capa ficam para a E16.
+
 ## Histórico
 
 - 2026-09-12: versão inicial.

@@ -2,97 +2,60 @@
 {% block title %}{{ article.title }} · Editor · {{ jornal.name }}{% endblock title %}
 {% block editor_status %}
   <span class="rounded-full bg-paper-2 px-2.5 py-0.5 text-meta font-medium text-ink-2">{{ article.get_status_display }}</span>
-  <span class="text-meta text-ink-3"
+  <span class="hidden text-meta text-ink-3 sm:inline"
         data-save-status
         role="status"
         aria-live="polite">Tudo salvo</span>
 {% endblock editor_status %}
+{% block editor_actions %}
+  <button type="button"
+          class="btn-secondary lg:hidden"
+          x-data
+          @click="$dispatch('toggle-details')">Detalhes</button>
+  {% include "publications/partials/actions.html" %}
+{% endblock editor_actions %}
 {% block content %}
   {{ editor_data|json_script:"editor-data" }}
-  <div class="mx-auto w-full max-w-reading px-4 pt-10 pb-32 sm:px-0">
-    <label for="editor-title" class="sr-only">Título</label>
-    <textarea id="editor-title"
-              data-editor-title
-              rows="1"
-              maxlength="120"
-              placeholder="Título"
-              class="block w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-h1 font-semibold text-ink placeholder:text-ink-3/60 focus:ring-0 focus:outline-none sm:text-display"></textarea>
-    <label for="editor-subtitle" class="sr-only">Linha fina</label>
-    <textarea id="editor-subtitle"
-              data-editor-subtitle
-              rows="1"
-              maxlength="220"
-              placeholder="Linha fina: uma frase que resume a publicação"
-              class="mt-4 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-lead text-ink-2 placeholder:text-ink-3/60 focus:ring-0 focus:outline-none"></textarea>
-    <div class="sticky top-14 z-20 -mx-4 mt-8 border-y border-line bg-paper/95 px-2 py-1.5 backdrop-blur sm:mx-0 sm:rounded-field sm:border"
-         role="toolbar"
-         aria-label="Formatação do texto"
-         aria-controls="editor-body"
-         data-editor-toolbar>
-      <div class="flex flex-wrap items-center gap-0.5">
-        <button type="button"
-                class="editor-btn"
-                data-cmd="paragraph"
-                title="Parágrafo">¶</button>
-        <button type="button"
-                class="editor-btn"
-                data-cmd="h2"
-                title="Título de seção">H2</button>
-        <button type="button" class="editor-btn" data-cmd="h3" title="Subtítulo">H3</button>
-        <span class="editor-sep" aria-hidden="true"></span>
-        <button type="button"
-                class="editor-btn font-bold"
-                data-cmd="bold"
-                title="Negrito (Ctrl+B)">B</button>
-        <button type="button"
-                class="editor-btn italic"
-                data-cmd="italic"
-                title="Itálico (Ctrl+I)">I</button>
-        <button type="button"
-                class="editor-btn"
-                data-cmd="link"
-                title="Link (Ctrl+K)">Link</button>
-        <span class="editor-sep" aria-hidden="true"></span>
-        <button type="button" class="editor-btn" data-cmd="bulletList" title="Lista">• Lista</button>
-        <button type="button"
-                class="editor-btn"
-                data-cmd="orderedList"
-                title="Lista numerada">1. Lista</button>
-        <button type="button"
-                class="editor-btn"
-                data-cmd="blockquote"
-                title="Citação">“ ”</button>
-        <button type="button"
-                class="editor-btn"
-                data-cmd="horizontalRule"
-                title="Separador">—</button>
-        <span class="editor-sep" aria-hidden="true"></span>
-        <button type="button"
-                class="editor-btn"
-                data-cmd="undo"
-                title="Desfazer (Ctrl+Z)">↶</button>
-        <button type="button"
-                class="editor-btn"
-                data-cmd="redo"
-                title="Refazer (Ctrl+Shift+Z)">↷</button>
+  <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem]"
+       x-data="{ details: false }"
+       @toggle-details.window="details = !details">
+    <div class="px-4 pt-10 pb-32 sm:px-8" data-editor-root>
+      <div class="mx-auto w-full max-w-reading">
+        {% include "components/messages.html" %}
+        <label for="editor-title" class="sr-only">Título</label>
+        <textarea id="editor-title"
+                  data-editor-title
+                  rows="1"
+                  maxlength="120"
+                  placeholder="Título"
+                  class="block w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-h1 font-semibold text-ink placeholder:text-ink-3/60 focus:ring-0 focus:outline-none sm:text-display"></textarea>
+        <label for="editor-subtitle" class="sr-only">Linha fina</label>
+        <textarea id="editor-subtitle"
+                  data-editor-subtitle
+                  rows="1"
+                  maxlength="220"
+                  placeholder="Linha fina: uma frase que resume a publicação"
+                  class="mt-4 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-lead text-ink-2 placeholder:text-ink-3/60 focus:ring-0 focus:outline-none"></textarea>
+        {% include "publications/partials/toolbar.html" %}
+        <div id="editor-body" class="article-body mt-8" data-editor-body></div>
+        <p class="mt-10 border-t border-line pt-3 text-meta text-ink-3"
+           data-editor-count></p>
       </div>
-      <form class="mt-1.5 flex gap-2 px-1 pb-1" data-link-form hidden>
-        <label for="editor-link" class="sr-only">Endereço do link</label>
-        <input id="editor-link"
-               type="url"
-               placeholder="https://..."
-               class="min-w-0 flex-1 rounded-field border border-line bg-white px-2.5 py-1.5 text-ui focus:border-accent focus:outline-none">
-        <button type="submit"
-                class="rounded-field bg-accent px-3 py-1.5 text-ui text-white hover:bg-accent-2">Aplicar</button>
-        <button type="button"
-                data-link-remove
-                class="rounded-field border border-line px-3 py-1.5 text-ui text-ink-2 hover:border-danger hover:text-danger">
-          Remover
-        </button>
-      </form>
     </div>
-    <div id="editor-body" class="article-body mt-8" data-editor-body></div>
-    <p class="mt-10 border-t border-line pt-3 text-meta text-ink-3"
-       data-editor-count></p>
+    {# Painel lateral: fixo no desktop, folha que abre por cima no celular #}
+    <aside class="fixed inset-0 z-40 bg-ink/30 lg:static lg:z-auto lg:block lg:bg-transparent"
+           :class="details ? 'block' : 'hidden lg:block'"
+           @click.self="details = false"
+           aria-label="Detalhes da publicação">
+      <div class="absolute inset-x-0 bottom-0 max-h-[85vh] space-y-6 overflow-y-auto rounded-t-card bg-paper p-5 shadow-popover lg:sticky lg:top-14 lg:max-h-[calc(100vh-3.5rem)] lg:rounded-none lg:border-l lg:border-line lg:shadow-none">
+        <div class="flex items-center justify-between lg:hidden">
+          <p class="text-ui font-medium">Detalhes</p>
+          <button type="button" class="btn-ghost" @click="details = false">Fechar</button>
+        </div>
+        {% include "publications/partials/checklist.html" %}
+        {% include "publications/partials/meta_form.html" %}
+        {% include "publications/partials/credits.html" %}
+      </div>
+    </aside>
   </div>
 {% endblock content %}
