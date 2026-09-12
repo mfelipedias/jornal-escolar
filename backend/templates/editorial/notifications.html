@@ -1,0 +1,20 @@
+{% extends "layouts/public.html" %}
+{% block title %}Notificações · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <section class="site-container py-12">
+    <div class="mx-auto max-w-reading">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h1 class="font-serif text-h1 font-semibold">Notificações</h1>
+        {% if notification_unread %}
+          <form method="post" action="{% url 'editorial:notification_read_all' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-secondary">Marcar todas como lidas</button>
+          </form>
+        {% endif %}
+      </div>
+      <div class="mt-8 overflow-hidden rounded-card border border-line bg-white">
+        {% include "editorial/partials/notification_list.html" %}
+      </div>
+    </div>
+  </section>
+{% endblock content %}

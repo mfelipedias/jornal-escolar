@@ -21,6 +21,7 @@
       {% if user.is_authenticated %}
         <a href="{% url 'publications:create' %}"
            class="rounded-field bg-accent px-3 py-1.5 text-ui text-white hover:bg-accent-2">Escrever</a>
+        {% include "components/notification_bell.html" %}
         <span class="hidden text-ink-2 sm:inline">{{ user.public_name }}</span>
         {% if user.is_staff %}
           <a href="{% url 'admin:index' %}" class="text-ink-2 hover:text-accent">Admin</a>

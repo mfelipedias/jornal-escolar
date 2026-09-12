@@ -1,0 +1,68 @@
+{% comment %}
+  Sino de notificações (docs/09 notification-bell, docs/15). Abre a lista das últimas 20.
+  Parâmetros: notification_unread (do context processor).
+{% endcomment %}
+<div id="notification-bell"
+     class="relative"
+     x-data="{ open: false }"
+     @keydown.escape.window="open = false">
+  <button type="button"
+          class="relative flex size-9 items-center justify-center rounded-full text-ink-2 hover:bg-paper-2 hover:text-ink"
+          :aria-expanded="open"
+          aria-controls="notification-panel"
+          hx-get="{% url 'editorial:notification_dropdown' %}"
+          hx-target="#notification-panel-list"
+          hx-trigger="click"
+          @click="open = !open">
+    <svg class="size-5"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.8"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+    <span class="sr-only">
+      Notificações
+      {% if notification_unread %}({{ notification_unread }} não lidas){% endif %}
+    </span>
+    {% if notification_unread %}
+      <span class="absolute -top-0.5 -right-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-[0.6875rem] leading-4.5 font-semibold text-white"
+            aria-hidden="true">
+        {% if notification_unread > 9 %}
+          9+
+        {% else %}
+          {{ notification_unread }}
+        {% endif %}
+      </span>
+    {% endif %}
+  </button>
+  <div id="notification-panel"
+       x-show="open"
+       x-cloak
+       @click.outside="open = false"
+       class="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-card border border-line bg-white shadow-popover">
+    <div class="flex items-center justify-between border-b border-line px-4 py-2.5">
+      <p class="text-ui font-medium">Notificações</p>
+      {% if notification_unread %}
+        <button type="button"
+                class="text-meta text-accent hover:underline"
+                hx-post="{% url 'editorial:notification_read_all' %}"
+                hx-target="#notification-bell"
+                hx-swap="outerHTML">Marcar todas como lidas</button>
+      {% endif %}
+    </div>
+    <div id="notification-panel-list" class="max-h-96 overflow-y-auto">
+      {% if notifications is not None %}
+        {% include "editorial/partials/notification_list.html" %}
+      {% else %}
+        <p class="px-4 py-6 text-center text-meta text-ink-3">Carregando…</p>
+      {% endif %}
+    </div>
+    <a href="{% url 'editorial:notifications' %}"
+       class="block border-t border-line px-4 py-2 text-center text-meta text-ink-2 hover:text-accent">Ver todas</a>
+  </div>
+</div>

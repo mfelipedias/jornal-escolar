@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from apps.accounts.models import User
-from apps.editorial import permissions
+from apps.editorial import notifications, permissions
 from apps.taxonomy.models import ArticleType, Discipline, Topic
 
 from . import rendering
@@ -117,6 +117,7 @@ def update_article(
     current.save(update_fields=[*columns, "last_edited_by", "updated_at"])
     if current.status == Article.Status.PUBLISHED:
         record_edit_revision(current, user)
+    notifications.article_edited_by_other(current, user)
     _sync(article, current, [*columns, "status", "updated_at"])
     return current
 
@@ -174,6 +175,7 @@ def add_staff_credit(
 ) -> ArticleContributor:
     if not permissions.can_edit_credits(user, article):
         raise PermissionDenied
+    notifications.article_edited_by_other(article, user)
     contributor, _ = ArticleContributor.objects.get_or_create(
         article=article,
         user=member,
@@ -200,6 +202,7 @@ def add_student_credit(
     error = student_name_error(name, full_name_authorized=full_name_authorized)
     if error:
         raise ValidationError({"name": error})
+    notifications.article_edited_by_other(article, user)
     return ArticleContributor.objects.create(
         article=article,
         display_name=" ".join(name.split()),
@@ -228,6 +231,7 @@ def add_guest_credit(
         raise ValidationError({"name": "Informe o nome."})
     if role not in ArticleContributor.Role.values or role == ArticleContributor.Role.REVIEWER:
         raise ValidationError({"role": "Papel inválido."})
+    notifications.article_edited_by_other(article, user)
     return ArticleContributor.objects.create(
         article=article,
         display_name=name[:80],
@@ -250,6 +254,7 @@ def remove_credit(user: User, article: Article, contributor: ArticleContributor)
     is_responsible = contributor.user_id and contributor.role in ArticleContributor.EDITING_ROLES
     if is_responsible and not responsible.exists():
         raise ValidationError("A publicação precisa de ao menos um autor ou coautor da equipe.")
+    notifications.article_edited_by_other(article, user)
     contributor.delete()
 
 
@@ -293,6 +298,7 @@ def set_metadata(
     )
     current.disciplines.set(Discipline.objects.filter(pk__in=discipline_ids, is_active=True))
     current.topics.set(Topic.objects.filter(pk__in=topic_ids, is_active=True))
+    notifications.article_edited_by_other(current, user)
     _sync(article, current, ["type_id", "event_at", "event_location", "sources", "updated_at"])
     return current
 
@@ -311,6 +317,7 @@ def set_cover(user: User, article: Article, asset: MediaAsset | None, caption: s
     current.cover_caption = " ".join(caption.split())[:200] if asset else ""
     current.last_edited_by = user
     current.save(update_fields=["cover", "cover_caption", "last_edited_by", "updated_at"])
+    notifications.article_edited_by_other(current, user)
     _sync(article, current, ["cover_id", "cover_caption", "updated_at"])
     return current
 
@@ -428,6 +435,7 @@ def publish(user: User, article: Article) -> Article:
     fields = ["slug", "status", "published_at", "archived_at", "updated_at"]
     current.save(update_fields=fields)
     create_revision(current, user, ArticleRevision.Reason.PUBLISHED)
+    notifications.article_published(current, user)
     _sync(article, current, fields)
     return current
 
@@ -445,7 +453,8 @@ def archive(user: User, article: Article, note: str = "") -> Article:
     current.is_featured = False
     fields = ["status", "archived_at", "is_featured", "updated_at"]
     current.save(update_fields=fields)
-    # A nota vai para EditorialEvent quando o modelo existir (E29); a notificação, na E17.
+    # A nota também vai para EditorialEvent quando o modelo existir (E29).
+    notifications.article_archived(current, user, note)
     _sync(article, current, fields)
     return current
 

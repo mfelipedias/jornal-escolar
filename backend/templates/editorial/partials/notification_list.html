@@ -1,0 +1,26 @@
+{% load humanize %}
+{% comment %}Itens de notificação. Parâmetros: notifications.{% endcomment %}
+{% if notifications %}
+  <ul class="divide-y divide-line">
+    {% for n in notifications %}
+      <li>
+        <a href="{% url 'editorial:notification_open' n.pk %}"
+           class="flex gap-3 px-4 py-3 hover:bg-paper-2
+                  {% if not n.is_read %}bg-accent-soft/40{% endif %}">
+          <span class="mt-1.5 size-2 shrink-0 rounded-full
+                       {% if n.is_read %}bg-transparent{% else %}bg-accent{% endif %}"
+                aria-hidden="true"></span>
+          <span class="min-w-0">
+            <span class="block text-ui text-ink">{{ n.message }}</span>
+            <span class="block text-meta text-ink-3">
+              {% if not n.is_read %}<span class="sr-only">Não lida.</span>{% endif %}
+              {{ n.updated_at|naturaltime }}
+            </span>
+          </span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="px-4 py-8 text-center text-meta text-ink-3">Nenhuma notificação por enquanto.</p>
+{% endif %}
