@@ -4,7 +4,7 @@
 
 UV = uv run --directory backend
 MANAGE = $(UV) python manage.py
-COMPOSE = docker compose -f infra/docker-compose.dev.yml --env-file infra/env/.env
+COMPOSE = docker compose
 
 .DEFAULT_GOAL := help
 .PHONY: help install assets-install assets-dev assets hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser
@@ -20,8 +20,8 @@ help:
 	@echo   make assets-install   instala os pacotes do frontend (npm)
 	@echo   make assets-dev       servidor do Vite com recarga automatica (deixe aberto em outro terminal)
 	@echo   make assets           gera CSS e JS finais em backend/static/dist
-	@echo   make dev              sobe banco e Django no Docker (http://localhost:8000)
-	@echo   make dev-native       sobe o banco no Docker e o Django no Windows
+	@echo   make dev              sobe TUDO no Docker: banco, Django e Vite (http://localhost:8000)
+	@echo   make dev-native       sobe o banco no Docker e o Django no Windows (use com make assets-dev)
 	@echo   make db               sobe so o banco no Docker, em segundo plano
 	@echo   make down             para os containers de desenvolvimento
 	@echo   make db-reset         APAGA o banco de desenvolvimento e cria de novo vazio

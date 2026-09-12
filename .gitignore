@@ -36,3 +36,6 @@ playwright-report/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Navegador automatizado (playwright-cli)
+.playwright-cli/

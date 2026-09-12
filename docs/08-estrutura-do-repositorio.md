@@ -59,7 +59,7 @@ jornal_escolar/
 │   └── tailwind.config.js        # Se necessário (Tailwind 4 usa CSS-first)
 ├── infra/
 │   ├── docker-compose.yml        # cloudflared, caddy, web, db, backup (+ worker e ollama por profile)
-│   ├── docker-compose.dev.yml    # Sobrescreve para desenvolvimento
+│   ├── (dev)                     # O Compose de desenvolvimento é o compose.yaml da raiz
 │   ├── Dockerfile                # Multi-stage, multi-arch: build de assets (node) + runtime (python)
 │   ├── caddy/Caddyfile
 │   ├── scripts/
@@ -72,6 +72,7 @@ jornal_escolar/
 ├── .pre-commit-config.yaml
 ├── .editorconfig
 ├── .gitignore
+├── compose.yaml                  # Desenvolvimento: `docker compose up` sobe db, web e vite
 ├── Makefile                      # make dev, test, lint, build, deploy, release, backup
 ├── VERSION                       # Número da versão (SemVer), ver docs/30
 ├── CHANGELOG.md                  # Histórico de mudanças por versão

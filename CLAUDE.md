@@ -27,6 +27,8 @@ O nome da escola **nunca** aparece no site, nos dados estruturados ou nas config
 ## Comandos
 
 ```
+docker compose up   # forma preferida pelo dono do projeto: db (5433), web (8000), vite (5173)
+make dev            # o mesmo que docker compose up
 make install        # uv sync + npm install
 make db             # PostgreSQL de dev no Docker (porta 5433)
 make dev-native     # Django em http://localhost:8000

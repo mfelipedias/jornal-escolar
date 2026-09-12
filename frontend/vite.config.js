@@ -12,6 +12,8 @@ export default defineConfig({
     strictPort: true,
     // URLs absolutas para fontes e imagens quando a página vem do Django (porta 8000).
     origin: "http://localhost:5173",
+    // Ligado pelo compose.yaml da raiz: dentro do container, observar arquivos por polling.
+    watch: { usePolling: process.env.VITE_USE_POLLING === "true", interval: 300 },
   },
   build: {
     outDir: resolve(import.meta.dirname, "../backend/static/dist"),

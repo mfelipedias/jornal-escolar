@@ -1,0 +1,87 @@
+# Ambiente de DESENVOLVIMENTO do Jornal Escolar.
+#
+#   docker compose up        sobe tudo (primeira vez demora alguns minutos)
+#   Ctrl+C                   para
+#   docker compose down      remove os containers (os dados do banco ficam guardados)
+#
+# Serviços, um container para cada, como em produção (docs/24):
+#   db   -> PostgreSQL 17 (porta 5433 no computador)
+#   web  -> Django com recarga automática: http://localhost:8000
+#   vite -> CSS e JS com recarga automática (porta 5173, usada pelas páginas do Django)
+#
+# Os valores abaixo servem só para desenvolvimento local. Para mudar algo, crie
+# infra/env/.env a partir de infra/env/.env.example (opcional).
+# O Compose de produção fica em infra/ e chega na E27.
+name: jornal_escolar_dev
+
+x-dev-env: &dev-env
+  path: infra/env/.env
+  required: false
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: jornal
+      POSTGRES_USER: jornal
+      POSTGRES_PASSWORD: jornal-dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jornal -d jornal"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+    working_dir: /app/backend
+    command: >
+      sh -c "uv sync --frozen
+      && uv run python manage.py migrate
+      && uv run python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - *dev-env
+    environment:
+      # Têm prioridade sobre infra/env/.env.
+      DATABASE_URL: postgres://jornal:jornal-dev@db:5432/jornal
+      SECRET_KEY: ${SECRET_KEY:-chave-insegura-somente-para-desenvolvimento-local}
+      # O .venv do Windows fica em backend/.venv; o do container fica fora do código montado.
+      UV_PROJECT_ENVIRONMENT: /opt/venv
+      UV_LINK_MODE: copy
+      UV_PYTHON_DOWNLOADS: never
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - venv_dev:/opt/venv
+      - uv_cache:/root/.cache/uv
+    depends_on:
+      db:
+        condition: service_healthy
+
+  vite:
+    image: node:24-slim
+    working_dir: /app/frontend
+    command: >
+      sh -c "npm install --no-audit --no-fund
+      && npm run dev -- --host 0.0.0.0"
+    environment:
+      # No Windows, mudanças em pastas montadas não geram eventos dentro do container;
+      # o Vite passa a verificar os arquivos periodicamente.
+      VITE_USE_POLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      # node_modules do Linux separado do node_modules do Windows (binários diferentes).
+      - node_modules_dev:/app/frontend/node_modules
+
+volumes:
+  pgdata_dev:
+  venv_dev:
+  uv_cache:
+  node_modules_dev:

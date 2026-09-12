@@ -76,14 +76,16 @@ Diário às 3h no container `backup`:
 
 ## Ambiente de desenvolvimento
 
-`infra/docker-compose.dev.yml`: `web` com `runserver` e volume do código, `db` com porta exposta, sem Caddy nem túnel, Vite em modo dev com HMR (a partir da E04).
+`compose.yaml` na raiz (antes `infra/docker-compose.dev.yml`; movido para que `docker compose up` funcione sem parâmetros): `web` com `runserver` e volume do código, `db` com porta exposta, sem Caddy nem túnel, Vite em modo dev com HMR (a partir da E04).
 
 Detalhes definidos na E02:
 
 - O `web` de dev usa a imagem pronta `ghcr.io/astral-sh/uv:python3.13-bookworm-slim`, sem Dockerfile próprio (o Dockerfile de produção é da E27). O ambiente virtual do container fica num volume (`/opt/venv`) para não se misturar com o `backend/.venv` do Windows.
 - O `db` publica a porta **5433** no computador, porque a 5432 já é usada por um PostgreSQL local. Dentro do Compose o Django usa `db:5432`.
-- O `.env` fica em `infra/env/.env` e é lido pelo Django (modo nativo) e pelo Compose (`--env-file`).
-- `make dev` sobe tudo no Docker; `make dev-native` sobe só o banco e roda o Django no Windows. Login Microsoft em dev usa `http://localhost:8000` registrado como redirect adicional no app do Entra ID; login por senha também funciona.
+- O `.env` fica em `infra/env/.env` e é lido pelo Django (modo nativo). No Compose ele é **opcional**: o `compose.yaml` já traz credenciais e chave secreta de desenvolvimento, para que um clone novo suba só com `docker compose up`.
+- `make dev` sobe tudo no Docker; `make dev-native` sobe só o banco e roda o Django no Windows.
+- Desde 2026-09-12 o Compose de dev também tem o serviço `vite` (`node:24-slim`, porta 5173), a pedido do dono do projeto, para que `make dev` suba o projeto inteiro sem Node no Windows. O `node_modules` do container fica num volume próprio (binários Linux) e o Vite observa arquivos por polling (`VITE_USE_POLLING`), porque pastas montadas do Windows não geram eventos de alteração.
+- Foi pedido um container único com banco e Django; a decisão foi manter **um container por serviço** agrupados no mesmo projeto Compose, pelo alinhamento com produção, atualizações independentes, backup do banco e reinício isolado em falhas. Login Microsoft em dev usa `http://localhost:8000` registrado como redirect adicional no app do Entra ID; login por senha também funciona.
 
 `Makefile`:
 
