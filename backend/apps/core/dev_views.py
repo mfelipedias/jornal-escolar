@@ -107,7 +107,7 @@ def components(request: HttpRequest) -> HttpResponse:
 
     cards = _sample_cards()
     paginator = Paginator([f"Item de exemplo {n}" for n in range(1, 121)], 5)
-    page_obj = paginator.get_page(request.GET.get("page"))
+    page_obj = paginator.get_page(request.GET.get("pagina"))
     if is_htmx:
         return render(request, "core/partials/components_more.html", {"page_obj": page_obj})
 

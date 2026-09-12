@@ -1,6 +1,7 @@
 """Consultas usadas pelas telas de publicações."""
 
-from django.db.models import Prefetch, Q, QuerySet
+from django.db.models import F, Max, Prefetch, Q, QuerySet
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.taxonomy.models import ArticleType, Discipline, KnowledgeArea, Topic
@@ -66,6 +67,65 @@ def related_articles(article: Article, limit: int = 3) -> list[Article]:
         .order_by("-published_at")
     )
     return list(for_cards(related)[:limit])
+
+
+def published() -> QuerySet[Article]:
+    return Article.objects.filter(status=Article.Status.PUBLISHED).order_by("-published_at")
+
+
+def featured_articles(limit: int = 3) -> list[Article]:
+    """Destaque da home: marcadas por editor+, completadas pelas mais recentes (docs/10)."""
+    chosen = list(
+        for_cards(
+            published()
+            .filter(is_featured=True)
+            .order_by(F("featured_order").asc(nulls_last=True), "-published_at")
+        )[:limit]
+    )
+    if len(chosen) < limit:
+        recent = for_cards(published().exclude(pk__in=[a.pk for a in chosen]))
+        chosen += list(recent[: limit - len(chosen)])
+    return chosen
+
+
+def latest_articles(exclude_ids: list[int]) -> QuerySet[Article]:
+    return for_cards(published().exclude(pk__in=exclude_ids))
+
+
+def upcoming_events(limit: int = 4) -> tuple[list[Article], bool]:
+    """Agenda: eventos a partir de hoje; sem nenhum, o último que já aconteceu.
+
+    Devolve (eventos, já_aconteceu).
+    """
+    events = published().filter(type__has_event_date=True, event_at__isnull=False)
+    today = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    upcoming = list(events.filter(event_at__gte=today).order_by("event_at")[:limit])
+    if upcoming:
+        return upcoming, False
+    return list(events.filter(event_at__lt=today).order_by("-event_at")[:1]), True
+
+
+def recent_for_area_strips(limit: int = 60) -> list[Article]:
+    """Publicações recentes para montar as faixas por área sem uma consulta por área."""
+    return list(for_cards(published())[:limit])
+
+
+def writers(limit: int = 8) -> QuerySet[User]:
+    """Quem escreve: equipe com perfil público, quem publicou por último primeiro."""
+    return (
+        User.objects.filter(is_active=True, profile__is_public=True)
+        .select_related("profile", "avatar")
+        .annotate(
+            last_published=Max(
+                "contributions__article__published_at",
+                filter=Q(
+                    contributions__role__in=ArticleContributor.EDITING_ROLES,
+                    contributions__article__status=Article.Status.PUBLISHED,
+                ),
+            )
+        )
+        .order_by(F("last_published").desc(nulls_last=True), "full_name")[:limit]
+    )
 
 
 def contributors(article: Article) -> QuerySet[ArticleContributor]:

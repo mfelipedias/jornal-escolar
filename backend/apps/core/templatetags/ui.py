@@ -24,6 +24,17 @@ def status_badge(status: str) -> dict[str, str]:
     return {"label": label, "classes": classes}
 
 
+PAGE_PARAM = "pagina"  # URLs públicas em português (docs/07)
+
+
+@register.simple_tag(takes_context=True)
+def page_url(context: template.Context, number: int) -> str:
+    """?pagina=N mantendo os outros parâmetros da URL (filtros)."""
+    query = context["request"].GET.copy()
+    query[PAGE_PARAM] = number
+    return f"?{query.urlencode()}"
+
+
 @register.filter
 def elided_pages(page_obj: Page) -> list:
     """Números de página com reticências: 1 … 4 5 6 … 12."""

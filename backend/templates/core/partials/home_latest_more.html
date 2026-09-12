@@ -1,0 +1,7 @@
+{% comment %}"Carregar mais" das últimas publicações da home: itens no fim da lista e botão novo.{% endcomment %}
+<ul hx-swap-oob="beforeend:#latest-list">
+  {% for card in latest %}
+    <li>{% include "components/card.html" with card=card variant="compact" %}</li>
+  {% endfor %}
+</ul>
+{% include "components/pagination.html" with page_obj=page_obj mode="more" %}

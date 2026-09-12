@@ -1,11 +1,130 @@
 {% extends "layouts/public.html" %}
+{% block title %}{{ jornal.name }} · {{ jornal.tagline }}{% endblock title %}
 {% block content %}
-  <section class="site-container py-16 sm:py-24">
-    <div class="max-w-reading">
-      <p class="text-meta font-medium tracking-[0.08em] text-accent uppercase">{{ jornal.tagline }}</p>
-      <h1 class="mt-4 font-serif text-h1 font-semibold text-balance sm:text-display">O jornal está sendo preparado</h1>
-      <p class="mt-6 font-serif text-lead text-ink-2">As primeiras publicações aparecem aqui em breve.</p>
-      <hr class="mt-12 w-16 border-t-[3px] border-accent">
+  {% if not blocks.has_content %}
+    <section class="site-container py-16 sm:py-24">
+      <div class="max-w-reading">
+        <p class="text-meta font-medium tracking-[0.08em] text-accent uppercase">{{ jornal.tagline }}</p>
+        <h1 class="mt-4 font-serif text-h1 font-semibold text-balance sm:text-display">O jornal está sendo preparado</h1>
+        <p class="mt-6 font-serif text-lead text-ink-2">As primeiras publicações aparecem aqui em breve.</p>
+        <hr class="mt-12 w-16 border-t-[3px] border-accent">
+      </div>
+    </section>
+  {% else %}
+    <h1 class="sr-only">{{ jornal.name }}: {{ jornal.tagline }}</h1>
+    <div class="site-container pt-8 pb-16 sm:pt-12">
+      {# Destaque #}
+      <section aria-label="Destaques" class="grid gap-10 lg:grid-cols-3 lg:gap-12">
+        {% with main=blocks.featured.0 %}
+          <div class="lg:col-span-2">{% include "components/card.html" with card=main variant="hero" %}</div>
+        {% endwith %}
+        {% if blocks.featured|length > 1 %}
+          <ul class="grid gap-8 sm:grid-cols-2 lg:grid-cols-1 lg:content-start">
+            {% for card in blocks.featured|slice:"1:" %}
+              <li>{% include "components/card.html" with card=card variant="standard" %}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </section>
+      <div class="mt-16 grid gap-14 border-t border-line pt-10 lg:grid-cols-3 lg:gap-12">
+        {# Últimas publicações #}
+        <section class="lg:col-span-2" aria-labelledby="latest-title">
+          <h2 id="latest-title" class="font-serif text-h2 font-semibold">Últimas publicações</h2>
+          {% if latest %}
+            <ul id="latest-list" class="mt-6 space-y-8">
+              {% for card in latest %}
+                <li>{% include "components/card.html" with card=card variant="compact" %}</li>
+              {% endfor %}
+            </ul>
+            {% include "components/pagination.html" with page_obj=page_obj mode="more" %}
+          {% else %}
+            <p class="mt-4 text-ui text-ink-2">Por enquanto, tudo o que foi publicado está nos destaques acima.</p>
+          {% endif %}
+        </section>
+        <div class="space-y-12">
+          {# Agenda #}
+          {% if blocks.events %}
+            <section aria-labelledby="agenda-title">
+              <h2 id="agenda-title"
+                  class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
+                Agenda
+              </h2>
+              <ul class="mt-4 space-y-4">
+                {% for event in blocks.events %}
+                  <li class="group relative flex gap-4">
+                    <time datetime="{{ event.event_at|date:'c' }}"
+                          class="flex w-12 shrink-0 flex-col items-center rounded-field bg-paper-2 py-1.5 leading-none">
+                      <span class="font-serif text-h3 font-semibold text-ink">{{ event.event_at|date:"j" }}</span>
+                      <span class="mt-1 text-meta text-ink-2">{{ event.event_at|date:"M"|lower }}</span>
+                    </time>
+                    <div class="min-w-0">
+                      {% if blocks.events_past %}
+                        <p class="text-meta font-semibold tracking-wide text-ink-3 uppercase">Aconteceu</p>
+                      {% endif %}
+                      <h3 class="font-serif text-[1.0625rem] leading-snug font-semibold text-ink">
+                        <a href="{{ event.get_absolute_url }}"
+                           class="after:absolute after:inset-0 group-hover:text-accent">{{ event.title }}</a>
+                      </h3>
+                      <p class="mt-0.5 text-meta text-ink-3">
+                        {{ event.event_at|date:"l, H\hi"|lower }}
+                        {% if event.event_location %}· {{ event.event_location }}{% endif %}
+                      </p>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            </section>
+          {% endif %}
+          {# Quem escreve #}
+          {% if blocks.writers %}
+            <section aria-labelledby="writers-title">
+              <h2 id="writers-title"
+                  class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
+                Quem escreve
+              </h2>
+              <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                {% for person in blocks.writers %}
+                  <li class="flex items-center gap-3">
+                    {% if person.avatar_url %}
+                      <img src="{{ person.avatar_url }}"
+                           alt=""
+                           width="40"
+                           height="40"
+                           loading="lazy"
+                           class="size-10 shrink-0 rounded-full object-cover">
+                    {% else %}
+                      <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-paper-2 font-serif text-ui font-semibold text-ink-2"
+                            aria-hidden="true">{{ person.name|slice:":1" }}</span>
+                    {% endif %}
+                    <span class="min-w-0">
+                      <span class="block truncate text-ui font-medium text-ink">{{ person.name }}</span>
+                      {% if person.detail %}<span class="block truncate text-meta text-ink-3">{{ person.detail }}</span>{% endif %}
+                    </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </section>
+          {% endif %}
+        </div>
+      </div>
+      {# Por área #}
+      {% for strip in blocks.strips %}
+        {% with classes=strip.area.color_classes %}
+          <section class="mt-16" aria-labelledby="area-{{ strip.area.slug }}">
+            <h2 id="area-{{ strip.area.slug }}"
+                class="flex items-center gap-3 border-b-[3px] pb-2 font-serif text-h2 font-semibold {{ classes.border }} {{ classes.text }}">
+              {{ strip.area.name }}
+            </h2>
+            <ul class="-mx-4 mt-6 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0">
+              {% for card in strip.cards %}
+                <li class="w-[80%] shrink-0 snap-start sm:w-auto">
+                  {% include "components/card.html" with card=card variant="standard" %}
+                </li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% endwith %}
+      {% endfor %}
     </div>
-  </section>
+  {% endif %}
 {% endblock content %}

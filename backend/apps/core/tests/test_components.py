@@ -93,19 +93,19 @@ def test_empty_state_and_pagination(page):
 
 
 def test_pagination_keeps_other_query_params(admin_client):
-    html = admin_client.get(URL + "?area=verde&page=3").content.decode()
+    html = admin_client.get(URL + "?area=verde&pagina=3").content.decode()
 
-    assert 'href="?area=verde&amp;page=4"' in html
-    assert 'href="?area=verde&amp;page=2"' in html
+    assert 'href="?area=verde&amp;pagina=4"' in html
+    assert 'href="?area=verde&amp;pagina=2"' in html
 
 
 def test_load_more_returns_items_and_next_button(admin_client):
-    response = admin_client.get(URL + "?page=2", HTTP_HX_REQUEST="true")
+    response = admin_client.get(URL + "?pagina=2", HTTP_HX_REQUEST="true")
 
     html = response.content.decode()
     assert 'hx-swap-oob="beforeend:#demo-more-list"' in html
     assert "Item de exemplo 6" in html
-    assert "page=3" in html
+    assert "pagina=3" in html
     assert "<html" not in html
 
 

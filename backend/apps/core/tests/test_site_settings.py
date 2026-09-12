@@ -66,7 +66,7 @@ def test_masthead_uses_setting_from_database(client):
 
     assert "Gazeta da" in html
     assert '<span class="text-accent">Escola</span>' in html
-    assert "<title>Gazeta da Escola</title>" in html
+    assert "<title>Gazeta da Escola · " in html  # nome + tagline (docs/10)
 
 
 def test_date_can_be_hidden(client):

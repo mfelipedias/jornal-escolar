@@ -120,3 +120,11 @@ Editores não editam a home "in place"; usam o painel editorial. Isso mantém a 
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: bloco de clima adicionado.
+- 2026-09-12: E20 implementada (`apps/publications/home.py`, `templates/core/home.html`). Ajustes na prática:
+  - Com 1 ou 2 destaques marcados, os lugares restantes são completados pelas mais recentes (antes: só "sem nenhum destaque").
+  - "Carregar mais" das últimas usa a própria home (`/?pagina=2` com HTMX), não `/x/articles/`, que é o endpoint de filtros da Fase 3. O parâmetro de página é `pagina` em todo o site.
+  - Faixas por área agrupam pela área principal (a da primeira disciplina), a partir das 60 publicações mais recentes, sem as do destaque: uma consulta para todas as faixas.
+  - Cache: destaque, agenda, quem escreve e faixas ficam 5 minutos em cache com uma "versão do conteúdo público" que sobe ao publicar, editar, arquivar ou mudar créditos de algo que já foi ao ar (`publications/cache.py`). "Últimas" é sempre consultada (paginada).
+  - Sem link "ver tudo", "ver agenda" e perfis até as páginas existirem (E21, E22). Clima fica para a Fase 3.
+  - No celular, "Quem escreve" vem logo depois da agenda (antes das faixas), e o 2º e o 3º destaques usam o card `standard`.
+  - `<title>` = nome · tagline; `h1` visualmente oculto com o nome do jornal. Lighthouse acessibilidade 100.

@@ -4,14 +4,23 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from apps.publications import home as home_blocks
+
 from . import services
 from .models import StaticPage
 
 
 @require_GET
 def home(request: HttpRequest) -> HttpResponse:
-    """Página inicial provisória: vira a home completa na E20."""
-    return render(request, "core/home.html")
+    """Página inicial (docs/10). Com HTMX e ?pagina=N devolve só mais "Últimas publicações"."""
+    blocks = home_blocks.blocks()
+    if not blocks.has_content:
+        return render(request, "core/home.html", {"blocks": blocks})
+    page_obj, latest = home_blocks.latest_page(blocks.featured_ids, request.GET.get("pagina"))
+    context = {"blocks": blocks, "page_obj": page_obj, "latest": latest}
+    if request.headers.get("HX-Request") == "true" and "pagina" in request.GET:
+        return render(request, "core/partials/home_latest_more.html", context)
+    return render(request, "core/home.html", context)
 
 
 @require_GET

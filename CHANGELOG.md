@@ -13,6 +13,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Publicação arquivada responde 410; página 404 própria.
 - Modelo de termo de autorização de uso de nome e imagem de alunos, com revogação e processo para a secretaria, em `docs/33` (E06b; falta aprovação da direção).
 - Componentes do design system (E19): card de publicação em quatro variantes (destaque, padrão, compacto e mini), assinatura com avatares, etiquetas de área, disciplina, tipo e tópico, estado editorial, estado vazio, paginação ("Carregar mais" e numerada) e toasts.
+- Página inicial completa (E20): destaques (marcados no admin ou os mais recentes), últimas publicações com "Carregar mais", agenda de eventos (ou o último que aconteceu), quem escreve e faixas por área; estado vazio quando não há publicações. Blocos em cache por 5 minutos, renovados ao publicar ou arquivar.
 - Vitrine dos componentes em `/dev/components/`, aberta em desenvolvimento e para administradores.
 - Mensagens do sistema aparecem como toast no canto da tela, inclusive em ações sem recarregar a página; erros e avisos ficam até serem fechados.
 
