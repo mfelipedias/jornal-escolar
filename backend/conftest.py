@@ -1,8 +1,17 @@
 """Fixtures compartilhadas por todos os testes (apps/*/tests e tests/)."""
 
 import pytest
+from django.core.cache import cache
 
 from tests.factories import UserFactory
+
+
+@pytest.fixture(autouse=True)
+def _clear_cache():
+    """Configurações do site ficam em cache; cada teste começa sem nada guardado."""
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture

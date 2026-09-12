@@ -13,7 +13,9 @@
         <span class="text-accent">{{ site.wordmark_accent }}</span>
       </span>
     </a>
-    {% now "l, j \d\e F \d\e Y" as today %}
-    <p class="hidden text-meta text-ink-3 sm:block">{{ today|lower }}</p>
+    {% if site.show_date %}
+      {% now "l, j \d\e F \d\e Y" as today %}
+      <p class="hidden text-meta text-ink-3 sm:block">{{ today|lower }}</p>
+    {% endif %}
   </div>
 </header>

@@ -26,6 +26,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Serviço `vite` no Compose de desenvolvimento; `docker compose up` na raiz sobe banco, Django e Vite, sem `.env` nem outras ferramentas instaladas.
 - Taxonomia: áreas do conhecimento (com cor do design system), disciplinas, tópicos (palavras-chave e disciplinas sugeridas) e tipos de publicação, editáveis no Django Admin (E07).
 - Comando `seed_taxonomy` com 6 áreas, 24 disciplinas, 30 tópicos e 10 tipos; só cria o que falta.
+- Configurações do site no banco (`SiteSetting`) com cache e formulário por tipo no Django Admin; nome, frase, crédito, e-mail e data do cabeçalho passam a ser editáveis (E08).
+- Páginas institucionais `/sobre/`, `/colaborar/` e `/privacidade/` (`StaticPage`), com links no rodapé só para as publicadas.
+- Comando `seed_site`: cria configurações e textos iniciais; Privacidade nasce despublicada até revisão da direção.
 
 ### Alterado
 

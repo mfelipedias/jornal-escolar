@@ -3,14 +3,8 @@ from typing import Any
 from django.conf import settings
 from django.http import HttpRequest
 
-# Valores padrão da identidade do site (docs/06, core.SiteSetting).
-# Na E08 passam a vir do banco, editáveis no painel; as chaves continuam as mesmas.
-SITE_DEFAULTS = {
-    "name": "Jornal Escolar",
-    "tagline": "Jornal digital da comunidade escolar",
-    "footer_credit": "Desenvolvido por Professor Marcos Felipe A. D. da Silva",
-    "contact_email": "marcossilva06@professor.educacao.sp.gov.br",
-}
+from .selectors import footer_pages
+from .site_settings import get_settings
 
 
 def split_wordmark(name: str) -> tuple[str, str]:
@@ -20,8 +14,19 @@ def split_wordmark(name: str) -> tuple[str, str]:
 
 
 def site(request: HttpRequest) -> dict[str, Any]:
-    head, last = split_wordmark(SITE_DEFAULTS["name"])
+    """Identidade do site para todos os templates: {{ site.name }}, {{ app_version }}..."""
+    values = get_settings("site.")
+    head, last = split_wordmark(values["site.name"])
     return {
-        "site": {**SITE_DEFAULTS, "wordmark_head": head, "wordmark_accent": last},
+        "site": {
+            "name": values["site.name"],
+            "tagline": values["site.tagline"],
+            "footer_credit": values["site.footer_credit"],
+            "contact_email": values["site.contact_email"],
+            "show_date": values["site.show_date"],
+            "wordmark_head": head,
+            "wordmark_accent": last,
+            "footer_pages": footer_pages(),
+        },
         "app_version": settings.APP_VERSION,
     }

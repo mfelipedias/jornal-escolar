@@ -3,7 +3,13 @@ import re
 import pytest
 from django.conf import settings
 
-from apps.core.context_processors import SITE_DEFAULTS, split_wordmark
+from apps.core.context_processors import split_wordmark
+from apps.core.site_settings import REGISTRY
+
+SITE_DEFAULTS = {
+    "footer_credit": REGISTRY["site.footer_credit"].default,
+    "contact_email": REGISTRY["site.contact_email"].default,
+}
 
 pytestmark = pytest.mark.django_db
 
