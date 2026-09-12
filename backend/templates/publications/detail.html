@@ -1,0 +1,179 @@
+{% extends "layouts/public.html" %}
+{% block title %}{{ article.title }} · {{ jornal.name }}{% endblock title %}
+{% block description %}{{ article.summary|default:jornal.tagline }}{% endblock description %}
+{% block head %}
+  {% if preview %}
+    <meta name="robots" content="noindex">
+  {% else %}
+    <link rel="canonical" href="{{ share_url }}">
+  {% endif %}
+{% endblock head %}
+{% block content %}
+  {% if preview %}
+    <div class="border-b border-warn/30 bg-area-ambar-soft">
+      <p class="site-container py-2.5 text-center text-ui text-area-ambar">
+        <strong>Pré-visualização</strong> — não publicado. Só quem pode editar vê esta página.
+      </p>
+    </div>
+  {% endif %}
+  <article class="site-container pt-10 pb-16 sm:pt-14"
+           aria-labelledby="article-title">
+    <header class="mx-auto max-w-reading">
+      <div class="flex flex-wrap items-center gap-2">
+        {% if area %}
+          {% with classes=area.color_classes %}
+            <span class="rounded-full px-2.5 py-0.5 text-meta font-medium {{ classes.soft_bg }} {{ classes.text }}">{{ area.name }}</span>
+          {% endwith %}
+        {% endif %}
+        {% if article.type %}
+          <span class="rounded-full bg-paper-2 px-2.5 py-0.5 text-meta font-medium text-ink-2">{{ article.type.name }}</span>
+        {% endif %}
+        {% if can_edit %}
+          <a href="{% url 'publications:edit' article.pk %}"
+             class="ml-auto text-meta text-ink-3 underline-offset-2 hover:text-accent hover:underline">Editar</a>
+        {% endif %}
+      </div>
+      <h1 id="article-title"
+          class="mt-4 font-serif text-h1 font-semibold text-balance sm:text-[2.5rem] sm:leading-[1.12]">
+        {{ article.title }}
+      </h1>
+      {% if article.subtitle %}<p class="mt-4 font-serif text-lead text-ink-2">{{ article.subtitle }}</p>{% endif %}
+      <div class="mt-6 border-t border-line pt-4 text-ui text-ink-2">
+        {% if byline %}
+          <p>
+            Por <span class="font-medium text-ink">{{ byline }}</span>
+          </p>
+        {% endif %}
+        <p class="mt-1 flex flex-wrap gap-x-2 text-meta text-ink-3">
+          {% if article.published_at %}
+            <time datetime="{{ article.published_at|date:'c' }}">{{ article.published_at|date:"j \d\e F \d\e Y"|lower }}</time>
+            <span aria-hidden="true">·</span>
+          {% endif %}
+          <span>{{ article.reading_minutes }} min de leitura</span>
+          {% if was_updated %}
+            <span aria-hidden="true">·</span>
+            <span>atualizado em
+              <time datetime="{{ article.updated_at|date:'c' }}">{{ article.updated_at|date:"d/m/Y" }}</time>
+            </span>
+          {% endif %}
+        </p>
+        {% if article.disciplines.all %}
+          <p class="mt-1 text-meta text-ink-3">{{ article.disciplines.all|join:", " }}</p>
+        {% endif %}
+      </div>
+      {% if article.event_at %}
+        <div class="mt-6 rounded-card border border-line bg-white p-4">
+          <p class="text-meta font-semibold tracking-wide text-accent uppercase">Evento</p>
+          <p class="mt-1 font-serif text-h3 font-semibold">
+            <time datetime="{{ article.event_at|date:'c' }}">{{ article.event_at|date:"l, j \d\e F \d\e Y, H\hi"|lower }}</time>
+          </p>
+          {% if article.event_location %}<p class="mt-0.5 text-ui text-ink-2">{{ article.event_location }}</p>{% endif %}
+        </div>
+      {% endif %}
+    </header>
+    {% if article.cover %}
+      <figure class="mx-auto mt-10 max-w-[56rem]">
+        <img src="{{ article.cover.variant_urls.w960|default:article.cover.url }}"
+             srcset="{{ article.cover.srcset }}"
+             sizes="(min-width: 960px) 896px,
+             100vw"
+             alt="{% if not article.cover.is_decorative %}{{ article.cover.alt_text }}{% endif %}"
+             width="{{ article.cover.width }}"
+             height="{{ article.cover.height }}"
+             fetchpriority="high"
+             class="aspect-[3/2] w-full rounded-card bg-paper-2 object-cover">
+        {% if article.cover_caption or article.cover.credit %}
+          <figcaption class="mx-auto mt-2 max-w-reading text-meta text-ink-2">
+            {{ article.cover_caption }}
+            {% if article.cover.credit %}<span class="ml-1 text-ink-3">{{ article.cover.credit }}</span>{% endif %}
+          </figcaption>
+        {% endif %}
+      </figure>
+    {% endif %}
+    <div class="article-body mx-auto mt-10 max-w-reading">{{ article.body_html|safe }}</div>
+    {% if article.sources %}
+      <section class="mx-auto mt-12 max-w-reading border-t border-line pt-6"
+               aria-labelledby="sources-title">
+        <h2 id="sources-title"
+            class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Fontes e referências</h2>
+        <ol class="mt-3 list-decimal space-y-1.5 pl-5 text-ui text-ink-2">
+          {% for source in article.sources %}
+            <li>
+              {% if source.url %}
+                <a href="{{ source.url }}"
+                   rel="noopener noreferrer"
+                   target="_blank"
+                   class="text-accent underline underline-offset-2">{{ source.title }}</a>
+              {% else %}
+                {{ source.title }}
+              {% endif %}
+              {% if source.publisher %}— {{ source.publisher }}{% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      </section>
+    {% endif %}
+    {% if not preview %}
+      <div class="mx-auto mt-10 max-w-reading">
+        {% include "components/share.html" with url=share_url title=article.title %}
+      </div>
+    {% endif %}
+    {% if credit_groups %}
+      <section class="mx-auto mt-12 max-w-reading rounded-card bg-paper-2 p-5 sm:p-6"
+               aria-labelledby="credits-title">
+        <h2 id="credits-title" class="font-serif text-h3 font-semibold">Quem fez</h2>
+        <dl class="mt-4 space-y-4">
+          {% for heading, credits in credit_groups %}
+            <div>
+              <dt class="text-meta font-semibold tracking-wide text-ink-3 uppercase">{{ heading }}</dt>
+              {% for credit in credits %}
+                <dd class="mt-2 flex items-center gap-3">
+                  {% if credit.avatar_url %}
+                    <img src="{{ credit.avatar_url }}"
+                         alt=""
+                         width="40"
+                         height="40"
+                         class="size-10 rounded-full object-cover">
+                  {% else %}
+                    <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white font-serif text-ui font-semibold text-ink-2"
+                          aria-hidden="true">{{ credit.name|slice:":1" }}</span>
+                  {% endif %}
+                  <span>
+                    <span class="block text-ui font-medium text-ink">{{ credit.name }}</span>
+                    {% if credit.detail %}<span class="block text-meta text-ink-2">{{ credit.detail }}</span>{% endif %}
+                  </span>
+                </dd>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </dl>
+      </section>
+    {% endif %}
+  </article>
+  {% if related %}
+    <section class="border-t border-line bg-paper-2/50 py-12"
+             aria-labelledby="related-title">
+      <div class="site-container">
+        <h2 id="related-title" class="font-serif text-h2 font-semibold">Leia também</h2>
+        <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {% for item in related %}
+            <li>
+              <a href="{{ item.get_absolute_url }}" class="group block">
+                {% if item.cover %}
+                  <img src="{{ item.cover.variant_urls.w480|default:item.cover.url }}"
+                       alt=""
+                       width="{{ item.cover.width }}"
+                       height="{{ item.cover.height }}"
+                       loading="lazy"
+                       class="aspect-[3/2] w-full rounded-card bg-paper-2 object-cover">
+                {% endif %}
+                <h3 class="mt-3 font-serif text-h3 font-semibold text-ink group-hover:text-accent">{{ item.title }}</h3>
+                {% if item.subtitle %}<p class="mt-1 line-clamp-2 text-ui text-ink-2">{{ item.subtitle }}</p>{% endif %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  {% endif %}
+{% endblock content %}

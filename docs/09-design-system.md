@@ -33,7 +33,7 @@ Definidos como variáveis CSS em `static/src/css/app.css` e expostos ao Tailwind
 | `--color-paper-2` | `#F1EDE6` | Fundos de seção, cabeçalho de tabela, campos |
 | `--color-ink` | `#1B1A21` | Texto principal, títulos |
 | `--color-ink-2` | `#4B4955` | Texto secundário, subtítulos |
-| `--color-ink-3` | `#7B7885` | Metadados, legendas, placeholders |
+| `--color-ink-3` | `#6B6875` | Metadados, legendas, placeholders (era `#7B7885`, ver Histórico) |
 | `--color-line` | `#E0DBD2` | Bordas e separadores |
 | `--color-accent` | `#A8174F` | Rosa da marca: links, botões primários, foco, "Escolar" no wordmark |
 | `--color-accent-2` | `#8A1140` | Hover do acento |
@@ -42,7 +42,7 @@ Definidos como variáveis CSS em `static/src/css/app.css` e expostos ao Tailwind
 | `--color-danger` | `#B42318` | Erros, ações destrutivas |
 | `--color-ok` | `#1F7A4D` | Sucesso, publicado |
 
-Contraste: `ink` sobre `paper` é cerca de 16:1; `accent` sobre `paper` é cerca de 6.5:1; `ink-3` sobre `paper` é cerca de 4.6:1 (usar só em 14px ou mais).
+Contraste: `ink` sobre `paper` é cerca de 16:1; `accent` sobre `paper` é cerca de 6.5:1; `ink-3` sobre `paper` é cerca de 5.2:1 e sobre `paper-2` cerca de 4.7:1.
 
 ### Cores por área do conhecimento
 
@@ -200,4 +200,5 @@ Fora do escopo por decisão do dono do projeto. Preparação sem custo: todas as
 - 2026-09-12: versão inicial.
 - 2026-09-12: nome e marca "Jornal da Rosa"; acento rosa; áreas mais vivas com nomes da escola; componentes de comentário, clima e notificação; versão no rodapé; modo escuro fora do escopo.
 - 2026-09-12: nome genérico "Jornal Escolar" a pedido do dono do projeto; glifo trocado de rosa para folha de jornal; a cor de acento rosa se mantém.
+- 2026-09-12: E18: Lighthouse mostrou que `ink-3 #7B7885` tinha contraste 4,1:1 (não 4,6:1) em texto de 13px; token escurecido para `#6B6875`.
 - 2026-09-12: E04 implementada. Tokens em `frontend/src/css/app.css` (cores de área como `area-coral`, `area-coral-soft` etc.); glifo em `templates/components/glyph.html` e `static/img/favicon.svg`. Masthead provisório sem busca, "Entrar" e linha de áreas (chegam em E36, E09 e E21); rodapé sem a linha de links até as páginas existirem. Data do masthead em minúsculas ("sábado, 12 de setembro de 2026").

@@ -1,10 +1,13 @@
 from django.urls import path
 
-from . import editor_views, views
+from . import editor_views, public_views, views
 
 app_name = "publications"
 
 urlpatterns = [
+    # Público
+    path("publicacoes/previa/<int:pk>/", public_views.preview, name="preview"),
+    path("publicacoes/<slug:slug>/", public_views.detail, name="detail"),
     # Painel
     path("painel/publicacoes/nova/", editor_views.create, name="create"),
     path("painel/publicacoes/<int:pk>/editar/", editor_views.edit, name="edit"),

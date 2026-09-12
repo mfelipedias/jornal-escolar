@@ -16,7 +16,7 @@
   --color-paper-2: #f1ede6;
   --color-ink: #1b1a21;
   --color-ink-2: #4b4955;
-  --color-ink-3: #7b7885;
+  --color-ink-3: #6b6875; /* era #7b7885 (4,1:1); ajustado para passar AA em paper e paper-2 */
   --color-line: #e0dbd2;
   --color-accent: #a8174f;
   --color-accent-2: #8a1140;
@@ -176,6 +176,12 @@
       width: 100%;
       height: auto;
       border-radius: var(--radius-card);
+    }
+    /* Imagem "larga": até 900px, centralizada sobre a coluna de leitura (docs/11). */
+    @media (width >= 64rem) {
+      & > .figure--wide {
+        margin-inline: calc((var(--container-reading) - 56.25rem) / 2);
+      }
     }
     & figcaption {
       margin-top: 0.5em;

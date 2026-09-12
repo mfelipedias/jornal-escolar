@@ -1,0 +1,28 @@
+{% comment %}
+  Compartilhar (docs/11): copiar link, WhatsApp e compartilhamento nativo do celular. Sem SDKs.
+  Parâmetros: url, title.
+{% endcomment %}
+<div class="flex flex-wrap items-center gap-2"
+     x-data="{ copied: false, canShare: !!navigator.share }">
+  <span class="mr-1 text-meta text-ink-3">Compartilhar:</span>
+  <button type="button"
+          class="btn-secondary min-h-11"
+          @click="navigator.clipboard.writeText('{{ url|escapejs }}').then(() => { copied = true; setTimeout(() => copied = false, 2500) })">
+    <span x-text="copied ? 'Link copiado!' : 'Copiar link'">Copiar link</span>
+  </button>
+  <a class="btn-secondary min-h-11"
+     href="https://wa.me/?text={{ title|urlencode }}%20{{ url|urlencode }}"
+     target="_blank"
+     rel="noopener noreferrer">WhatsApp</a>
+  <button type="button"
+          class="btn-secondary min-h-11"
+          x-show="canShare"
+          x-cloak
+          @click="navigator.share({ title: '{{ title|escapejs }}', url: '{{ url|escapejs }}' }).catch(() => {})">
+    Mais opções
+  </button>
+  <span class="sr-only"
+        role="status"
+        aria-live="polite"
+        x-text="copied ? 'Link copiado' : ''"></span>
+</div>

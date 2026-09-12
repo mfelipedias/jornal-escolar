@@ -4,7 +4,16 @@
      class="flex items-center gap-2"
      x-data="{ archiving: false }">
   {% if article.status == "published" %}
-    <span class="hidden text-meta text-ok sm:inline">No ar desde {{ article.published_at|date:"d/m/Y" }}</span>
+    <span class="hidden text-meta text-ok md:inline">No ar desde {{ article.published_at|date:"d/m/Y" }}</span>
+    <a href="{{ article.get_absolute_url }}"
+       target="_blank"
+       rel="noopener"
+       class="btn-ghost">Ver no site</a>
+  {% else %}
+    <a href="{{ article.get_absolute_url }}"
+       target="_blank"
+       rel="noopener"
+       class="btn-ghost hidden sm:inline-flex">Pré-visualizar</a>
   {% endif %}
   {% if can_restore %}
     <form hx-post="{% url 'publications:transition' article.pk 'restore' %}">

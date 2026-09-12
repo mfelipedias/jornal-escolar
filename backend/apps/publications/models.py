@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models import Q
+from django.urls import reverse
 
 from apps.core.models import TimeStampedModel
 
@@ -96,9 +97,22 @@ class Article(TimeStampedModel):
     def __str__(self) -> str:
         return self.title
 
+    def get_absolute_url(self) -> str:
+        if self.slug:
+            return reverse("publications:detail", args=[self.slug])
+        return reverse("publications:preview", args=[self.pk])
+
     @property
     def is_published(self) -> bool:
         return self.status == self.Status.PUBLISHED
+
+    @property
+    def summary(self) -> str:
+        """Linha fina ou início do texto (meta description, cards)."""
+        if self.subtitle:
+            return self.subtitle
+        text = " ".join(self.body_text.split())
+        return text if len(text) <= 160 else text[:157].rsplit(" ", 1)[0] + "…"
 
 
 class ArticleContributor(models.Model):
