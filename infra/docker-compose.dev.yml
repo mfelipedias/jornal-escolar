@@ -1,0 +1,48 @@
+# Ambiente de desenvolvimento (docs/24).
+# O Compose de produção (docker-compose.yml, com Caddy e túnel) chega na E27.
+name: jornal_escolar_dev
+
+services:
+  db:
+    image: postgres:17
+    env_file: env/.env
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+    working_dir: /app/backend
+    command: >
+      sh -c "uv sync --frozen
+      && uv run python manage.py migrate
+      && uv run python manage.py runserver 0.0.0.0:8000"
+    env_file: env/.env
+    environment:
+      # Valores vindos de --env-file env/.env (ver Makefile).
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      # O .venv do Windows fica em backend/.venv; o do container fica fora do código montado.
+      UV_PROJECT_ENVIRONMENT: /opt/venv
+      UV_LINK_MODE: copy
+      UV_PYTHON_DOWNLOADS: never
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ..:/app
+      - venv_dev:/opt/venv
+      - uv_cache:/root/.cache/uv
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata_dev:
+  venv_dev:
+  uv_cache:

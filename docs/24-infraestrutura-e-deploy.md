@@ -76,7 +76,14 @@ Diário às 3h no container `backup`:
 
 ## Ambiente de desenvolvimento
 
-`infra/docker-compose.dev.yml`: `web` com `runserver` e volume do código, `db` com porta exposta, sem Caddy nem túnel, Vite em modo dev com HMR. Login Microsoft em dev usa `http://localhost:8000` registrado como redirect adicional no app do Entra ID; login por senha também funciona.
+`infra/docker-compose.dev.yml`: `web` com `runserver` e volume do código, `db` com porta exposta, sem Caddy nem túnel, Vite em modo dev com HMR (a partir da E04).
+
+Detalhes definidos na E02:
+
+- O `web` de dev usa a imagem pronta `ghcr.io/astral-sh/uv:python3.13-bookworm-slim`, sem Dockerfile próprio (o Dockerfile de produção é da E27). O ambiente virtual do container fica num volume (`/opt/venv`) para não se misturar com o `backend/.venv` do Windows.
+- O `db` publica a porta **5433** no computador, porque a 5432 já é usada por um PostgreSQL local. Dentro do Compose o Django usa `db:5432`.
+- O `.env` fica em `infra/env/.env` e é lido pelo Django (modo nativo) e pelo Compose (`--env-file`).
+- `make dev` sobe tudo no Docker; `make dev-native` sobe só o banco e roda o Django no Windows. Login Microsoft em dev usa `http://localhost:8000` registrado como redirect adicional no app do Entra ID; login por senha também funciona.
 
 `Makefile`:
 

@@ -4,12 +4,18 @@ name = "jornal-escolar"
 version = "0.0.1"
 description = "Jornal digital escolar"
 requires-python = ">=3.13,<3.14"
-dependencies = []
+dependencies = [
+    "django>=5.2,<6.0",
+    "django-environ>=0.12",
+    "psycopg[binary]>=3.2",
+]
 
 [dependency-groups]
 dev = [
     "djlint>=1.36",
     "pre-commit>=4.0",
+    "pytest>=8.4",
+    "pytest-django>=4.11",
     "ruff>=0.13",
 ]
 
@@ -45,6 +51,12 @@ known-first-party = ["apps", "config"]
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["apps", "tests"]
+addopts = "--reuse-db --strict-markers"
 
 [tool.djlint]
 profile = "django"

@@ -16,7 +16,7 @@ Convenção de commits: um commit por etapa, mensagem `E07: taxonomia e seed`. A
 | E02 | Projeto Django com settings por ambiente, `django-environ`, `.env.example`, PostgreSQL no Compose de dev, `/healthz/` com versão | [24](24-infraestrutura-e-deploy.md) | `make dev` sobe | `/healthz/` devolve `{"status":"ok","version":"0.0.1"}` |
 | E03 | Usuário customizado com `email`, `role`, `staff_kind` (só o modelo) | [06](06-modelo-de-dados.md) | Migração inicial | `createsuperuser` com e-mail |
 | E04 | Vite + Tailwind 4 + HTMX + Alpine via `django-vite`; tokens; marca "Jornal Escolar" (wordmark e glifo); `base.html`, `layouts/public.html`, masthead, rodapé com crédito de desenvolvimento e versão | [09](09-design-system.md) | Página inicial provisória | Fontes locais; responsiva; rodapé sem nome da escola |
-| E05 | pytest + pytest-django + factory-boy; GitHub Actions | [24](24-infraestrutura-e-deploy.md) | CI verde | |
+| E05 | factory-boy; GitHub Actions (pytest e pytest-django já entraram na E02 junto com os primeiros testes) | [24](24-infraestrutura-e-deploy.md) | CI verde | |
 | E06 | `CLAUDE.md`, `README.md`; Cloudflare Tunnel apontando para a página provisória; app registrado na Microsoft seguindo o guia | [24](24-infraestrutura-e-deploy.md), [32](32-guia-login-microsoft.md) | Site "em breve" no ar | `https://jornal.projetosrosa.com.br` responde |
 | E06b | (não técnica) Termo de autorização de nome e imagem redigido com a direção | [23](23-seguranca-e-lgpd.md) | Documento | Aprovado pela direção |
 
@@ -104,4 +104,5 @@ Etapas E50 a E55 permanecem descritas na versão anterior deste documento (hist�
 ## Histórico
 
 - 2026-09-12: versão inicial.
+- 2026-09-12: pytest adiantado da E05 para a E02; na E03 o banco de desenvolvimento é recriado (o usuário customizado precisa existir antes das migrações de `auth`).
 - 2026-09-12: reescrito: sem contas de aluno, login Microsoft, notificações no painel na Fase 1, comentários e clima na Fase 3, IA congelada, releases por fase.
