@@ -5,7 +5,7 @@ version = "0.0.1"
 description = "Jornal digital escolar"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "django>=5.2,<6.0",
+    "django[argon2]>=5.2,<6.0",
     "django-environ>=0.12",
     "psycopg[binary]>=3.2",
 ]

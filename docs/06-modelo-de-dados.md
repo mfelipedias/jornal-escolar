@@ -43,6 +43,13 @@ Modelo customizado desde a primeira migração. Login por e-mail institucional (
 
 Índices: `email` único; `role`.
 
+Implementação (E03):
+
+- `is_staff` e `is_superuser` são calculados no `save()` a partir de `role`: verdadeiros só para `admin`, falsos para os demais. Não se editam à mão.
+- `avatar` entra na E11, junto com `MediaAsset`.
+- `display_name` vazio usa `full_name` (`User.public_name`).
+- O login compara o e-mail em minúsculas; `createsuperuser` pede e-mail e nome completo e cria um `admin`.
+
 ### accounts.TeacherProfile (1:1 User)
 
 Nome mantido por tradição; vale para todos os cargos.

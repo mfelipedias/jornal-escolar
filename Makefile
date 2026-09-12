@@ -7,7 +7,7 @@ MANAGE = $(UV) python manage.py
 COMPOSE = docker compose -f infra/docker-compose.dev.yml --env-file infra/env/.env
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks lint format test secret-key dev dev-native db down logs migrate makemigrations shell superuser
+.PHONY: help install hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser
 
 help:
 	@echo Jornal Escolar - comandos disponiveis:
@@ -21,6 +21,7 @@ help:
 	@echo   make dev-native       sobe o banco no Docker e o Django no Windows
 	@echo   make db               sobe so o banco no Docker, em segundo plano
 	@echo   make down             para os containers de desenvolvimento
+	@echo   make db-reset         APAGA o banco de desenvolvimento e cria de novo vazio
 	@echo   make logs             mostra os logs dos containers
 	@echo   make migrate          aplica migracoes
 	@echo   make makemigrations   cria migracoes a partir dos modelos
@@ -38,10 +39,11 @@ lint:
 	$(UV) ruff format --check .
 	$(UV) djlint templates --lint
 
+# djlint --reformat sai com erro quando altera arquivos; o "-" evita que isso pare o make.
 format:
-	$(UV) ruff check --fix .
 	$(UV) ruff format .
-	$(UV) djlint templates --reformat
+	$(UV) ruff check --fix .
+	-$(UV) djlint templates --reformat
 
 test:
 	$(UV) pytest
@@ -60,6 +62,12 @@ db:
 
 down:
 	$(COMPOSE) down
+
+db-reset:
+	$(COMPOSE) down
+	-docker volume rm jornal_escolar_dev_pgdata_dev
+	$(COMPOSE) up -d --wait db
+	$(MANAGE) migrate
 
 logs:
 	$(COMPOSE) logs -f

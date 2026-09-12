@@ -13,6 +13,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - App `core` com `/healthz/` (banco, migrações e versão) e cabeçalho `X-App-Version` em todas as respostas.
 - pytest e pytest-django, com testes do `/healthz/`.
 - Comandos `make dev`, `dev-native`, `db`, `down`, `logs`, `test`, `migrate`, `makemigrations`, `shell`, `superuser` e `secret-key`.
+- Usuário customizado `accounts.User` com login por e-mail (sempre em minúsculas), papel (`role`), cargo (`staff_kind`) e senhas em Argon2 (E03).
+- Cadastro de usuários no Django Admin; só o papel `admin` acessa o Django Admin.
+- `make db-reset` para recriar o banco de desenvolvimento.
+
+### Corrigido
+
+- `make format` formata antes de aplicar correções do ruff e não para quando o djlint altera templates.
 
 ## [0.0.1] - 2026-09-12
 
