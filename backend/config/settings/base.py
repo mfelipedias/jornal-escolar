@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.taxonomy",
     "apps.publications",
+    "apps.editorial",
 ]
 
 MIDDLEWARE = [

@@ -1,8 +1,82 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.template.defaultfilters import filesizeformat
 from django.utils.html import format_html
 
-from .models import MediaAsset
+from . import services
+from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
+
+
+class ArticleContributorInline(admin.TabularInline):
+    model = ArticleContributor
+    extra = 0
+    fields = (
+        "role",
+        "user",
+        "display_name",
+        "is_student",
+        "class_group",
+        "consent_ok",
+        "contribution_note",
+        "order",
+        "show_in_credits",
+    )
+    autocomplete_fields = ("user",)
+
+
+class ArticleRevisionInline(admin.TabularInline):
+    model = ArticleRevision
+    extra = 0
+    can_delete = False
+    fields = ("number", "reason", "title", "created_by", "created_at")
+    readonly_fields = fields
+
+    def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
+        return False
+
+
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    """Consulta e correções pontuais. O texto é editado no editor do painel (docs/18)."""
+
+    list_display = ("title", "status", "type", "published_at", "created_by", "is_featured")
+    list_filter = ("status", "type", "is_featured", "disciplines__area")
+    search_fields = ("title", "subtitle", "slug", "contributors__display_name")
+    list_select_related = ("type", "created_by")
+    date_hierarchy = "created_at"
+    readonly_fields = (
+        "slug",
+        "status",
+        "body_html",
+        "body_text",
+        "reading_minutes",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "published_at",
+        "archived_at",
+        "reads_count",
+        "reactions_count",
+        "comments_count",
+    )
+    exclude = ("body_json", "submitted_at")
+    filter_horizontal = ("disciplines", "topics")
+    raw_id_fields = ("cover",)
+    inlines = [ArticleContributorInline, ArticleRevisionInline]
+    actions = ["archive_articles"]
+
+    @admin.action(description="Arquivar (tirar do ar)")
+    def archive_articles(self, request: HttpRequest, queryset: QuerySet[Article]) -> None:
+        done = 0
+        for article in queryset.exclude(status=Article.Status.ARCHIVED):
+            try:
+                services.archive(request.user, article, note="Arquivado pelo Django Admin.")
+                done += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{article}: {exc}", messages.WARNING)
+        self.message_user(request, f"{done} publicação(ões) arquivada(s).", messages.SUCCESS)
 
 
 @admin.register(MediaAsset)

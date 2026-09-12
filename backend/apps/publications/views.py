@@ -7,9 +7,9 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods, require_POST
 
-from apps.accounts.models import User
 from apps.core.http import json_error
 from apps.core.ratelimit import hit
+from apps.editorial import permissions
 
 from . import media
 from .forms import MediaAssetMetadataForm
@@ -28,11 +28,6 @@ def login_required_json(view):
     return wrapper
 
 
-def can_edit_media(user: User, asset: MediaAsset) -> bool:
-    # Regra provisória até apps/editorial/permissions.py (E12): autor da imagem ou editor+.
-    return asset.uploaded_by_id == user.pk or user.role in (User.Role.EDITOR, User.Role.ADMIN)
-
-
 @require_POST
 @login_required_json
 def media_upload(request: HttpRequest) -> JsonResponse:
@@ -40,6 +35,8 @@ def media_upload(request: HttpRequest) -> JsonResponse:
     uploaded = request.FILES.get("file")
     if uploaded is None:
         return json_error("missing_file", "Nenhum arquivo enviado.", 400)
+    if not permissions.can_upload_media(request.user):
+        return json_error("forbidden", "Sua conta não pode enviar imagens.", 403)
     if not hit(
         f"media-upload:{request.user.pk}", limit=settings.MEDIA_UPLOADS_PER_HOUR, period=3600
     ):
@@ -56,7 +53,7 @@ def media_upload(request: HttpRequest) -> JsonResponse:
 def media_detail(request: HttpRequest, pk: int) -> JsonResponse:
     """GET/PATCH /x/media/<id>/: dados e metadados (texto alternativo, crédito, consentimento)."""
     asset = get_object_or_404(MediaAsset, pk=pk)
-    if not can_edit_media(request.user, asset):
+    if not permissions.can_edit_media(request.user, asset):
         return json_error("forbidden", "Você não pode alterar esta imagem.", 403)
     if request.method == "GET":
         return JsonResponse(media.serialize(asset))

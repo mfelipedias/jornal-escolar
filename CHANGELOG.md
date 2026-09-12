@@ -40,6 +40,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Perfil (`TeacherProfile`) criado automaticamente para cada conta, com endereço único derivado do nome.
 - Upload de imagens (`MediaAsset`, `POST /x/media/`): só JPEG, PNG e WebP pelo conteúdo real, até 10 MB e 6000 px, sem EXIF/GPS, rotação da câmera aplicada, variantes WebP de 480, 960 e 1600 px, cota de 1 GB e 60 envios por hora por pessoa (E11).
 - `GET/PATCH /x/media/<id>/` para texto alternativo, crédito, licença, pessoas na foto e autorização; admin de imagens com miniatura; foto de perfil (`avatar`) no usuário.
+- Publicações (`Article`), créditos (`ArticleContributor`, inclusive alunos sem conta com turma e autorização) e versões (`ArticleRevision`), com estados rascunho, publicado e arquivado (E12).
+- Regras em `publications/services.py`: criar, editar, publicar, arquivar e restaurar; checklist de publicação; endereço definitivo na primeira publicação; versão a cada publicação e edição de texto publicado.
+- `apps/editorial/permissions.py`: única fonte das permissões (equipe publica só o próprio texto; editor e admin, qualquer um; nota obrigatória para arquivar texto alheio); política de nome de aluno "Rafael S.".
+- Admin de publicações com créditos, versões e ação de arquivar.
 
 ### Alterado
 
