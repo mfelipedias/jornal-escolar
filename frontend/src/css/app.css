@@ -107,6 +107,130 @@
 }
 
 @layer components {
+  /* Corpo das publicações: o mesmo no editor e na página pública (docs/09, docs/11). */
+  .article-body {
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    color: var(--color-ink);
+    overflow-wrap: break-word;
+
+    & > * + * {
+      margin-top: 1.1em;
+    }
+    & h2 {
+      margin-top: 1.8em;
+      font-size: var(--text-h2);
+      line-height: var(--text-h2--line-height);
+      font-weight: 600;
+    }
+    & h3 {
+      margin-top: 1.5em;
+      font-size: var(--text-h3);
+      line-height: var(--text-h3--line-height);
+      font-weight: 600;
+    }
+    & a {
+      color: var(--color-accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    & ul,
+    & ol {
+      padding-left: 1.4em;
+    }
+    & ul {
+      list-style: disc;
+    }
+    & ol {
+      list-style: decimal;
+    }
+    & li + li {
+      margin-top: 0.35em;
+    }
+    & li > p + p {
+      margin-top: 0.5em;
+    }
+    & blockquote {
+      border-left: 3px solid var(--color-accent);
+      padding-left: 1.1em;
+      color: var(--color-ink-2);
+      font-style: italic;
+    }
+    & blockquote cite {
+      font-family: var(--font-sans);
+      font-size: var(--text-meta);
+      font-style: normal;
+      color: var(--color-ink-3);
+    }
+    & hr {
+      margin-block: 2.2em;
+      border: 0;
+      border-top: 1px solid var(--color-line);
+    }
+    & figure img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-card);
+    }
+    & figcaption {
+      margin-top: 0.5em;
+      font-family: var(--font-sans);
+      font-size: var(--text-meta);
+      color: var(--color-ink-2);
+    }
+    & .figure-credit {
+      margin-left: 0.5em;
+      color: var(--color-ink-3);
+    }
+  }
+
+  /* Editor (TipTap) */
+  .article-body .ProseMirror {
+    min-height: 40vh;
+    outline: none;
+
+    & > * + * {
+      margin-top: 1.1em;
+    }
+    & p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      float: left;
+      height: 0;
+      pointer-events: none;
+      color: var(--color-ink-3);
+    }
+  }
+
+  .editor-btn {
+    min-width: 2.25rem;
+    border-radius: var(--radius-field);
+    padding: 0.35rem 0.55rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-ui);
+    color: var(--color-ink-2);
+    transition: background-color 150ms;
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-paper-2);
+      color: var(--color-ink);
+    }
+    &[aria-pressed="true"] {
+      background-color: var(--color-accent-soft);
+      color: var(--color-accent-2);
+    }
+    &:disabled {
+      opacity: 0.35;
+    }
+  }
+
+  .editor-sep {
+    margin-inline: 0.25rem;
+    height: 1.25rem;
+    width: 1px;
+    background-color: var(--color-line);
+  }
+
   /* Margens laterais: 16px celular, 32px tablet, 48px desktop (docs/09). */
   .site-container {
     margin-inline: auto;

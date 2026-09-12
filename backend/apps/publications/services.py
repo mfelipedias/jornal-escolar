@@ -5,6 +5,7 @@ PermissionDenied quando o usuário não pode agir.
 """
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -42,6 +43,10 @@ class ChecklistItem:
     code: str
     message: str
     blocking: bool
+
+
+class ConflictError(Exception):
+    """Outra pessoa salvou a publicação depois da versão que o editor carregou."""
 
 
 class ChecklistError(Exception):
@@ -83,14 +88,21 @@ def _sync(target: Article, source: Article, fields: list[str]) -> None:
 
 
 @transaction.atomic
-def update_article(user: User, article: Article, **fields: Any) -> Article:
-    """Salva alterações. Editar algo já publicado gera uma versão (docs/04, "editar publicada")."""
+def update_article(
+    user: User, article: Article, *, expected_updated_at: datetime | None = None, **fields: Any
+) -> Article:
+    """Salva alterações. Editar algo já publicado gera uma versão (docs/04, "editar publicada").
+
+    Com expected_updated_at, recusa (ConflictError) se a publicação mudou desde então.
+    """
     unknown = set(fields) - EDITABLE_FIELDS
     if unknown:
         raise ValueError(f"Campos não editáveis: {sorted(unknown)}")
     current = _locked(article)
     if not permissions.can_edit(user, current):
         raise PermissionDenied
+    if expected_updated_at is not None and current.updated_at != expected_updated_at:
+        raise ConflictError
     if "title" in fields and len(fields["title"] or "") > TITLE_MAX:
         raise ValidationError({"title": f"O título pode ter até {TITLE_MAX} caracteres."})
 

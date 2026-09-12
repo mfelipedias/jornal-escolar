@@ -46,6 +46,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Admin de publicações com créditos, versões e ação de arquivar.
 - Renderizador `publications/rendering.py`: documento do editor → HTML e texto com lista fechada de nós e marcas, links só `http(s)`/`mailto`/internos, figuras com `srcset` e tamanho, segunda limpeza com `nh3`, tempo de leitura (E13).
 - Salvar o corpo gera HTML, texto e tempo de leitura e liga as imagens à publicação; só entram imagens enviadas pela própria pessoa ou já da publicação (editores usam qualquer uma).
+- Editor de publicações com TipTap 3 (`/painel/publicacoes/nova/` e `/painel/publicacoes/<id>/editar/`): título, linha fina, barra de ferramentas (parágrafo, H2, H3, negrito, itálico, link, listas, citação, separador, desfazer), contagem de palavras (E14).
+- Salvamento automático (`PUT /x/articles/<id>/body/`) 2 s após parar de digitar ou a cada 30 s, com indicador, novas tentativas, cópia local se a conexão cair e aviso de conflito quando outra pessoa salvou.
+- Estilos do corpo das publicações (`.article-body`) compartilhados entre editor e página pública; botão "Escrever" no cabeçalho; página 403.
 
 ### Alterado
 

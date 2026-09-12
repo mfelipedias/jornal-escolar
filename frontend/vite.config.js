@@ -22,6 +22,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         app: resolve(import.meta.dirname, "src/js/app.js"),
+        editor: resolve(import.meta.dirname, "src/js/editor.js"),
       },
     },
   },

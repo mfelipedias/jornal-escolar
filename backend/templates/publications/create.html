@@ -1,0 +1,19 @@
+{% extends "layouts/public.html" %}
+{% block title %}Nova publicação · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <section class="site-container py-16">
+    <div class="mx-auto max-w-reading text-center">
+      <h1 class="font-serif text-h1 font-semibold">Nova publicação</h1>
+      <p class="mt-3 font-serif text-lead text-ink-2">
+        O rascunho fica só com você até publicar. Tudo é salvo automaticamente.
+      </p>
+      <form method="post" class="mt-8">
+        {% csrf_token %}
+        <button type="submit"
+                class="rounded-field bg-accent px-6 py-3 text-ui font-medium text-white transition hover:bg-accent-2">
+          Começar a escrever
+        </button>
+      </form>
+    </div>
+  </section>
+{% endblock content %}
