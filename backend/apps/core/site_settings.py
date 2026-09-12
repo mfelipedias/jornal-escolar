@@ -66,6 +66,15 @@ REGISTRY: dict[str, SettingSpec] = {
             True,
         ),
         SettingSpec(
+            "auth.microsoft_enabled",
+            "Login com a conta Microsoft da escola ligado",
+            "bool",
+            True,
+            "Desligue se a Secretaria bloquear o aplicativo; todos passam a entrar com senha "
+            "criada por link de acesso. O botão só aparece se MS_CLIENT_ID e MS_CLIENT_SECRET "
+            "estiverem configurados no servidor.",
+        ),
+        SettingSpec(
             "editorial.self_publish",
             "Quem publica",
             "choice",

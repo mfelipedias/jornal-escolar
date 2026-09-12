@@ -29,8 +29,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Configurações do site no banco (`SiteSetting`) com cache e formulário por tipo no Django Admin; nome, frase, crédito, e-mail e data do cabeçalho passam a ser editáveis (E08).
 - Páginas institucionais `/sobre/`, `/colaborar/` e `/privacidade/` (`StaticPage`), com links no rodapé só para as publicadas.
 - Comando `seed_site`: cria configurações e textos iniciais; Privacidade nasce despublicada até revisão da direção.
+- Login em `/entrar/` com `django-allauth`: senha de reserva e botão "Entrar com a conta da escola" (Microsoft), que aparece quando `MS_CLIENT_ID`/`MS_CLIENT_SECRET` estão configurados (E09).
+- Login Microsoft só para domínios permitidos e contas cadastradas e ativas, identificando a pessoa pelo `userPrincipalName`.
+- Limite de tentativas de login (5 por e-mail e 30 por IP a cada 15 minutos); sessão de 14 dias sem uso; senha mínima de 10 caracteres.
+- Layout `auth.html`, telas de sair, conta desativada, cadastro fechado e erros de login; cabeçalho com "Entrar" ou nome, "Admin" e "Sair".
+- Configuração "Login com a conta Microsoft da escola ligado" no admin.
 
 ### Alterado
+
+- O `/admin/login/` redireciona para `/entrar/`; telas do allauth sem uso (cadastro, recuperação de senha por e-mail, e-mails) respondem 404.
+- Variável de template da identidade do site renomeada de `site` para `jornal`, que o allauth sobrescrevia.
 
 - Compose de desenvolvimento movido de `infra/docker-compose.dev.yml` para `compose.yaml` na raiz.
 

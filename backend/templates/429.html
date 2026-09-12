@@ -1,0 +1,5 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Muitas tentativas · {{ jornal.name }}{% endblock title %}
+{% block auth_content %}
+  {% include "components/auth_notice.html" with title="Muitas tentativas" text="Por segurança, aguarde 15 minutos antes de tentar entrar de novo." %}
+{% endblock auth_content %}

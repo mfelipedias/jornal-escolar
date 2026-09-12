@@ -1,0 +1,5 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Cadastro fechado · {{ jornal.name }}{% endblock title %}
+{% block auth_content %}
+  {% include "components/auth_notice.html" with title="Cadastro fechado" text="As contas são criadas pelo administrador do jornal. Peça para cadastrar você." %}
+{% endblock auth_content %}

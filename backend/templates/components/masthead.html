@@ -6,16 +6,31 @@
   <div class="site-container flex items-center justify-between gap-4 py-4 sm:py-6">
     <a href="{% url 'core:home' %}"
        class="group flex items-center gap-2.5 text-ink sm:gap-3"
-       aria-label="{{ site.name }}, página inicial">
+       aria-label="{{ jornal.name }}, página inicial">
       {% include "components/glyph.html" with class="size-7 shrink-0 text-accent sm:size-8" %}
       <span class="font-serif text-2xl leading-none font-semibold tracking-tight sm:text-[1.75rem]">
-        {% if site.wordmark_head %}{{ site.wordmark_head }}{% endif %}
-        <span class="text-accent">{{ site.wordmark_accent }}</span>
+        {% if jornal.wordmark_head %}{{ jornal.wordmark_head }}{% endif %}
+        <span class="text-accent">{{ jornal.wordmark_accent }}</span>
       </span>
     </a>
-    {% if site.show_date %}
-      {% now "l, j \d\e F \d\e Y" as today %}
-      <p class="hidden text-meta text-ink-3 sm:block">{{ today|lower }}</p>
-    {% endif %}
+    <div class="flex items-center gap-4 text-meta sm:gap-6">
+      {% if jornal.show_date %}
+        {% now "l, j \d\e F \d\e Y" as today %}
+        <p class="hidden text-ink-3 md:block">{{ today|lower }}</p>
+      {% endif %}
+      {% if user.is_authenticated %}
+        <span class="hidden text-ink-2 sm:inline">{{ user.public_name }}</span>
+        {% if user.is_staff %}
+          <a href="{% url 'admin:index' %}" class="text-ink-2 hover:text-accent">Admin</a>
+        {% endif %}
+        <form method="post" action="{% url 'accounts:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="text-ink-2 hover:text-accent">Sair</button>
+        </form>
+      {% else %}
+        <a href="{% url 'accounts:login' %}"
+           class="rounded-field border border-line px-3 py-1.5 text-ui text-ink hover:border-accent hover:text-accent">Entrar</a>
+      {% endif %}
+    </div>
   </div>
 </header>

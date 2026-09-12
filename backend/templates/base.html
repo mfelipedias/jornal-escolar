@@ -4,9 +4,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}{{ site.name }}{% endblock title %}</title>
+    <title>{% block title %}{{ jornal.name }}{% endblock title %}</title>
     <meta name="description"
-          content="{% block description %}{{ site.tagline }}{% endblock description %}">
+          content="{% block description %}{{ jornal.tagline }}{% endblock description %}">
     <meta name="theme-color" content="#FBF9F5">
     <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
     {% vite_hmr_client %}

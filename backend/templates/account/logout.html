@@ -1,0 +1,16 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Sair · {{ jornal.name }}{% endblock title %}
+{% block auth_content %}
+  <h1 class="text-center font-serif text-h2 font-semibold">Sair</h1>
+  <p class="mt-2 text-center text-ui text-ink-2">Deseja encerrar a sessão neste aparelho?</p>
+  <form method="post" action="{% url 'accounts:logout' %}" class="mt-8">
+    {% csrf_token %}
+    <button type="submit"
+            class="w-full rounded-field bg-accent px-4 py-3 text-ui font-medium text-white transition hover:bg-accent-2">
+      Sair
+    </button>
+  </form>
+  <p class="mt-6 text-center text-ui">
+    <a href="{% url 'core:home' %}" class="text-accent hover:underline">Voltar para o jornal</a>
+  </p>
+{% endblock auth_content %}

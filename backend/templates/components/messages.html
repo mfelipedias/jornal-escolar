@@ -1,0 +1,11 @@
+{% comment %}Mensagens do Django (sucesso, erro, aviso). O toast animado chega na E19.{% endcomment %}
+{% if messages %}
+  <ul class="mb-6 space-y-2" role="status" aria-live="polite">
+    {% for message in messages %}
+      <li class="rounded-field border px-4 py-3 text-ui
+                 {% if message.level_tag == 'error' %}border-danger/30 bg-danger/5 text-danger{% elif message.level_tag == 'success' %}border-ok/30 bg-ok/5 text-ok{% else %}border-line bg-paper-2 text-ink-2{% endif %}">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

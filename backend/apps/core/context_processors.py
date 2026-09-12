@@ -14,11 +14,14 @@ def split_wordmark(name: str) -> tuple[str, str]:
 
 
 def site(request: HttpRequest) -> dict[str, Any]:
-    """Identidade do site para todos os templates: {{ site.name }}, {{ app_version }}..."""
+    """Identidade do site para todos os templates: {{ jornal.name }}, {{ app_version }}...
+
+    Chama-se "jornal" e não "site" porque o allauth e o Django já usam "site" no contexto.
+    """
     values = get_settings("site.")
     head, last = split_wordmark(values["site.name"])
     return {
-        "site": {
+        "jornal": {
             "name": values["site.name"],
             "tagline": values["site.tagline"],
             "footer_credit": values["site.footer_credit"],

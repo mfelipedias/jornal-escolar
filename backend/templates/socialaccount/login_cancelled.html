@@ -1,0 +1,5 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Entrada cancelada · {{ jornal.name }}{% endblock title %}
+{% block auth_content %}
+  {% include "components/auth_notice.html" with title="Entrada cancelada" text="Você cancelou a entrada com a conta Microsoft." %}
+{% endblock auth_content %}

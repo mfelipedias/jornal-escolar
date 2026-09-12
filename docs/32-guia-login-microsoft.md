@@ -40,11 +40,20 @@ Para o botão da Microsoft existir, o jornal precisa estar "registrado" na Micro
 1. Entrar em `portal.azure.com` com **qualquer conta Microsoft** (pode ser uma conta pessoal Outlook; não precisa ser a da escola, e não precisa de cartão de crédito para isso).
 2. Procurar "Microsoft Entra ID", depois "App registrations", "New registration".
 3. Nome: `Jornal Escolar`. Em "Supported account types", escolher a opção que inclui **contas de qualquer organização** (multi-tenant). É isso que permite que contas da Secretaria entrem.
-4. Em "Redirect URI", tipo Web, colocar `https://jornal.projetosrosa.com.br/entrar/microsoft/callback/` (o endereço exato é confirmado na etapa).
+4. Em "Redirect URI", tipo Web, colocar `https://jornal.projetosrosa.com.br/entrar/microsoft/login/callback/`. Para testar no seu computador, adicione também `http://localhost:8000/entrar/microsoft/login/callback/` (em "Authentication", "Add URI").
 5. Depois de criar, copiar o **Application (client) ID**.
 6. Em "Certificates & secrets", criar um "client secret", e **copiar o valor na hora** (não aparece de novo). Anotar a validade (escolher 24 meses) e marcar na agenda para renovar.
 7. Em "API permissions", garantir que existe `User.Read` (vem por padrão). Nada mais.
-8. Colocar os dois valores no `.env` do servidor: `MS_CLIENT_ID` e `MS_CLIENT_SECRET`.
+8. Colocar os dois valores no `.env` do servidor: `MS_CLIENT_ID` e `MS_CLIENT_SECRET`. Para testar no computador, coloque-os em `infra/env/.env` e rode `docker compose up` de novo: o botão "Entrar com a conta da escola" aparece em `/entrar/`.
+
+## Como testar com uma conta real (etapa E09)
+
+1. Cadastre no `/admin/` um usuário com o seu e-mail `@professor.educacao.sp.gov.br` (sem senha).
+2. Abra `/entrar/` e clique em "Entrar com a conta da escola".
+3. Resultados possíveis:
+   - Voltou para o jornal com seu nome no topo: **funcionou**.
+   - A Microsoft mostrou "aprovação do administrador necessária": **a Secretaria bloqueou**. Use o plano B.
+   - O jornal mostrou "Peça ao administrador para cadastrar você": o e-mail cadastrado é diferente do da conta Microsoft.
 
 O jornal só lê o e-mail e o nome da pessoa. Não acessa arquivos, agenda nem mensagens.
 
@@ -59,3 +68,4 @@ Se preferir que todo mundo use senha própria, basta desligar o botão na config
 ## Histórico
 
 - 2026-09-12: criado após dúvida do dono do projeto.
+- 2026-09-12: E09 implementada; endereço de retorno definitivo, teste local e roteiro de teste com conta real. A configuração "Login com a conta Microsoft da escola ligado" fica em Admin → Configurações.

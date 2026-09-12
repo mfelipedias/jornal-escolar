@@ -1,0 +1,5 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Conta desativada · {{ jornal.name }}{% endblock title %}
+{% block auth_content %}
+  {% include "components/auth_notice.html" with title="Conta desativada" text="Sua conta está desativada. Fale com o administrador do jornal." %}
+{% endblock auth_content %}

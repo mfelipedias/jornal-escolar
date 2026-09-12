@@ -1,0 +1,5 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Não foi possível entrar · {{ jornal.name }}{% endblock title %}
+{% block auth_content %}
+  {% include "components/auth_notice.html" with title="Não foi possível entrar" text="A Microsoft não confirmou o acesso. Tente de novo ou entre com e-mail e senha. Se a mensagem da Microsoft falar em aprovação do administrador, a Secretaria bloqueou o aplicativo." %}
+{% endblock auth_content %}

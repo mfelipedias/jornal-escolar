@@ -1,0 +1,61 @@
+{% extends "layouts/auth.html" %}
+{% load socialaccount %}
+{% block title %}Entrar · {{ jornal.name }}{% endblock title %}
+{% block auth_content %}
+  <h1 class="text-center font-serif text-h2 font-semibold">Entrar</h1>
+  <p class="mt-2 text-center text-ui text-ink-2">Acesso para professores e equipe da escola.</p>
+  {% if microsoft_login_enabled %}
+    <form method="post"
+          action="{% provider_login_url 'microsoft' %}"
+          class="mt-8">
+      {% csrf_token %}
+      {% if redirect_field_value %}
+        <input type="hidden"
+               name="{{ redirect_field_name }}"
+               value="{{ redirect_field_value }}">
+      {% endif %}
+      <button type="submit"
+              class="flex w-full items-center justify-center gap-3 rounded-field bg-accent px-4 py-3 text-ui font-medium text-white transition hover:bg-accent-2">
+        <svg class="size-4" viewBox="0 0 21 21" aria-hidden="true">
+          <path fill="#f25022" d="M1 1h9v9H1z" />
+          <path fill="#7fba00" d="M11 1h9v9h-9z" />
+          <path fill="#00a4ef" d="M1 11h9v9H1z" />
+          <path fill="#ffb900" d="M11 11h9v9h-9z" />
+        </svg>
+        Entrar com a conta da escola
+      </button>
+    </form>
+    <div class="my-8 flex items-center gap-3 text-meta text-ink-3">
+      <span class="h-px flex-1 bg-line"></span>
+      ou com senha
+      <span class="h-px flex-1 bg-line"></span>
+    </div>
+  {% endif %}
+  <form method="post"
+        action="{% url 'accounts:login' %}"
+        class="{% if not microsoft_login_enabled %}mt-8{% endif %}
+               space-y-5"
+        novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="rounded-field border border-danger/30 bg-danger/5 px-4 py-3 text-ui text-danger"
+           role="alert">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {% include "components/form_field.html" with field=form.login label="E-mail" type="email" autocomplete="email" %}
+    {% include "components/form_field.html" with field=form.password label="Senha" type="password" autocomplete="current-password" %}
+    {% if redirect_field_value %}
+      <input type="hidden"
+             name="{{ redirect_field_name }}"
+             value="{{ redirect_field_value }}">
+    {% endif %}
+    <button type="submit"
+            class="w-full rounded-field border border-ink px-4 py-3 text-ui font-medium text-ink transition hover:bg-ink hover:text-paper">
+      Entrar com senha
+    </button>
+  </form>
+  <p class="mt-8 text-center text-meta text-ink-3">
+    Esqueceu a senha ou ainda não tem acesso? Fale com o administrador do jornal.
+  </p>
+{% endblock auth_content %}

@@ -48,6 +48,8 @@ Dentro de `backend/`: `uv run python manage.py <comando>`, `uv run pytest caminh
 - Permissões editoriais só em `apps/editorial/permissions.py` (a partir da E12).
 - `accounts.User`: login por e-mail em minúsculas; `role` (`staff`, `editor`, `admin`) decide permissões; `is_staff`/`is_superuser` são derivados de `role` no `save()`; `staff_kind` é só exibição.
 - Settings em `config/settings/{base,dev,test,prod}.py`, variáveis via `django-environ` a partir de `infra/env/.env`.
+- Identidade do site nos templates é `{{ jornal.name }}`, `{{ jornal.tagline }}` etc. (context processor `apps.core.context_processors.site`). Não use `site`: o allauth e o Django sobrescrevem essa variável. Valores vêm de `apps/core/site_settings.py` (`get_setting("chave")`), editáveis no admin.
+- Login: `django-allauth` com cadastro fechado; adaptadores em `apps/accounts/adapters.py`. Login Microsoft identifica pelo `userPrincipalName`, nunca pelo `mail`.
 - Versão em `VERSION` (raiz) → `settings.APP_VERSION`, `/healthz/`, cabeçalho `X-App-Version`, rodapé.
 - Templates: `layouts/` esqueletos, `components/` peças com `{% include ... with %}`, `<app>/partials/` fragmentos HTMX. Nenhuma cor escrita direto no template: use os tokens do Tailwind (`bg-paper`, `text-ink-2`, `text-accent`, `bg-area-verde-soft`).
 - Frontend: fontes em `frontend/src/` (não em `backend/static/src/`); saída em `backend/static/dist/` (gitignored).

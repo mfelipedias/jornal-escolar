@@ -53,7 +53,9 @@ Regras no sistema:
 - Ativação por "link de primeiro acesso" gerado pelo admin (token de uso único, 7 dias), entregue por qualquer canal.
 - Reset de senha: sem e-mail, o admin gera um novo link. Não existe "esqueci minha senha" automático.
 - Validadores do Django (mínimo 10 caracteres, não comum, não similar ao e-mail). Hash Argon2.
-- Limite de tentativas (5 por 15 min por e-mail e por IP).
+- Limite de tentativas: 5 erros por 15 min por e-mail e 30 por 15 min por IP. **Ajuste da E09:** o limite por IP era 5, mas a escola inteira sai pela mesma conexão; 5 erros de uma pessoa bloqueariam todos os professores. Em produção, `TRUSTED_CLIENT_IP_HEADER=CF-Connecting-IP` faz o limite usar o IP real atrás da Cloudflare.
+- Login Microsoft identifica a pessoa pelo `userPrincipalName`, nunca pelo campo `mail`: em aplicativos multi-tenant, o `mail` pode ser preenchido pelo administrador de qualquer organização Microsoft e permitiria se passar por um professor cadastrado. Contas convidadas (`#EXT#`) são recusadas.
+- As telas de cadastro, recuperação de senha por e-mail e gestão de e-mails do allauth respondem 404. O `/admin/login/` redireciona para `/entrar/`, que tem o limite de tentativas.
 
 ### Sessões
 
