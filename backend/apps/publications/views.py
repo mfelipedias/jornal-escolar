@@ -13,7 +13,7 @@ from apps.editorial import permissions
 
 from . import media
 from .forms import MediaAssetMetadataForm
-from .models import MediaAsset
+from .models import Article, MediaAsset
 
 
 def login_required_json(view):
@@ -31,18 +31,25 @@ def login_required_json(view):
 @require_POST
 @login_required_json
 def media_upload(request: HttpRequest) -> JsonResponse:
-    """POST /x/media/ (multipart, campo "file")."""
+    """POST /x/media/ (multipart, campos "file" e, opcionalmente, "article")."""
     uploaded = request.FILES.get("file")
     if uploaded is None:
         return json_error("missing_file", "Nenhum arquivo enviado.", 400)
     if not permissions.can_upload_media(request.user):
         return json_error("forbidden", "Sua conta não pode enviar imagens.", 403)
+    article = None
+    if request.POST.get("article"):
+        article = Article.objects.filter(pk=request.POST["article"]).first()
+        if article is None or not permissions.can_edit(request.user, article):
+            return json_error(
+                "forbidden", "Você não pode enviar imagens para esta publicação.", 403
+            )
     if not hit(
         f"media-upload:{request.user.pk}", limit=settings.MEDIA_UPLOADS_PER_HOUR, period=3600
     ):
         return json_error("rate_limited", "Muitos envios em pouco tempo. Tente mais tarde.", 429)
     try:
-        asset = media.process_upload(uploaded, request.user)
+        asset = media.process_upload(uploaded, request.user, article=article)
     except media.MediaError as exc:
         return json_error(exc.code, exc.message, exc.status)
     return JsonResponse(media.serialize(asset), status=201)

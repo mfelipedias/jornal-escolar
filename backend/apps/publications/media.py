@@ -22,7 +22,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from apps.accounts.models import User
 
-from .models import MediaAsset
+from .models import Article, MediaAsset
 
 ALLOWED_FORMATS = {
     "JPEG": ("jpg", "image/jpeg"),
@@ -99,7 +99,9 @@ def _resize(image: Image.Image, width: int) -> Image.Image:
 
 
 @transaction.atomic
-def process_upload(uploaded: UploadedFile, user: User) -> MediaAsset:
+def process_upload(
+    uploaded: UploadedFile, user: User, article: Article | None = None
+) -> MediaAsset:
     if uploaded.size is None or uploaded.size > settings.MEDIA_MAX_UPLOAD_BYTES:
         max_mb = settings.MEDIA_MAX_UPLOAD_BYTES // (1024 * 1024)
         raise MediaError("file_too_large", f"A imagem pode ter no máximo {max_mb} MB.", 413)
@@ -141,6 +143,7 @@ def process_upload(uploaded: UploadedFile, user: User) -> MediaAsset:
             size_bytes=total,
             mime=mime,
             uploaded_by=user,
+            article=article,
         )
         asset.file.name = original_path
         asset.save()

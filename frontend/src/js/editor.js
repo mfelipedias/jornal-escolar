@@ -5,6 +5,11 @@ import Typography from "@tiptap/extension-typography";
 import { CharacterCount, Placeholder } from "@tiptap/extensions";
 import StarterKit from "@tiptap/starter-kit";
 
+import { Figure } from "./editor-figure.js";
+
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
 const DEBOUNCE_MS = 2000;
 const MAX_WAIT_MS = 30000;
 const RETRY_MAX_MS = 60000;
@@ -63,10 +68,31 @@ export function initEditor(root) {
       Placeholder.configure({ placeholder: "Comece a escrever…" }),
       CharacterCount,
       Typography,
+      Figure,
     ],
     content: data.body,
     editorProps: {
       attributes: { "aria-label": "Texto da publicação", role: "textbox", "aria-multiline": "true" },
+      handleDrop: (view, event, _slice, moved) => {
+        const files = imageFiles(event.dataTransfer?.files);
+        if (moved || !files.length) return false;
+        event.preventDefault();
+        const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        files.forEach((file) => insertUploadedImage(file, coords?.pos));
+        return true;
+      },
+      handlePaste: (_view, event) => {
+        const files = imageFiles(event.clipboardData?.files);
+        if (!files.length) return false;
+        event.preventDefault();
+        files.forEach((file) => insertUploadedImage(file));
+        return true;
+      },
+      handleDoubleClickOn: (_view, pos, node) => {
+        if (node.type.name !== "figure") return false;
+        openImageDialog(pos);
+        return true;
+      },
     },
     onUpdate: () => markDirty(),
     onSelectionUpdate: () => refreshToolbar(),
@@ -207,6 +233,10 @@ export function initEditor(root) {
     undo: () => editor.chain().focus().undo().run(),
     redo: () => editor.chain().focus().redo().run(),
     link: () => openLinkForm(),
+    image: () => {
+      if (editor.isActive("figure")) openImageDialog(editor.state.selection.from);
+      else fileInput.click();
+    },
   };
   const isActive = {
     paragraph: () => editor.isActive("paragraph"),
@@ -218,6 +248,7 @@ export function initEditor(root) {
     bulletList: () => editor.isActive("bulletList"),
     orderedList: () => editor.isActive("orderedList"),
     blockquote: () => editor.isActive("blockquote"),
+    image: () => editor.isActive("figure"),
   };
 
   toolbar.addEventListener("click", (event) => {
@@ -269,6 +300,177 @@ export function initEditor(root) {
       event.preventDefault();
       openLinkForm();
     }
+  });
+
+  // --- imagens (E16) ---
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = IMAGE_TYPES.join(",");
+  fileInput.multiple = true;
+  fileInput.hidden = true;
+  fileInput.dataset.imageInput = "";
+  root.appendChild(fileInput);
+  fileInput.addEventListener("change", () => {
+    imageFiles(fileInput.files).forEach((file) => insertUploadedImage(file));
+    fileInput.value = "";
+  });
+
+  function imageFiles(list) {
+    return Array.from(list || []).filter((file) => file.type.startsWith("image/"));
+  }
+
+  function uploadImage(file, onProgress) {
+    return new Promise((resolve, reject) => {
+      if (!IMAGE_TYPES.includes(file.type)) {
+        reject(new Error("Envie uma imagem JPG, PNG ou WebP."));
+        return;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        reject(new Error("A imagem pode ter no máximo 10 MB."));
+        return;
+      }
+      const form = new FormData();
+      form.append("file", file);
+      form.append("article", String(data.articleId));
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", data.mediaUrl);
+      xhr.setRequestHeader("X-CSRFToken", csrfToken());
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+      });
+      xhr.addEventListener("load", () => {
+        let body = {};
+        try {
+          body = JSON.parse(xhr.responseText);
+        } catch {
+          // resposta sem JSON
+        }
+        if (xhr.status === 201) resolve(body);
+        else reject(new Error(body.error?.message || "Não foi possível enviar a imagem."));
+      });
+      xhr.addEventListener("error", () => reject(new Error("Falha de conexão ao enviar a imagem.")));
+      xhr.send(form);
+    });
+  }
+
+  async function insertUploadedImage(file, pos) {
+    try {
+      const asset = await uploadImage(file, (pct) => setStatus(`Enviando imagem… ${pct}%`));
+      const node = {
+        type: "figure",
+        attrs: { assetId: asset.id, src: asset.variants.w960 || asset.url, alt: "", size: "normal" },
+      };
+      if (pos === undefined) editor.chain().focus().insertContent(node).run();
+      else editor.chain().focus().insertContentAt(pos, node).run();
+      const figurePos = findFigure(asset.id);
+      if (figurePos !== null) openImageDialog(figurePos, true);
+    } catch (error) {
+      setStatus(error.message, "error");
+    }
+  }
+
+  function findFigure(assetId) {
+    let found = null;
+    editor.state.doc.descendants((node, position) => {
+      if (found === null && node.type.name === "figure" && node.attrs.assetId === assetId) {
+        found = position;
+      }
+    });
+    return found;
+  }
+
+  const dialog = document.querySelector("[data-image-dialog]");
+  const dialogForm = dialog.querySelector("form");
+  let dialogPos = null;
+
+  async function openImageDialog(pos, isNew = false) {
+    const node = editor.state.doc.nodeAt(pos);
+    if (!node || node.type.name !== "figure") return;
+    dialogPos = pos;
+    const fields = dialogForm.elements;
+    fields.alt.value = node.attrs.alt || "";
+    fields.caption.value = node.attrs.caption || "";
+    fields.credit.value = node.attrs.credit || "";
+    fields.size.value = node.attrs.size || "normal";
+    fields.is_decorative.checked = false;
+    fields.has_people.checked = false;
+    fields.consent_ok.checked = false;
+    dialog.querySelector("[data-image-preview]").src = node.attrs.src || "";
+    dialog.querySelector("[data-image-error]").hidden = true;
+    dialog.querySelector("[data-image-new]").hidden = !isNew;
+    dialog.showModal();
+    try {
+      const response = await fetch(`${data.mediaUrl}${node.attrs.assetId}/`, { credentials: "same-origin" });
+      if (response.ok) {
+        const asset = await response.json();
+        fields.is_decorative.checked = asset.is_decorative;
+        fields.has_people.checked = asset.has_people;
+        fields.consent_ok.checked = asset.consent_ok;
+        if (!fields.alt.value) fields.alt.value = asset.alt_text;
+        if (!fields.credit.value) fields.credit.value = asset.credit;
+      }
+    } catch {
+      // mantém os valores do nó
+    }
+    fields.alt.focus();
+  }
+
+  dialogForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (event.submitter?.value === "cancel") {
+      dialog.close();
+      return;
+    }
+    const fields = dialogForm.elements;
+    const node = editor.state.doc.nodeAt(dialogPos);
+    const errorEl = dialog.querySelector("[data-image-error]");
+    if (!node) {
+      dialog.close();
+      return;
+    }
+    if (event.submitter?.value === "remove") {
+      editor.chain().focus().setNodeSelection(dialogPos).deleteSelection().run();
+      dialog.close();
+      return;
+    }
+    if (!fields.is_decorative.checked && !fields.alt.value.trim()) {
+      errorEl.textContent = "Descreva a imagem ou marque como decorativa.";
+      errorEl.hidden = false;
+      fields.alt.focus();
+      return;
+    }
+    const metadata = {
+      alt_text: fields.alt.value.trim(),
+      is_decorative: fields.is_decorative.checked,
+      credit: fields.credit.value.trim(),
+      has_people: fields.has_people.checked,
+      consent_ok: fields.consent_ok.checked,
+    };
+    const response = await fetch(`${data.mediaUrl}${node.attrs.assetId}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+      credentials: "same-origin",
+      body: JSON.stringify(metadata),
+    }).catch(() => null);
+    if (!response?.ok) {
+      const body = response ? await response.json().catch(() => ({})) : {};
+      errorEl.textContent = body.error?.message || "Não foi possível salvar os dados da imagem.";
+      errorEl.hidden = false;
+      return;
+    }
+    editor
+      .chain()
+      .focus()
+      .setNodeSelection(dialogPos)
+      .updateAttributes("figure", {
+        alt: metadata.is_decorative ? "" : metadata.alt_text,
+        caption: fields.caption.value.trim(),
+        credit: metadata.credit,
+        size: fields.size.value === "wide" ? "wide" : "normal",
+      })
+      .run();
+    dialog.close();
+    document.body.dispatchEvent(new CustomEvent("articleSaved")); // autorização muda a checklist
   });
 
   // O painel lateral (HTMX) também altera a publicação: acompanha o updated_at dele.

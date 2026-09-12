@@ -314,6 +314,20 @@ def sanitize(markup: str) -> str:
     )
 
 
+def _editor_document(node: dict, assets: dict[int, MediaAsset]) -> dict | None:
+    """Documento para o editor: figuras ganham "src" calculado pelo servidor (para exibir a
+    imagem ao reabrir) e figuras sem imagem válida saem. O "src" nunca vem do navegador."""
+    if node["type"] == "figure":
+        asset = assets.get(node["attrs"]["assetId"])
+        if asset is None:
+            return None
+        return {**node, "attrs": {**node["attrs"], "src": asset.variant_url("w960")}}
+    if "content" not in node:
+        return node
+    children = [c for c in (_editor_document(child, assets) for child in node["content"]) if c]
+    return {**node, "content": children}
+
+
 def render(document: Any, allowed_assets: set[int] | None = None) -> RenderResult:
     clean = normalize(document, allowed_assets)
     ids = collect_asset_ids(clean)
@@ -323,7 +337,7 @@ def render(document: Any, allowed_assets: set[int] | None = None) -> RenderResul
     text = "\n\n".join(block.strip() for block in renderer.text_blocks if block.strip())
     words = len(text.split())
     return RenderResult(
-        document=clean,
+        document=_editor_document(clean, assets) or {"type": "doc", "content": []},
         html=markup,
         text=text,
         words=words,

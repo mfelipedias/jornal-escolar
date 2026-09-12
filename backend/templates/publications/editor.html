@@ -16,6 +16,7 @@
 {% endblock editor_actions %}
 {% block content %}
   {{ editor_data|json_script:"editor-data" }}
+  {% include "publications/partials/image_dialog.html" %}
   <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem]"
        x-data="{ details: false }"
        @toggle-details.window="details = !details">
@@ -54,6 +55,7 @@
         </div>
         {% include "publications/partials/checklist.html" %}
         {% include "publications/partials/meta_form.html" %}
+        {% include "publications/partials/cover.html" %}
         {% include "publications/partials/credits.html" %}
       </div>
     </aside>

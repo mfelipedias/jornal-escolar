@@ -1,0 +1,93 @@
+{% comment %}
+  Imagem de capa (docs/16). Escolhe entre as imagens do texto ou envia uma nova.
+  Parâmetros: article, article_images, cover_error, oob.
+{% endcomment %}
+<section id="editor-cover"
+         {% if oob %}hx-swap-oob="true"{% endif %}
+         hx-get="{% url 'publications:save_cover' article.pk %}"
+         hx-trigger="articleSaved from:body delay:500ms"
+         hx-swap="outerHTML"
+         class="editor-panel"
+         aria-labelledby="cover-title">
+  <h2 id="cover-title" class="editor-panel-title">Capa</h2>
+  {% if cover_error %}
+    <p class="mb-2 rounded-field border border-danger/30 bg-danger/5 px-3 py-2 text-meta text-danger"
+       role="alert">{{ cover_error }}</p>
+  {% endif %}
+  {% if article.cover %}
+    <figure>
+      <img src="{{ article.cover.variant_urls.w480 }}"
+           alt="{{ article.cover.alt_text }}"
+           class="aspect-[3/2] w-full rounded-card object-cover">
+      {% if not article.cover.alt_text and not article.cover.is_decorative %}
+        <figcaption class="mt-1 text-meta text-warn">Sem texto alternativo: edite a imagem no texto ou no admin.</figcaption>
+      {% endif %}
+    </figure>
+    <form class="mt-2 space-y-2"
+          hx-post="{% url 'publications:save_cover' article.pk %}"
+          hx-target="#editor-cover"
+          hx-swap="outerHTML">
+      <input type="hidden" name="asset" value="{{ article.cover_id }}">
+      <label for="cover-caption" class="block text-meta font-medium text-ink-2">Legenda da capa</label>
+      <input id="cover-caption"
+             name="cover_caption"
+             maxlength="200"
+             value="{{ article.cover_caption }}"
+             class="field"
+             hx-post="{% url 'publications:save_cover' article.pk %}"
+             hx-trigger="change"
+             hx-target="#editor-cover"
+             hx-swap="outerHTML"
+             hx-include="closest form">
+    </form>
+    <form hx-post="{% url 'publications:save_cover' article.pk %}"
+          hx-target="#editor-cover"
+          hx-swap="outerHTML">
+      <input type="hidden" name="remove" value="1">
+      <button type="submit" class="btn-ghost -ml-2 mt-1 text-meta">Remover capa</button>
+    </form>
+  {% else %}
+    <p class="text-meta text-ink-3">Opcional, mas necessária para aparecer em destaque na página inicial.</p>
+  {% endif %}
+  {% with others=article_images %}
+    {% if others %}
+      <p class="mt-3 text-meta font-medium text-ink-2">Usar uma imagem do texto</p>
+      <div class="mt-1.5 grid grid-cols-4 gap-1.5">
+        {% for image in others %}
+          {% if image.pk != article.cover_id %}
+            <form hx-post="{% url 'publications:save_cover' article.pk %}"
+                  hx-target="#editor-cover"
+                  hx-swap="outerHTML">
+              <input type="hidden" name="asset" value="{{ image.pk }}">
+              <button type="submit"
+                      class="block overflow-hidden rounded-field border border-line hover:border-accent"
+                      title="Usar como capa">
+                <img src="{{ image.variant_urls.w480 }}"
+                     alt="Usar como capa: {{ image.alt_text|default:'imagem sem descrição' }}"
+                     class="aspect-square w-full object-cover">
+              </button>
+            </form>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  <form class="mt-3"
+        hx-post="{% url 'publications:save_cover' article.pk %}"
+        hx-target="#editor-cover"
+        hx-swap="outerHTML"
+        hx-encoding="multipart/form-data"
+        hx-trigger="change">
+    <label class="btn-secondary w-full cursor-pointer text-meta">
+      {% if article.cover %}
+        Trocar por nova imagem
+      {% else %}
+        Enviar imagem de capa
+      {% endif %}
+      <input type="file"
+             name="file"
+             accept="image/jpeg,image/png,image/webp"
+             class="sr-only">
+    </label>
+  </form>
+</section>

@@ -51,6 +51,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Estilos do corpo das publicações (`.article-body`) compartilhados entre editor e página pública; botão "Escrever" no cabeçalho; página 403.
 - Painel lateral do editor (E15): tipo (com data e local para eventos), disciplinas por área, tópicos, fontes, comentários abertos; créditos de colegas (busca), alunos (turma e autorização) e outros; checklist ao vivo; botões Publicar, Arquivar (com motivo) e Restaurar. No celular, o painel abre em "Detalhes".
 - Aviso de conflito só quando outra pessoa salvou (`last_edited_by`); edições seguidas de texto publicado agrupadas numa única versão por 15 minutos.
+- Imagens no editor (E16): botão, arrastar e soltar ou colar; progresso do envio; diálogo com texto alternativo (ou decorativa), legenda, crédito, tamanho, pessoas na imagem e autorização; duplo clique reabre o diálogo.
+- Capa da publicação no painel lateral: enviar nova ou escolher entre as imagens do texto, com legenda; a lista se atualiza após cada salvamento.
+- O documento salvo guarda o endereço de cada imagem calculado pelo servidor, para o editor exibi-la ao reabrir.
 
 ### Alterado
 

@@ -11,6 +11,7 @@ urlpatterns = [
     # Endpoints internos do editor
     path("x/articles/<int:pk>/body/", editor_views.save_body, name="save_body"),
     path("x/articles/<int:pk>/meta/", editor_views.save_meta, name="save_meta"),
+    path("x/articles/<int:pk>/cover/", editor_views.save_cover, name="save_cover"),
     path("x/articles/<int:pk>/checklist/", editor_views.checklist, name="checklist"),
     path("x/articles/<int:pk>/contributors/", editor_views.add_contributor, name="add_contributor"),
     path(

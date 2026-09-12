@@ -17,10 +17,11 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from apps.accounts.models import User
 from apps.core.http import json_error
+from apps.core.ratelimit import hit
 from apps.editorial import permissions
 
-from . import selectors, services
-from .models import Article, ArticleContributor
+from . import media, selectors, services
+from .models import Article, ArticleContributor, MediaAsset
 from .views import login_required_json
 
 # --- telas ---
@@ -64,6 +65,7 @@ def sidebar_context(request: HttpRequest, article: Article, **extra: Any) -> dic
             for r in ArticleContributor.Role.choices
             if r[0] in ("author", "coauthor", "collaborator")
         ],
+        "article_images": article.media_assets.order_by("-created_at")[:24],
         "checklist": items,
         "blocking": blocking,
         "can_publish": permissions.can_publish(request.user, article),
@@ -90,6 +92,7 @@ def edit(request: HttpRequest, pk: int) -> HttpResponse:
         "body": article.body_json or {"type": "doc", "content": []},
         "updatedAt": article.updated_at.isoformat(),
         "saveUrl": reverse("publications:save_body", args=[article.pk]),
+        "mediaUrl": reverse("publications:media_upload"),
         "status": article.status,
     }
     context = sidebar_context(request, article, editor_data=editor_data)
@@ -215,6 +218,41 @@ def save_meta(request: HttpRequest, pk: int) -> HttpResponse:
     )
     response = render(request, "publications/partials/meta_response.html", context)
     return _with_updated_at(response, article)
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+def save_cover(request: HttpRequest, pk: int) -> HttpResponse:
+    """/x/articles/<id>/cover/: GET atualiza a seção (novas imagens no texto); POST envia nova
+    capa (file), escolhe uma imagem (asset) ou remove (remove)."""
+    article = _editable_article(request, pk)
+    if request.method == "GET":
+        return render(
+            request, "publications/partials/cover.html", sidebar_context(request, article)
+        )
+    error = ""
+    try:
+        if request.POST.get("remove"):
+            services.set_cover(request.user, article, None)
+        elif request.FILES.get("file"):
+            if not hit(
+                f"media-upload:{request.user.pk}",
+                limit=settings.MEDIA_UPLOADS_PER_HOUR,
+                period=3600,
+            ):
+                raise media.MediaError("rate_limited", "Muitos envios em pouco tempo.", 429)
+            asset = media.process_upload(request.FILES["file"], request.user, article=article)
+            services.set_cover(request.user, article, asset, request.POST.get("cover_caption", ""))
+        else:
+            asset = get_object_or_404(MediaAsset, pk=request.POST.get("asset"))
+            services.set_cover(request.user, article, asset, request.POST.get("cover_caption", ""))
+    except media.MediaError as exc:
+        error = exc.message
+    article.refresh_from_db()
+    context = sidebar_context(request, article, cover_error=error)
+    return _with_updated_at(
+        render(request, "publications/partials/cover_response.html", context), article
+    )
 
 
 @require_GET

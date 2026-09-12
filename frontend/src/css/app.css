@@ -197,6 +197,16 @@
     & > * + * {
       margin-top: 1.1em;
     }
+    & .editor-figure {
+      cursor: pointer;
+    }
+    & .editor-figure figcaption:not(:has(span:not(:empty))) {
+      display: none;
+    }
+    & .ProseMirror-selectednode img {
+      outline: 3px solid var(--color-accent);
+      outline-offset: 2px;
+    }
     & p.is-editor-empty:first-child::before {
       content: attr(data-placeholder);
       float: left;

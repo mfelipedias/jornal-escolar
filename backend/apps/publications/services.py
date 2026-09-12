@@ -297,6 +297,24 @@ def set_metadata(
     return current
 
 
+@transaction.atomic
+def set_cover(user: User, article: Article, asset: MediaAsset | None, caption: str = "") -> Article:
+    """Define ou remove a imagem de capa. Só imagens que a pessoa pode usar neste texto."""
+    current = _locked(article)
+    if not permissions.can_edit(user, current):
+        raise PermissionDenied
+    if asset is not None and asset.pk not in usable_asset_ids(user, current, {asset.pk}):
+        raise PermissionDenied
+    if asset is not None and asset.article_id is None:
+        MediaAsset.objects.filter(pk=asset.pk).update(article=current)
+    current.cover = asset
+    current.cover_caption = " ".join(caption.split())[:200] if asset else ""
+    current.last_edited_by = user
+    current.save(update_fields=["cover", "cover_caption", "last_edited_by", "updated_at"])
+    _sync(article, current, ["cover_id", "cover_caption", "updated_at"])
+    return current
+
+
 def clean_sources(sources: list[dict]) -> list[dict]:
     """Fontes: título obrigatório e URL http(s) válida; linhas vazias são ignoradas."""
     cleaned: list[dict] = []

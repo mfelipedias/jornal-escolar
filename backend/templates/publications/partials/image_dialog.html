@@ -1,0 +1,76 @@
+{% comment %}Diálogo da imagem no editor (docs/16, "Upload de imagens"). Controlado por editor.js.{% endcomment %}
+<dialog data-image-dialog
+        aria-labelledby="image-dialog-title"
+        class="m-auto w-[min(34rem,calc(100vw-2rem))] rounded-card border border-line bg-paper p-0 shadow-popover backdrop:bg-ink/40">
+  <form method="dialog" class="space-y-3 p-5" novalidate>
+    <h2 id="image-dialog-title" class="font-serif text-h3 font-semibold">Dados da imagem</h2>
+    <p class="text-meta text-ink-2" data-image-new hidden>Imagem enviada. Complete as informações abaixo.</p>
+    <img data-image-preview
+         alt=""
+         class="max-h-48 w-full rounded-field bg-paper-2 object-contain">
+    <p class="rounded-field border border-danger/30 bg-danger/5 px-3 py-2 text-meta text-danger"
+       role="alert"
+       data-image-error
+       hidden></p>
+    <div>
+      {# djlint:off H042 (o djlint não reconhece o id do textarea abaixo) #}
+      <label for="image-alt" class="block text-meta font-medium text-ink">Texto alternativo</label>
+      {# djlint:on #}
+      <textarea id="image-alt"
+                name="alt"
+                rows="2"
+                maxlength="250"
+                class="field mt-1"
+                aria-describedby="image-alt-help"></textarea>
+      <p id="image-alt-help" class="mt-1 text-meta text-ink-3">
+        Descreva o que aparece, para quem não enxerga a imagem. Ex.: “Alunos apresentando maquete de usina solar”.
+      </p>
+      <label class="mt-1.5 flex items-center gap-2 text-meta text-ink-2">
+        <input type="checkbox" name="is_decorative" class="size-4 accent-accent">
+        Imagem decorativa (não traz informação)
+      </label>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div>
+        <label for="image-caption" class="block text-meta font-medium text-ink">Legenda</label>
+        <input id="image-caption" name="caption" maxlength="300" class="field mt-1">
+      </div>
+      <div>
+        <label for="image-credit" class="block text-meta font-medium text-ink">Crédito</label>
+        <input id="image-credit"
+               name="credit"
+               maxlength="120"
+               placeholder="Foto: Grêmio"
+               class="field mt-1">
+      </div>
+    </div>
+    <div>
+      <label for="image-size" class="block text-meta font-medium text-ink">Tamanho</label>
+      <select id="image-size" name="size" class="field mt-1">
+        <option value="normal">Largura do texto</option>
+        <option value="wide">Larga</option>
+      </select>
+    </div>
+    <fieldset class="rounded-field border border-line p-3">
+      <legend class="px-1 text-meta font-medium text-ink">Pessoas na imagem</legend>
+      <label class="flex items-center gap-2 text-meta text-ink">
+        <input type="checkbox" name="has_people" class="size-4 accent-accent">
+        Aparecem pessoas que podem ser reconhecidas
+      </label>
+      <label class="mt-1.5 flex items-start gap-2 text-meta text-ink">
+        <input type="checkbox" name="consent_ok" class="mt-0.5 size-4 accent-accent">
+        Tenho autorização de uso de imagem dessas pessoas (ou dos responsáveis)
+      </label>
+    </fieldset>
+    <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+      <button type="submit"
+              value="remove"
+              class="btn-ghost text-danger"
+              formnovalidate>Remover imagem</button>
+      <div class="flex gap-2">
+        <button type="submit" value="cancel" class="btn-ghost" formnovalidate>Cancelar</button>
+        <button type="submit" value="save" class="btn-primary">Salvar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
