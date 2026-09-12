@@ -16,6 +16,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Usuário customizado `accounts.User` com login por e-mail (sempre em minúsculas), papel (`role`), cargo (`staff_kind`) e senhas em Argon2 (E03).
 - Cadastro de usuários no Django Admin; só o papel `admin` acessa o Django Admin.
 - `make db-reset` para recriar o banco de desenvolvimento.
+- Frontend com Vite, Tailwind 4, HTMX e Alpine via `django-vite`; fontes Newsreader e Inter auto-hospedadas (E04).
+- Tokens do design system, glifo e wordmark "Jornal Escolar", favicon.
+- `base.html`, `layouts/public.html`, masthead, rodapé com crédito e versão, página inicial provisória.
+- Comandos `make assets-install`, `assets-dev` e `assets`.
 
 ### Corrigido
 

@@ -1,11 +1,23 @@
+{% load static django_vite %}
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Jornal Escolar{% endblock title %}</title>
+    <title>{% block title %}{{ site.name }}{% endblock title %}</title>
+    <meta name="description"
+          content="{% block description %}{{ site.tagline }}{% endblock description %}">
+    <meta name="theme-color" content="#FBF9F5">
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+    {% vite_hmr_client %}
+    {% vite_asset 'src/js/app.js' %}
+    {% block head %}
+    {% endblock head %}
   </head>
-  <body>
+  <body class="min-h-screen bg-paper text-ink"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <a href="#conteudo"
+       class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-field focus:bg-accent focus:px-4 focus:py-2 focus:text-ui focus:text-white">Pular para o conteúdo</a>
     {% block body %}
     {% endblock body %}
   </body>

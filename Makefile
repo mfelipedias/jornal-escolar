@@ -7,7 +7,7 @@ MANAGE = $(UV) python manage.py
 COMPOSE = docker compose -f infra/docker-compose.dev.yml --env-file infra/env/.env
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser
+.PHONY: help install assets-install assets-dev assets hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser
 
 help:
 	@echo Jornal Escolar - comandos disponiveis:
@@ -17,6 +17,9 @@ help:
 	@echo   make format           formata codigo Python e templates
 	@echo   make test             roda os testes (precisa do banco: make db)
 	@echo   make secret-key       gera um SECRET_KEY para o .env
+	@echo   make assets-install   instala os pacotes do frontend (npm)
+	@echo   make assets-dev       servidor do Vite com recarga automatica (deixe aberto em outro terminal)
+	@echo   make assets           gera CSS e JS finais em backend/static/dist
 	@echo   make dev              sobe banco e Django no Docker (http://localhost:8000)
 	@echo   make dev-native       sobe o banco no Docker e o Django no Windows
 	@echo   make db               sobe so o banco no Docker, em segundo plano
@@ -28,8 +31,17 @@ help:
 	@echo   make shell            abre o shell do Django
 	@echo   make superuser        cria um usuario administrador
 
-install:
+install: assets-install
 	uv sync --directory backend
+
+assets-install:
+	npm install --prefix frontend
+
+assets-dev:
+	npm run dev --prefix frontend
+
+assets:
+	npm run build --prefix frontend
 
 hooks: install
 	$(UV) pre-commit install

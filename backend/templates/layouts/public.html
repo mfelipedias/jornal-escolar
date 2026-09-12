@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+  <div class="flex min-h-screen flex-col">
+    {% include "components/masthead.html" %}
+    <main id="conteudo" class="flex-1" tabindex="-1">
+      {% block content %}
+      {% endblock content %}
+    </main>
+    {% include "components/footer.html" %}
+  </div>
+{% endblock body %}

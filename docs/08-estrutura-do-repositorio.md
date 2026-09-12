@@ -104,11 +104,13 @@ jornal_escolar/
 
 ## Fluxo de assets
 
-1. `static/src/css/app.css` importa Tailwind e define tokens (ver [09](09-design-system.md)).
-2. `static/src/js/app.js` importa HTMX e Alpine e registra componentes globais.
-3. `static/src/js/editor.js` importa TipTap e extensões; expõe `window.initEditor(el, options)`.
-4. Vite gera `static/dist/` com hash nos nomes e `manifest.json`.
-5. `django-vite` lê o manifest e injeta as tags nos templates (`{% vite_asset 'js/app.js' %}`).
+**Mudança na E04:** o código-fonte de CSS e JS fica em `frontend/src/`, e não em `backend/static/src/`. Os pacotes npm ficam em `frontend/node_modules`, e o Vite e o Tailwind só os encontram a partir de arquivos dentro de `frontend/`. As fontes vêm dos pacotes Fontsource e são empacotadas pelo Vite; `backend/static/fonts/` não é usado. Onde a árvore acima diz `static/src/` e `static/fonts/`, leia `frontend/src/` e "dentro do build".
+
+1. `frontend/src/css/app.css` importa Tailwind, as fontes e define tokens (ver [09](09-design-system.md)).
+2. `frontend/src/js/app.js` importa o CSS, HTMX e Alpine.
+3. `frontend/src/js/editor.js` (E14) importa TipTap e extensões; expõe `window.initEditor(el, options)`.
+4. Vite gera `backend/static/dist/` com hash nos nomes e `manifest.json` (`make assets`).
+5. `django-vite` lê o manifest e injeta as tags nos templates (`{% vite_asset 'src/js/app.js' %}`). Em desenvolvimento, com `make assets-dev` aberto, as tags apontam para o servidor do Vite (porta 5173) e a página recarrega sozinha ao editar CSS.
 6. Em produção, o Dockerfile roda o build do Vite na etapa Node e copia `dist/` para a imagem Python; `collectstatic` + WhiteNoise servem com cache longo.
 
 ## Ambiente de desenvolvimento no Windows
@@ -131,3 +133,4 @@ Na prática (E01), o desenvolvimento começou no modo **nativo**:
 - 2026-09-12: versão inicial.
 - 2026-09-12: `VERSION` e `CHANGELOG.md`; sem `emails/`; apps ajustadas às decisões.
 - 2026-09-12: E01 executada; notas sobre make no Windows e Python 3.13.
+- 2026-09-12: E04: fontes de CSS/JS em `frontend/src/`; fontes tipográficas via Fontsource no build.

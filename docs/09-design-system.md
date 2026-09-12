@@ -35,7 +35,7 @@ Definidos como variáveis CSS em `static/src/css/app.css` e expostos ao Tailwind
 | `--color-ink-2` | `#4B4955` | Texto secundário, subtítulos |
 | `--color-ink-3` | `#7B7885` | Metadados, legendas, placeholders |
 | `--color-line` | `#E0DBD2` | Bordas e separadores |
-| `--color-accent` | `#A8174F` | Rosa da marca: links, botões primários, foco, "Rosa" no wordmark |
+| `--color-accent` | `#A8174F` | Rosa da marca: links, botões primários, foco, "Escolar" no wordmark |
 | `--color-accent-2` | `#8A1140` | Hover do acento |
 | `--color-accent-soft` | `#FBE4EC` | Fundo de destaque suave, seleção |
 | `--color-warn` | `#B45309` | Avisos |
@@ -67,7 +67,7 @@ Cada `KnowledgeArea` escolhe uma cor entre estas oito, mais vivas que em um jorn
 | Corpo de leitura | **Newsreader** 400, tamanho 18 a 19px, entrelinha 1.6 | Georgia, serif | Corpo da publicação |
 | Interface | **Inter** (variável) | system-ui, sans-serif | Navegação, botões, formulários, metadados, painel |
 
-Fontes auto-hospedadas em `static/fonts/` (licença OFL), com `font-display: swap`. Sem Google Fonts em produção: evita requisição externa e rastreamento.
+Fontes auto-hospedadas (licença OFL), com `font-display: swap`, vindas dos pacotes `@fontsource-variable/newsreader` (eixo óptico, com itálico) e `@fontsource-variable/inter` e servidas pelo próprio site a partir do build do Vite. Sem Google Fonts em produção: evita requisição externa e rastreamento.
 
 Escala (desktop; mobile reduz um passo nos maiores):
 
@@ -200,3 +200,4 @@ Fora do escopo por decisão do dono do projeto. Preparação sem custo: todas as
 - 2026-09-12: versão inicial.
 - 2026-09-12: nome e marca "Jornal da Rosa"; acento rosa; áreas mais vivas com nomes da escola; componentes de comentário, clima e notificação; versão no rodapé; modo escuro fora do escopo.
 - 2026-09-12: nome genérico "Jornal Escolar" a pedido do dono do projeto; glifo trocado de rosa para folha de jornal; a cor de acento rosa se mantém.
+- 2026-09-12: E04 implementada. Tokens em `frontend/src/css/app.css` (cores de área como `area-coral`, `area-coral-soft` etc.); glifo em `templates/components/glyph.html` e `static/img/favicon.svg`. Masthead provisório sem busca, "Entrar" e linha de áreas (chegam em E36, E09 e E21); rodapé sem a linha de links até as páginas existirem. Data do masthead em minúsculas ("sábado, 12 de setembro de 2026").

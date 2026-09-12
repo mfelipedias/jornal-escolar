@@ -1,0 +1,19 @@
+{% comment %}
+  Cabeçalho público (docs/09, "Masthead").
+  Provisório na E04: busca chega na E36, "Entrar" na E09 e a linha de áreas na E21.
+{% endcomment %}
+<header class="border-b border-line">
+  <div class="site-container flex items-center justify-between gap-4 py-4 sm:py-6">
+    <a href="{% url 'core:home' %}"
+       class="group flex items-center gap-2.5 text-ink sm:gap-3"
+       aria-label="{{ site.name }}, página inicial">
+      {% include "components/glyph.html" with class="size-7 shrink-0 text-accent sm:size-8" %}
+      <span class="font-serif text-2xl leading-none font-semibold tracking-tight sm:text-[1.75rem]">
+        {% if site.wordmark_head %}{{ site.wordmark_head }}{% endif %}
+        <span class="text-accent">{{ site.wordmark_accent }}</span>
+      </span>
+    </a>
+    {% now "l, j \d\e F \d\e Y" as today %}
+    <p class="hidden text-meta text-ink-3 sm:block">{{ today|lower }}</p>
+  </div>
+</header>

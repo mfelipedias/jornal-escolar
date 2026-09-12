@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_vite",
     "apps.core",
     "apps.accounts",
 ]
@@ -70,6 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context_processors.site",
             ],
         },
     },
@@ -101,9 +103,20 @@ TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# CSS e JS gerados pelo Vite a partir de frontend/ (docs/08, "Fluxo de assets").
+# Em modo dev, as páginas carregam direto do servidor do Vite (make assets-dev).
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": env.bool("VITE_DEV_MODE", default=False),
+        "dev_server_port": 5173,
+        "static_url_prefix": "dist",
+        "manifest_path": BASE_DIR / "static" / "dist" / "manifest.json",
+    }
+}
 
 MEDIA_URL = env.str("MEDIA_URL", default="/media/")
 MEDIA_ROOT = Path(env.str("MEDIA_ROOT", default=str(BASE_DIR / "media")))
