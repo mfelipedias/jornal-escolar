@@ -1,0 +1,40 @@
+# Roda antes de cada commit. Instalar com: make hooks
+# ruff e djlint rodam via uv para usar as mesmas versões do backend/uv.lock.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff (lint)
+        entry: uv run --directory backend ruff check --fix --force-exclude
+        language: system
+        types: [python]
+        files: ^backend/
+        pass_filenames: false
+      - id: ruff-format
+        name: ruff (formatação)
+        entry: uv run --directory backend ruff format --force-exclude
+        language: system
+        types: [python]
+        files: ^backend/
+        pass_filenames: false
+      - id: djlint
+        name: djlint (templates)
+        entry: uv run --directory backend djlint templates --lint
+        language: system
+        files: ^backend/templates/.*\.html$
+        pass_filenames: false

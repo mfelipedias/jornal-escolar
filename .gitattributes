@@ -1,2 +1,12 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Texto sempre com LF, inclusive no Windows: scripts .sh quebram no Docker com CRLF.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
