@@ -12,10 +12,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Pré-visualização para autores e editores (rascunhos em `/publicacoes/previa/<id>/`), com faixa de aviso e sem indexação; botões "Pré-visualizar" e "Ver no site" no editor; link "Editar" na página.
 - Publicação arquivada responde 410; página 404 própria.
 - Modelo de termo de autorização de uso de nome e imagem de alunos, com revogação e processo para a secretaria, em `docs/33` (E06b; falta aprovação da direção).
+- Componentes do design system (E19): card de publicação em quatro variantes (destaque, padrão, compacto e mini), assinatura com avatares, etiquetas de área, disciplina, tipo e tópico, estado editorial, estado vazio, paginação ("Carregar mais" e numerada) e toasts.
+- Vitrine dos componentes em `/dev/components/`, aberta em desenvolvimento e para administradores.
+- Mensagens do sistema aparecem como toast no canto da tela, inclusive em ações sem recarregar a página; erros e avisos ficam até serem fechados.
 
 ### Alterado
 
 - Cor `ink-3` escurecida (`#6B6875`) para atingir contraste AA em textos pequenos.
+- Cor de área âmbar escurecida (`#8F5A00`) para atingir contraste AA nas etiquetas.
+- "Leia também" e o cabeçalho da publicação usam os novos componentes.
 
 ## [0.3.0] - 2026-09-12
 

@@ -1,7 +1,7 @@
 {% extends "layouts/editor.html" %}
 {% block title %}{{ article.title }} · Editor · {{ jornal.name }}{% endblock title %}
 {% block editor_status %}
-  <span class="rounded-full bg-paper-2 px-2.5 py-0.5 text-meta font-medium text-ink-2">{{ article.get_status_display }}</span>
+  {% include "components/status_badge.html" with status=article.status %}
   <span class="hidden text-meta text-ink-3 sm:inline"
         data-save-status
         role="status"
@@ -22,7 +22,6 @@
        @toggle-details.window="details = !details">
     <div class="px-4 pt-10 pb-32 sm:px-8" data-editor-root>
       <div class="mx-auto w-full max-w-reading">
-        {% include "components/messages.html" %}
         <label for="editor-title" class="sr-only">Título</label>
         <textarea id="editor-title"
                   data-editor-title

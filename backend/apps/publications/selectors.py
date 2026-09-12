@@ -22,20 +22,31 @@ def active_topics() -> QuerySet[Topic]:
     return Topic.objects.filter(is_active=True)
 
 
+def _credited_contributors() -> Prefetch:
+    return Prefetch(
+        "contributors",
+        queryset=ArticleContributor.objects.filter(show_in_credits=True)
+        .select_related("user", "user__profile", "user__avatar")
+        .order_by("order", "pk"),
+    )
+
+
+def _with_disciplines() -> Prefetch:
+    return Prefetch("disciplines", queryset=Discipline.objects.select_related("area"))
+
+
+def for_cards(queryset: QuerySet[Article]) -> QuerySet[Article]:
+    """Carrega o que presentation.card() usa, para listas sem uma consulta por card."""
+    return queryset.select_related("type", "cover").prefetch_related(
+        _with_disciplines(), _credited_contributors()
+    )
+
+
 def article_for_page(**lookup) -> Article | None:
     """Publicação com tudo que a página pública precisa, em poucas consultas."""
     return (
         Article.objects.select_related("type", "cover")
-        .prefetch_related(
-            Prefetch("disciplines", queryset=Discipline.objects.select_related("area")),
-            "topics",
-            Prefetch(
-                "contributors",
-                queryset=ArticleContributor.objects.filter(show_in_credits=True)
-                .select_related("user", "user__profile", "user__avatar")
-                .order_by("order", "pk"),
-            ),
-        )
+        .prefetch_related(_with_disciplines(), "topics", _credited_contributors())
         .filter(**lookup)
         .first()
     )
@@ -47,17 +58,14 @@ def related_articles(article: Article, limit: int = 3) -> list[Article]:
     topic_ids = [t.pk for t in article.topics.all()]
     if not discipline_ids and not topic_ids:
         return []
-    return list(
+    related = (
         Article.objects.filter(status=Article.Status.PUBLISHED)
         .filter(Q(disciplines__in=discipline_ids) | Q(topics__in=topic_ids))
         .exclude(pk=article.pk)
-        .select_related("type", "cover")
-        .prefetch_related(
-            Prefetch("disciplines", queryset=Discipline.objects.select_related("area"))
-        )
         .distinct()
-        .order_by("-published_at")[:limit]
+        .order_by("-published_at")
     )
+    return list(for_cards(related)[:limit])
 
 
 def contributors(article: Article) -> QuerySet[ArticleContributor]:

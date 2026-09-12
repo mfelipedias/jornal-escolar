@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-label="Ilustração de demonstração">
+  <rect width="960" height="640" fill="#E2F3E4"/>
+  <circle cx="700" cy="210" r="120" fill="#F7D774"/>
+  <path d="M0 470 Q240 360 480 450 T960 420 V640 H0Z" fill="#2F7A3E" opacity=".35"/>
+  <path d="M0 540 Q300 440 600 520 T960 500 V640 H0Z" fill="#2F7A3E" opacity=".6"/>
+  <g fill="#1B1A21" opacity=".75">
+    <rect x="200" y="330" width="170" height="100" rx="6" transform="rotate(-12 285 380)"/>
+    <rect x="276" y="430" width="16" height="80"/>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-label="Ilustração de demonstração">
+  <rect width="960" height="640" fill="#E1EBFA"/>
+  <g stroke="#1D5FB8" stroke-width="3" fill="none" opacity=".5">
+    <path d="M80 0V640M240 0V640M400 0V640M560 0V640M720 0V640M880 0V640"/>
+    <path d="M0 80H960M0 240H960M0 400H960M0 560H960"/>
+  </g>
+  <path d="M80 520 L240 420 L400 460 L560 260 L720 300 L880 120" stroke="#1D5FB8" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="880" cy="120" r="24" fill="#A8174F"/>
+</svg>

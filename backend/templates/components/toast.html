@@ -1,0 +1,12 @@
+{% comment %}
+  Região dos toasts, uma por página (incluída no base.html). Mostra as mensagens do Django
+  ao carregar; respostas HTMX acrescentam novas via components/toast_oob.html.
+{% endcomment %}
+<div id="toasts"
+     class="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:items-end"
+     role="status"
+     aria-live="polite">
+  {% for message in messages %}
+    {% include "components/toast_item.html" with message=message %}
+  {% endfor %}
+</div>

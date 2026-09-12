@@ -1,0 +1,6 @@
+{% comment %}Toasts levados por uma resposta HTMX (HtmxMessagesMiddleware).{% endcomment %}
+<div hx-swap-oob="beforeend:#toasts">
+  {% for message in toast_messages %}
+    {% include "components/toast_item.html" with message=message %}
+  {% endfor %}
+</div>

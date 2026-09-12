@@ -53,7 +53,7 @@ Cada `KnowledgeArea` escolhe uma cor entre estas oito, mais vivas que em um jorn
 | coral | `#B23A1F` | `#FDE6DF` | Linguagens e suas Tecnologias |
 | verde | `#2F7A3E` | `#E2F3E4` | Ciências da Natureza |
 | azul | `#1D5FB8` | `#E1EBFA` | Matemática e suas Tecnologias |
-| âmbar | `#9A6200` | `#FBEFD3` | Ciências Humanas e Sociais Aplicadas |
+| âmbar | `#8F5A00` | `#FBEFD3` | Ciências Humanas e Sociais Aplicadas |
 | violeta | `#6A3FB5` | `#ECE4FA` | Formação e Projetos |
 | petróleo | `#1C6F6B` | `#DDF2F0` | Escola e Comunidade |
 | magenta | `#A8174F` | `#FBE4EC` | Reservada (mesma do acento; usar só se uma área precisar) |
@@ -201,4 +201,5 @@ Fora do escopo por decisão do dono do projeto. Preparação sem custo: todas as
 - 2026-09-12: nome e marca "Jornal da Rosa"; acento rosa; áreas mais vivas com nomes da escola; componentes de comentário, clima e notificação; versão no rodapé; modo escuro fora do escopo.
 - 2026-09-12: nome genérico "Jornal Escolar" a pedido do dono do projeto; glifo trocado de rosa para folha de jornal; a cor de acento rosa se mantém.
 - 2026-09-12: E18: Lighthouse mostrou que `ink-3 #7B7885` tinha contraste 4,1:1 (não 4,6:1) em texto de 13px; token escurecido para `#6B6875`.
+- 2026-09-12: E19: componentes em `templates/components/` (`card`, `byline`, `tag`, `status_badge`, `empty_state`, `pagination`, `toast`) e vitrine em `/dev/components/` (aberta com `DEBUG` ou para o papel admin). O card recebe um `ArticleCard` (`publications/presentation.py`), não o modelo. Toast: sucesso e informação somem em 4s; **erro e aviso ficam até fechar** (sumir sozinho faria quem lê devagar perder a mensagem); mensagens do Django em respostas HTMX viram toast pelo `HtmxMessagesMiddleware`. Âmbar de área escurecido de `#9A6200` para `#8F5A00` (4,46:1 → 5,07:1 sobre `ambar-soft`). Status "publicado" usa o verde de área em vez de `ok` sobre fundo claro.
 - 2026-09-12: E04 implementada. Tokens em `frontend/src/css/app.css` (cores de área como `area-coral`, `area-coral-soft` etc.); glifo em `templates/components/glyph.html` e `static/img/favicon.svg`. Masthead provisório sem busca, "Entrar" e linha de áreas (chegam em E36, E09 e E21); rodapé sem a linha de links até as páginas existirem. Data do masthead em minúsculas ("sábado, 12 de setembro de 2026").

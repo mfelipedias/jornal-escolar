@@ -189,6 +189,35 @@ def test_related_articles(client, published, author):
     assert "Leia também" in html
     assert "Robótica na escola" in html
     assert "Sem relação" not in html
+    assert "border-area-verde" in html  # card com filete da área
+
+
+def test_card_from_article(published):
+    article = Article.objects.get(pk=published.pk)
+
+    card = presentation.card(article)
+
+    assert card.title == "Feira de Ciências"
+    assert card.url == article.get_absolute_url()
+    assert card.area.name == "Ciências da Natureza"
+    assert card.byline == "Carla Souza e Rafael S."
+    assert card.type_name == article.type.name
+    assert card.published_at == article.published_at
+    assert card.image is None
+
+
+def test_related_cards_do_not_multiply_queries(
+    client, published, author, django_assert_max_num_queries
+):
+    physics = published.disciplines.first()
+    for n in range(3):
+        other = ArticleFactory(
+            ready=True, author=author, created_by=author, title=f"Outra {n}", disciplines=[physics]
+        )
+        services.publish(author, other)
+
+    with django_assert_max_num_queries(20):
+        client.get(published.get_absolute_url())
 
 
 def test_sources_event_and_share(client, author):

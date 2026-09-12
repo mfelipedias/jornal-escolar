@@ -1,0 +1,11 @@
+{% comment %}Etiquetas de área e tipo do card (usado por components/card.html).{% endcomment %}
+{% if card.area or card.type_name %}
+  <div class="flex flex-wrap items-center gap-1.5">
+    {% if card.area %}
+      {% include "components/tag.html" with kind="area" area=card.area label="" url="" %}
+    {% endif %}
+    {% if card.type_name %}
+      {% include "components/tag.html" with kind="type" label=card.type_name area=None url="" %}
+    {% endif %}
+  </div>
+{% endif %}

@@ -3,9 +3,6 @@
   <div class="flex min-h-screen flex-col">
     {% include "components/masthead.html" %}
     <main id="conteudo" class="flex-1" tabindex="-1">
-      {% if messages %}
-        <div class="site-container pt-6">{% include "components/messages.html" %}</div>
-      {% endif %}
       {% block content %}
       {% endblock content %}
     </main>

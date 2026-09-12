@@ -1,0 +1,35 @@
+{% comment %}
+  Um toast (docs/09). Parâmetros: message (mensagem do Django) ou level ("success", "error",
+  "warning", "info") e text. Sucesso e informação somem em 4s; erro e aviso ficam até fechar.
+{% endcomment %}
+{% firstof message.level_tag level as level %}
+{% firstof message text as text %}
+<div class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-card border bg-white py-3 pr-2 pl-4 text-ui shadow-popover
+            {% if level == 'error' %}border-danger/40{% elif level == 'warning' %}border-warn/40{% elif level == 'success' %}border-ok/40{% else %}border-line{% endif %}"
+     x-data="toast"
+     data-level="{{ level }}"
+     x-show="open"
+     x-transition.opacity.duration.150ms
+     @mouseenter="pause"
+     @mouseleave="resume"
+     @focusin="pause"
+     @focusout="resume">
+  <span class="mt-1.5 size-2 shrink-0 rounded-full
+               {% if level == 'error' %}bg-danger{% elif level == 'warning' %}bg-warn{% elif level == 'success' %}bg-ok{% else %}bg-ink-3{% endif %}"
+        aria-hidden="true"></span>
+  <p class="flex-1
+            {% if level == 'error' %}text-danger{% else %}text-ink{% endif %}">
+    {% if level == "error" %}
+      <span class="sr-only">Erro:</span>
+    {% elif level == "warning" %}
+      <span class="sr-only">Atenção:</span>
+    {% endif %}
+    {{ text }}
+  </p>
+  <button type="button"
+          class="btn-ghost -my-1 px-2"
+          @click="close"
+          aria-label="Fechar aviso">
+    <span aria-hidden="true">×</span>
+  </button>
+</div>

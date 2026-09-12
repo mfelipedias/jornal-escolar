@@ -1,0 +1,34 @@
+{% comment %}
+  Etiqueta (docs/09). Parâmetros:
+    kind: "area" (colorida; passe area), "discipline" (contorno), "type" (neutra), "topic" (com #)
+    label: texto; se vazio e kind="area", usa area.name
+    area: KnowledgeArea, para kind="area"
+    size: "sm" (padrão) ou "md"
+    url: opcional; vira link
+{% endcomment %}
+{% firstof label area.name as text %}
+{% if kind == "topic" %}
+  {% if url %}
+    <a href="{{ url }}"
+       class="inline-flex items-baseline
+              {% if size == 'md' %}text-ui{% else %}text-meta{% endif %}
+              text-ink-2 hover:text-accent"><span class="mr-px text-ink-3" aria-hidden="true">#</span>{{ text }}</a>
+  {% else %}
+    <span class="inline-flex items-baseline
+                 {% if size == 'md' %}text-ui{% else %}text-meta{% endif %}
+                 text-ink-2"><span class="mr-px text-ink-3" aria-hidden="true">#</span>{{ text }}</span>
+  {% endif %}
+{% else %}
+  {% with classes=area.color_classes %}
+    {% if url %}
+      <a href="{{ url }}"
+         class="inline-flex items-center rounded-full font-medium transition-colors
+                {% if size == 'md' %}px-3 py-1 text-ui{% else %}px-2.5 py-0.5 text-meta{% endif %}
+                {% if kind == 'area' %}{{ classes.soft_bg }} {{ classes.text }} hover:underline{% elif kind == 'discipline' %}border border-line text-ink-2 hover:border-accent hover:text-accent{% else %}bg-paper-2 text-ink-2 hover:text-ink{% endif %}">{{ text }}</a>
+    {% else %}
+      <span class="inline-flex items-center rounded-full font-medium
+                   {% if size == 'md' %}px-3 py-1 text-ui{% else %}px-2.5 py-0.5 text-meta{% endif %}
+                   {% if kind == 'area' %}{{ classes.soft_bg }} {{ classes.text }}{% elif kind == 'discipline' %}border border-line text-ink-2{% else %}bg-paper-2 text-ink-2{% endif %}">{{ text }}</span>
+    {% endif %}
+  {% endwith %}
+{% endif %}

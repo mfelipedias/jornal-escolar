@@ -1,0 +1,55 @@
+{% comment %}
+  Paginação (docs/09). Parâmetros:
+    page_obj: página do Paginator do Django
+    mode: "more" (público: "Carregar mais" via HTMX) ou "numbers" (painel, padrão)
+
+  "more": sem JavaScript é um link para a próxima página. Com HTMX, busca a mesma URL e
+  troca este bloco pelo que a view devolver: os próximos itens com hx-swap-oob="beforeend:#lista"
+  e um novo pagination. Exemplo em core/partials/components_more.html.
+  Os links preservam os filtros da URL (tag querystring do Django).
+{% endcomment %}
+{% load ui %}
+{% if page_obj.paginator.num_pages > 1 %}
+  {% if mode == "more" %}
+    {% if page_obj.has_next %}
+      <div class="mt-10 flex flex-col items-center gap-2" data-load-more>
+        <a href="{% querystring page=page_obj.next_page_number %}"
+           class="btn-secondary min-h-11 px-6"
+           hx-get="{% querystring page=page_obj.next_page_number %}"
+           hx-target="closest [data-load-more]"
+           hx-swap="outerHTML">Carregar mais</a>
+        <p class="text-meta text-ink-3">Mostrando {{ page_obj.end_index }} de {{ page_obj.paginator.count }}</p>
+      </div>
+    {% endif %}
+  {% else %}
+    <nav class="mt-8 flex flex-wrap items-center justify-center gap-1 text-ui"
+         aria-label="Paginação">
+      {% if page_obj.has_previous %}
+        <a href="{% querystring page=page_obj.previous_page_number %}"
+           class="btn-ghost min-h-10"
+           rel="prev">
+          <span aria-hidden="true">←</span> Anterior
+        </a>
+      {% endif %}
+      {% for number in page_obj|elided_pages %}
+        {% if number == page_obj.paginator.ELLIPSIS %}
+          <span class="px-2 text-ink-3" aria-hidden="true">{{ number }}</span>
+        {% elif number == page_obj.number %}
+          <span class="flex min-h-10 min-w-10 items-center justify-center rounded-field bg-accent-soft font-medium text-accent-2"
+                aria-current="page">{{ number }}</span>
+        {% else %}
+          <a href="{% querystring page=number %}"
+             class="btn-ghost min-h-10 min-w-10"
+             aria-label="Página {{ number }}">{{ number }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <a href="{% querystring page=page_obj.next_page_number %}"
+           class="btn-ghost min-h-10"
+           rel="next">
+          Próxima <span aria-hidden="true">→</span>
+        </a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endif %}

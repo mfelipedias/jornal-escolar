@@ -1,0 +1,10 @@
+{% comment %}
+  Estado editorial (docs/09). Parâmetros: status ("draft", "published"...); label opcional.
+{% endcomment %}
+{% load ui %}
+{% with badge=status|status_badge %}
+  <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-meta font-medium {{ badge.classes }}">
+    <span class="size-1.5 rounded-full bg-current" aria-hidden="true"></span>
+    {{ label|default:badge.label }}
+  </span>
+{% endwith %}

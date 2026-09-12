@@ -1,6 +1,9 @@
-"""Montagem dos textos exibidos nas páginas públicas (byline, créditos, área principal)."""
+"""Montagem dos textos exibidos nas páginas públicas (byline, créditos, área principal, cards)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
+
+from apps.taxonomy.models import KnowledgeArea
 
 from .models import Article, ArticleContributor
 
@@ -48,14 +51,18 @@ def _credit(contributor: ArticleContributor) -> Credit:
     )
 
 
-def byline(article: Article) -> str:
-    """ "Carla Souza e Rafael S." com autores e coautores na ordem dos créditos."""
-    names = [
-        c.display_name
+def byline_people(article: Article) -> list[Credit]:
+    """Autores e coautores na ordem dos créditos (avatares e nomes do componente byline)."""
+    return [
+        _credit(c)
         for c in article.contributors.all()
         if c.role in ArticleContributor.EDITING_ROLES and c.show_in_credits
     ]
-    return join_names(names)
+
+
+def byline(article: Article) -> str:
+    """ "Carla Souza e Rafael S." com autores e coautores na ordem dos créditos."""
+    return join_names([person.name for person in byline_people(article)])
 
 
 def credit_groups(article: Article) -> list[tuple[str, list[Credit]]]:
@@ -72,7 +79,63 @@ def credit_groups(article: Article) -> list[tuple[str, list[Credit]]]:
     return groups
 
 
-def main_area(article: Article):
+def main_area(article: Article) -> KnowledgeArea | None:
     """Área da primeira disciplina (etiqueta colorida no topo)."""
     first = next(iter(article.disciplines.all()), None)
     return first.area if first else None
+
+
+@dataclass
+class CardImage:
+    """Imagem do card. É decorativa: o título ao lado já diz do que se trata."""
+
+    src: str
+    srcset: str = ""
+    width: int | None = None
+    height: int | None = None
+
+
+@dataclass
+class ArticleCard:
+    """Tudo que o componente card precisa, sem consultas no template (docs/09).
+
+    Listas montam com card(article); a página /dev/components/ monta à mão.
+    """
+
+    title: str
+    url: str
+    subtitle: str = ""
+    area: KnowledgeArea | None = None
+    type_name: str = ""
+    people: list[Credit] = field(default_factory=list)
+    published_at: datetime | None = None
+    reading_minutes: int = 0
+    image: CardImage | None = None
+
+    @property
+    def byline(self) -> str:
+        return join_names([person.name for person in self.people])
+
+
+def card(article: Article) -> ArticleCard:
+    """Card de uma publicação. Use com selectors que já trazem capa, disciplinas e créditos."""
+    image = None
+    if article.cover_id:
+        cover = article.cover
+        image = CardImage(
+            src=cover.variant_urls.get("w960") or cover.url,
+            srcset=cover.srcset,
+            width=cover.width,
+            height=cover.height,
+        )
+    return ArticleCard(
+        title=article.title,
+        url=article.get_absolute_url(),
+        subtitle=article.subtitle,
+        area=main_area(article),
+        type_name=article.type.name if article.type_id else "",
+        people=byline_people(article),
+        published_at=article.published_at,
+        reading_minutes=article.reading_minutes,
+        image=image,
+    )

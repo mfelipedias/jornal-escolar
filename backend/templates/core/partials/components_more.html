@@ -1,0 +1,10 @@
+{% comment %}
+  Resposta do "Carregar mais" na vitrine: os itens vão para o fim da lista (out of band) e o
+  botão é trocado pelo da página seguinte. Listas reais (E20, E21) seguem o mesmo modelo.
+{% endcomment %}
+<ul hx-swap-oob="beforeend:#demo-more-list">
+  {% for item in page_obj %}
+    <li class="border-t border-line py-2 text-ui text-ink-2">{{ item }}</li>
+  {% endfor %}
+</ul>
+{% include "components/pagination.html" with page_obj=page_obj mode="more" %}

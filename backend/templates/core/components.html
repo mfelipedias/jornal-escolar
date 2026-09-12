@@ -1,0 +1,141 @@
+{% extends "layouts/public.html" %}
+{% block title %}Componentes · {{ jornal.name }}{% endblock title %}
+{% block head %}
+  <meta name="robots" content="noindex">
+{% endblock head %}
+{% block content %}
+  <div class="site-container pt-10 pb-20 sm:pt-14">
+    <header class="max-w-reading">
+      <p class="text-meta font-medium tracking-[0.08em] text-accent uppercase">Design system</p>
+      <h1 class="mt-3 font-serif text-h1 font-semibold">Componentes</h1>
+      <p class="mt-4 text-ui text-ink-2">
+        Vitrine das peças de <code>templates/components/</code> com dados de exemplo. Regras e variantes em <code>docs/09</code>.
+      </p>
+      <nav class="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-ui"
+           aria-label="Seções">
+        <a class="text-accent hover:underline" href="#cards">Cards</a>
+        <a class="text-accent hover:underline" href="#byline">Assinatura</a>
+        <a class="text-accent hover:underline" href="#tags">Etiquetas</a>
+        <a class="text-accent hover:underline" href="#status">Estados</a>
+        <a class="text-accent hover:underline" href="#vazio">Estado vazio</a>
+        <a class="text-accent hover:underline" href="#paginacao">Paginação</a>
+        <a class="text-accent hover:underline" href="#toast">Toast</a>
+      </nav>
+    </header>
+    <section id="cards" class="mt-16" aria-labelledby="cards-title">
+      <h2 id="cards-title"
+          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Cards</h2>
+      <h3 class="mt-8 text-meta font-semibold tracking-wide text-ink-3 uppercase">hero</h3>
+      <div class="mt-4">{% include "components/card.html" with card=hero variant="hero" %}</div>
+      <h3 class="mt-14 text-meta font-semibold tracking-wide text-ink-3 uppercase">standard</h3>
+      <ul class="mt-4 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {% for card in cards %}
+          <li>{% include "components/card.html" with card=card variant="standard" %}</li>
+        {% endfor %}
+      </ul>
+      <div class="mt-14 grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div>
+          <h3 class="text-meta font-semibold tracking-wide text-ink-3 uppercase">compact</h3>
+          <ul class="mt-4 space-y-6">
+            {% for card in cards %}
+              <li>{% include "components/card.html" with card=card variant="compact" %}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-meta font-semibold tracking-wide text-ink-3 uppercase">mini</h3>
+          <ul class="mt-4 space-y-3">
+            {% for card in cards %}
+              <li>{% include "components/card.html" with card=card variant="mini" %}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+    <section id="byline" class="mt-16" aria-labelledby="byline-title">
+      <h2 id="byline-title"
+          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Assinatura</h2>
+      <div class="mt-6 space-y-4">
+        {% with card=cards.1 %}
+          {% include "components/byline.html" with people=card.people names=card.byline avatars=True size="md" %}
+          {% include "components/byline.html" with people=card.people names=card.byline avatars=True size="sm" %}
+          {% include "components/byline.html" with people=card.people names=card.byline avatars=False size="md" %}
+        {% endwith %}
+      </div>
+    </section>
+    <section id="tags" class="mt-16" aria-labelledby="tags-title">
+      <h2 id="tags-title"
+          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Etiquetas</h2>
+      <h3 class="mt-6 text-meta font-semibold tracking-wide text-ink-3 uppercase">área (8 cores)</h3>
+      <div class="mt-3 flex flex-wrap gap-2">
+        {% for area in areas %}
+          {% include "components/tag.html" with kind="area" area=area label="" url="" %}
+        {% endfor %}
+      </div>
+      <h3 class="mt-6 text-meta font-semibold tracking-wide text-ink-3 uppercase">disciplina, tipo e tópico · sm e md · com link</h3>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        {% include "components/tag.html" with kind="discipline" label="Física" area=None url="" %}
+        {% include "components/tag.html" with kind="type" label="Reportagem" area=None url="" %}
+        {% include "components/tag.html" with kind="topic" label="Energia solar" area=None url="" %}
+        {% include "components/tag.html" with kind="area" area=areas.1 label="" size="md" url="#tags" %}
+        {% include "components/tag.html" with kind="discipline" label="Química" area=None size="md" url="#tags" %}
+        {% include "components/tag.html" with kind="type" label="Entrevista" area=None size="md" url="#tags" %}
+        {% include "components/tag.html" with kind="topic" label="Meio ambiente" area=None size="md" url="#tags" %}
+      </div>
+    </section>
+    <section id="status" class="mt-16" aria-labelledby="status-title">
+      <h2 id="status-title"
+          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Estados editoriais</h2>
+      <div class="mt-6 flex flex-wrap gap-2">
+        {% for status in statuses %}
+          {% include "components/status_badge.html" with status=status label="" %}
+        {% endfor %}
+      </div>
+    </section>
+    <section id="vazio" class="mt-16" aria-labelledby="vazio-title">
+      <h2 id="vazio-title"
+          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Estado vazio</h2>
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <div class="rounded-card border border-line bg-white px-4">
+          {% url 'core:components' as demo_url %}
+          {% include "components/empty_state.html" with title="Ainda não há publicações em Física" text="Professores desta disciplina podem ser os primeiros." action_url=demo_url action_label="Ver outras disciplinas" compact=True %}
+        </div>
+        <div class="rounded-card border border-line bg-white px-4">
+          {% include "components/empty_state.html" with title="Nenhuma revisão pedida a você" text="Quando um colega pedir sua leitura, aparece aqui." compact=True %}
+        </div>
+      </div>
+    </section>
+    <section id="paginacao" class="mt-16" aria-labelledby="paginacao-title">
+      <h2 id="paginacao-title"
+          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Paginação</h2>
+      <div class="mt-6 grid gap-10 md:grid-cols-2">
+        <div>
+          <h3 class="text-meta font-semibold tracking-wide text-ink-3 uppercase">carregar mais (público)</h3>
+          <ul id="demo-more-list" class="mt-3">
+            {% for item in page_obj %}<li class="border-t border-line py-2 text-ui text-ink-2">{{ item }}</li>{% endfor %}
+          </ul>
+          {% include "components/pagination.html" with page_obj=page_obj mode="more" %}
+        </div>
+        <div>
+          <h3 class="text-meta font-semibold tracking-wide text-ink-3 uppercase">numeração (painel)</h3>
+          {% include "components/pagination.html" with page_obj=page_obj mode="numbers" %}
+        </div>
+      </div>
+    </section>
+    <section id="toast" class="mt-16" aria-labelledby="toast-title">
+      <h2 id="toast-title"
+          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Toast</h2>
+      <p class="mt-4 max-w-reading text-ui text-ink-2">
+        Sucesso e informação somem em 4 segundos; erro e aviso ficam até fechar. Os botões pedem ao servidor uma mensagem do Django e ela chega como toast pela resposta HTMX.
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        {% for level, label in toast_levels %}
+          <button type="button"
+                  class="btn-secondary"
+                  hx-get="{% url 'core:components' %}?toast={{ level }}"
+                  hx-swap="none">Mostrar {{ label }}</button>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+{% endblock content %}

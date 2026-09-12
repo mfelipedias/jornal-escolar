@@ -17,8 +17,13 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
         "preview": preview,
         "area": presentation.main_area(article),
         "byline": presentation.byline(article),
+        "byline_people": presentation.byline_people(article),
         "credit_groups": presentation.credit_groups(article),
-        "related": selectors.related_articles(article) if not preview else [],
+        "related": (
+            [presentation.card(item) for item in selectors.related_articles(article)]
+            if not preview
+            else []
+        ),
         "can_edit": permissions.can_edit(request.user, article),
         "share_url": request.build_absolute_uri(request.path),
         "was_updated": bool(

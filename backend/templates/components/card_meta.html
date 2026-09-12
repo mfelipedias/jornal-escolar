@@ -1,0 +1,10 @@
+{% comment %}Data e tempo de leitura do card (usado por components/card.html).{% endcomment %}
+{% if card.published_at or card.reading_minutes %}
+  <p class="mt-2 flex flex-wrap gap-x-2 text-meta text-ink-3">
+    {% if card.published_at %}
+      <time datetime="{{ card.published_at|date:'c' }}">{{ card.published_at|date:"j M Y"|lower }}</time>
+    {% endif %}
+    {% if card.published_at and card.reading_minutes %}<span aria-hidden="true">·</span>{% endif %}
+    {% if card.reading_minutes %}<span>{{ card.reading_minutes }} min de leitura</span>{% endif %}
+  </p>
+{% endif %}

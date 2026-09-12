@@ -1,0 +1,36 @@
+{% comment %}
+  Assinatura (docs/09): até 3 avatares empilhados e "Por Carla Souza e Rafael S.".
+  Parâmetros:
+    people: lista de Credit (presentation.byline_people ou ArticleCard.people)
+    names: texto já montado ("Carla Souza e Rafael S.")
+    avatars: True para mostrar os avatares
+    size: "sm" (cards) ou "md" (página da publicação, padrão)
+{% endcomment %}
+{% if names %}
+  <div class="flex items-center gap-2.5
+              {% if size == 'sm' %}text-meta{% else %}text-ui{% endif %}
+              text-ink-2">
+    {% if avatars and people %}
+      <span class="flex shrink-0 -space-x-2" aria-hidden="true">
+        {% for person in people|slice:":3" %}
+          {% if person.avatar_url %}
+            <img src="{{ person.avatar_url }}"
+                 alt=""
+                 width="32"
+                 height="32"
+                 loading="lazy"
+                 class="{% if size == 'sm' %}size-6{% else %}size-8{% endif %}
+                        rounded-full object-cover ring-2 ring-paper">
+          {% else %}
+            <span class="flex
+                         {% if size == 'sm' %}size-6 text-[0.6875rem]{% else %}size-8 text-meta{% endif %}
+                         items-center justify-center rounded-full bg-paper-2 font-serif font-semibold text-ink-2 ring-2 ring-paper">{{ person.name|slice:":1" }}</span>
+          {% endif %}
+        {% endfor %}
+      </span>
+    {% endif %}
+    <p>
+      Por <span class="font-medium text-ink">{{ names }}</span>
+    </p>
+  </div>
+{% endif %}
