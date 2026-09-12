@@ -4,19 +4,19 @@ Toda função que muda estado confere a permissão em apps/editorial/permissions
 PermissionDenied quando o usuário não pode agir.
 """
 
-import contextlib
 from dataclasses import dataclass
 from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.utils import timezone
 from django.utils.text import slugify
 
 from apps.accounts.models import User
 from apps.editorial import permissions
 
+from . import rendering
 from .credits import student_name_error
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
 
@@ -97,6 +97,9 @@ def update_article(user: User, article: Article, **fields: Any) -> Article:
     for name, value in fields.items():
         setattr(current, name, value)
     columns = [Article._meta.get_field(name).attname for name in fields]
+    if "body_json" in fields:
+        _render_body(user, current)
+        columns += ["body_html", "body_text", "reading_minutes"]
     current.save(update_fields=[*columns, "updated_at"])
     if current.status == Article.Status.PUBLISHED:
         create_revision(current, user, ArticleRevision.Reason.EDITED_AFTER_PUBLISH)
@@ -170,30 +173,24 @@ def _next_order(article: Article) -> int:
 # --- corpo ---
 
 
-def body_has_text(body_json: dict) -> bool:
-    """O documento do editor tem algum texto ou imagem? (renderizador completo na E13)"""
-    stack = [body_json] if isinstance(body_json, dict) else []
-    while stack:
-        node = stack.pop()
-        if node.get("type") == "text" and str(node.get("text", "")).strip():
-            return True
-        if node.get("type") in ("image", "figure"):
-            return True
-        stack.extend(child for child in node.get("content", []) if isinstance(child, dict))
-    return False
+def usable_asset_ids(user: User, article: Article, ids: set[int]) -> set[int]:
+    """Imagens que esta pessoa pode pôr neste texto: as que ela enviou e ainda estão soltas,
+    ou as que já pertencem à publicação. Editores podem usar qualquer uma."""
+    assets = MediaAsset.objects.filter(pk__in=ids)
+    if not permissions.is_editor(user):
+        assets = assets.filter(Q(article=article) | Q(article__isnull=True, uploaded_by=user))
+    return set(assets.values_list("pk", flat=True))
 
 
-def body_asset_ids(body_json: dict) -> set[int]:
-    ids: set[int] = set()
-    stack = [body_json] if isinstance(body_json, dict) else []
-    while stack:
-        node = stack.pop()
-        asset_id = (node.get("attrs") or {}).get("assetId")
-        if asset_id is not None:
-            with contextlib.suppress(TypeError, ValueError):
-                ids.add(int(asset_id))
-        stack.extend(child for child in node.get("content", []) if isinstance(child, dict))
-    return ids
+def _render_body(user: User, article: Article) -> None:
+    """Limpa o documento, gera HTML/texto/tempo de leitura e liga as imagens à publicação."""
+    wanted = rendering.collect_asset_ids(rendering.normalize(article.body_json))
+    result = rendering.render(article.body_json, usable_asset_ids(user, article, wanted))
+    article.body_json = result.document
+    article.body_html = result.html
+    article.body_text = result.text
+    article.reading_minutes = result.reading_minutes
+    MediaAsset.objects.filter(pk__in=result.asset_ids, article__isnull=True).update(article=article)
 
 
 # --- checklist e transições ---
@@ -217,12 +214,13 @@ def checklist(article: Article) -> list[ChecklistItem]:
         add("type_missing", "Escolha o tipo de publicação.")
     elif article.type.has_event_date and article.event_at is None:
         add("event_date_missing", "Informe a data do evento.")
-    if not body_has_text(article.body_json):
+    body = rendering.render(article.body_json)
+    if body.is_empty:
         add("body_empty", "Escreva o texto da publicação.")
     if article.contributors.filter(is_student=True, consent_ok=False).exists():
         add("student_consent_missing", "Marque a autorização de todos os alunos creditados.")
 
-    asset_ids = body_asset_ids(article.body_json)
+    asset_ids = set(body.asset_ids)
     if article.cover_id:
         asset_ids.add(article.cover_id)
     if MediaAsset.objects.filter(pk__in=asset_ids, has_people=True, consent_ok=False).exists():

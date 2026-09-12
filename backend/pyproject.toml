@@ -9,6 +9,7 @@ dependencies = [
     "django-allauth[socialaccount]>=65.19",
     "django-environ>=0.12",
     "django-vite>=3.1",
+    "nh3>=0.3",
     "pillow>=11.3",
     "psycopg[binary]>=3.2",
 ]

@@ -44,6 +44,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Regras em `publications/services.py`: criar, editar, publicar, arquivar e restaurar; checklist de publicação; endereço definitivo na primeira publicação; versão a cada publicação e edição de texto publicado.
 - `apps/editorial/permissions.py`: única fonte das permissões (equipe publica só o próprio texto; editor e admin, qualquer um; nota obrigatória para arquivar texto alheio); política de nome de aluno "Rafael S.".
 - Admin de publicações com créditos, versões e ação de arquivar.
+- Renderizador `publications/rendering.py`: documento do editor → HTML e texto com lista fechada de nós e marcas, links só `http(s)`/`mailto`/internos, figuras com `srcset` e tamanho, segunda limpeza com `nh3`, tempo de leitura (E13).
+- Salvar o corpo gera HTML, texto e tempo de leitura e liga as imagens à publicação; só entram imagens enviadas pela própria pessoa ou já da publicação (editores usam qualquer uma).
 
 ### Alterado
 

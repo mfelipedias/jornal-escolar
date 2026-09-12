@@ -267,7 +267,7 @@ class MediaAsset(models.Model):
 
     @property
     def url(self) -> str:
-        return self.file.url
+        return self.file.url if self.file else ""
 
     def variant_url(self, key: str) -> str:
         path = self.variants.get(key)
