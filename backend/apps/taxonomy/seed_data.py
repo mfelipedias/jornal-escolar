@@ -1,0 +1,114 @@
+"""Taxonomia inicial da escola (docs/18, "Seed inicial").
+
+Ponto de partida: tudo pode ser editado depois no Django Admin.
+"""
+
+AREAS = [
+    {
+        "name": "Linguagens e suas Tecnologias",
+        "slug": "linguagens",
+        "color": "coral",
+        "description": "Leitura, escrita, artes, corpo e línguas.",
+        "disciplines": [
+            "Língua Portuguesa",
+            "Leitura e Produção de Texto",
+            "Arte",
+            "Educação Física",
+            "Língua Inglesa",
+        ],
+    },
+    {
+        "name": "Matemática e suas Tecnologias",
+        "slug": "matematica",
+        "color": "azul",
+        "description": "Números, formas, dados e decisões financeiras.",
+        "disciplines": ["Matemática", "Educação Financeira"],
+    },
+    {
+        "name": "Ciências da Natureza e suas Tecnologias",
+        "slug": "ciencias-da-natureza",
+        "color": "verde",
+        "description": "Vida, matéria, energia e o planeta.",
+        "disciplines": ["Biologia", "Física", "Química"],
+    },
+    {
+        "name": "Ciências Humanas e Sociais Aplicadas",
+        "slug": "ciencias-humanas",
+        "color": "ambar",
+        "description": "Sociedade, tempo, espaço e pensamento.",
+        "disciplines": ["História", "Geografia", "Filosofia", "Sociologia"],
+    },
+    {
+        "name": "Formação e Projetos",
+        "slug": "formacao-e-projetos",
+        "color": "violeta",
+        "description": "Projetos, tecnologia, estudos e escolhas para o futuro.",
+        "disciplines": [
+            "Projeto de Vida",
+            "Tecnologia e Inovação",
+            "Orientação de Estudos",
+            "Eletivas",
+            "Itinerários Formativos",
+        ],
+    },
+    {
+        "name": "Escola e Comunidade",
+        "slug": "escola-e-comunidade",
+        "color": "petroleo",
+        "description": "O que acontece na escola e ao redor dela.",
+        "disciplines": [
+            "Grêmio Estudantil",
+            "Eventos e Cultura",
+            "Gestão e Coordenação",
+            "Sala de Leitura",
+            "Monitoria",
+        ],
+    },
+]
+
+ARTICLE_TYPES = [
+    {"name": "Notícia", "description": "Fato recente, contado de forma direta."},
+    {"name": "Reportagem", "description": "Apuração mais longa, com fontes e contexto."},
+    {"name": "Artigo de opinião", "description": "Ponto de vista assinado sobre um tema."},
+    {"name": "Entrevista", "description": "Conversa com uma pessoa, em perguntas e respostas."},
+    {"name": "Projeto", "description": "Registro de um projeto da escola: objetivo, etapas e resultados."},
+    {"name": "Produção de aluno", "description": "Texto, poema, conto ou trabalho criado por alunos."},
+    {"name": "Divulgação científica", "description": "Ciência explicada para todo mundo."},
+    {"name": "Evento", "description": "Algo que vai acontecer ou aconteceu, com data.", "has_event_date": True},
+    {"name": "Curiosidade", "description": "Texto curto sobre algo interessante."},
+    {"name": "Resenha", "description": "Análise de livro, filme, série, jogo ou exposição."},
+]  # fmt: skip
+
+# Tópicos: nome, palavras-chave (Fase 4) e disciplinas sugeridas (por nome).
+TOPICS = [
+    ("Inteligência Artificial", ["inteligência artificial", "IA", "aprendizado de máquina", "ChatGPT", "algoritmo"], ["Tecnologia e Inovação", "Matemática", "Filosofia"]),
+    ("Programação", ["programação", "código", "Python", "software", "desenvolvimento"], ["Tecnologia e Inovação", "Matemática"]),
+    ("Ciência de Dados", ["dados", "estatística", "gráfico", "pesquisa", "big data"], ["Matemática", "Tecnologia e Inovação"]),
+    ("Robótica", ["robótica", "robô", "Arduino", "automação", "sensores"], ["Tecnologia e Inovação", "Física"]),
+    ("Meio Ambiente", ["meio ambiente", "sustentabilidade", "reciclagem", "poluição", "biodiversidade"], ["Biologia", "Geografia", "Química"]),
+    ("Mudanças Climáticas", ["clima", "aquecimento global", "carbono", "emissões", "COP"], ["Geografia", "Biologia", "Física"]),
+    ("Saúde", ["saúde", "doença", "vacina", "SUS", "saúde mental"], ["Biologia", "Educação Física"]),
+    ("Alimentação", ["alimentação", "nutrição", "comida", "merenda", "dieta"], ["Biologia", "Química"]),
+    ("Astronomia", ["astronomia", "espaço", "planeta", "NASA", "telescópio"], ["Física", "Geografia"]),
+    ("Energia", ["energia", "solar", "eólica", "eletricidade", "renovável"], ["Física", "Química", "Geografia"]),
+    ("Literatura", ["literatura", "livro", "autor", "poesia", "romance"], ["Língua Portuguesa", "Leitura e Produção de Texto", "Sala de Leitura"]),
+    ("Cinema", ["cinema", "filme", "documentário", "série", "audiovisual"], ["Arte", "Sociologia"]),
+    ("Música", ["música", "banda", "canção", "instrumento", "show"], ["Arte"]),
+    ("Esportes", ["esporte", "futebol", "vôlei", "atletismo", "campeonato"], ["Educação Física"]),
+    ("Olimpíadas do Conhecimento", ["olimpíada", "OBMEP", "OBA", "medalha", "competição"], ["Matemática", "Física", "Química", "Biologia"]),
+    ("ENEM e Vestibular", ["ENEM", "vestibular", "SISU", "FUVEST", "redação"], ["Orientação de Estudos", "Projeto de Vida"]),
+    ("Profissões", ["profissão", "carreira", "mercado de trabalho", "curso técnico", "faculdade"], ["Projeto de Vida"]),
+    ("Direitos Humanos", ["direitos humanos", "igualdade", "racismo", "inclusão", "diversidade"], ["Sociologia", "Filosofia", "História"]),
+    ("Política e Cidadania", ["política", "eleição", "cidadania", "democracia", "voto"], ["Sociologia", "História", "Filosofia"]),
+    ("Economia", ["economia", "inflação", "emprego", "renda", "mercado"], ["Geografia", "Educação Financeira", "Sociologia"]),
+    ("História do Brasil", ["história do Brasil", "Independência", "República", "colonização", "memória"], ["História"]),
+    ("Cultura Afro-brasileira e Indígena", ["cultura afro-brasileira", "povos indígenas", "quilombo", "consciência negra", "etnia"], ["História", "Sociologia", "Arte"]),
+    ("Educação Financeira", ["dinheiro", "poupança", "orçamento", "juros", "consumo consciente"], ["Educação Financeira", "Matemática"]),
+    ("Empreendedorismo", ["empreendedorismo", "negócio", "startup", "inovação", "ideia"], ["Projeto de Vida", "Tecnologia e Inovação", "Educação Financeira"]),
+    ("Redes Sociais", ["redes sociais", "Instagram", "TikTok", "fake news", "internet"], ["Sociologia", "Língua Portuguesa", "Tecnologia e Inovação"]),
+    ("Jogos", ["jogos", "games", "videogame", "xadrez", "e-sports"], ["Tecnologia e Inovação", "Educação Física", "Arte"]),
+    ("Fotografia", ["fotografia", "foto", "câmera", "imagem", "exposição"], ["Arte"]),
+    ("Teatro", ["teatro", "peça", "ator", "encenação", "palco"], ["Arte", "Língua Portuguesa"]),
+    ("Matemática no cotidiano", ["matemática", "cálculo", "porcentagem", "geometria", "problema"], ["Matemática"]),
+    ("Divulgação científica", ["ciência", "pesquisa científica", "descoberta", "cientista", "experimento"], ["Biologia", "Física", "Química"]),
+]  # fmt: skip

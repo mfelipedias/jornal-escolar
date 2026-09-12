@@ -46,6 +46,7 @@ Cada serviço tem seu próprio container, como em produção: dá para atualizar
 | `docker compose logs -f web` | Acompanha os logs do Django |
 | `docker compose down` | Para e remove os containers (o banco fica guardado) |
 | `docker compose exec web uv run python manage.py createsuperuser` | Cria um administrador |
+| `docker compose exec web uv run python manage.py seed_taxonomy` | Cria áreas, disciplinas, tópicos e tipos iniciais (pode repetir; não apaga edições) |
 | `docker compose exec web uv run pytest` | Roda os testes |
 | `docker compose down -v` | **Apaga tudo**, inclusive o banco |
 

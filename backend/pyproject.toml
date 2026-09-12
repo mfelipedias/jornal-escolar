@@ -48,6 +48,10 @@ ignore = [
     "RUF012",  # atributos mutáveis de classe são o padrão do Django (Meta, admin)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Dados de seed ficam mais legíveis em uma linha por item.
+"**/seed_data.py" = ["E501"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["apps", "config"]
 

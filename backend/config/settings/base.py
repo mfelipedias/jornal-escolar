@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django_vite",
     "apps.core",
     "apps.accounts",
+    "apps.taxonomy",
 ]
 
 MIDDLEWARE = [

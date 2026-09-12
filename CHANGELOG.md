@@ -24,6 +24,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - GitHub Actions: lint, checagem de migrações, testes com PostgreSQL e build do frontend.
 - `README.md` com preparação do computador e comandos; `CLAUDE.md` com instruções para assistentes de código (E06).
 - Serviço `vite` no Compose de desenvolvimento; `docker compose up` na raiz sobe banco, Django e Vite, sem `.env` nem outras ferramentas instaladas.
+- Taxonomia: áreas do conhecimento (com cor do design system), disciplinas, tópicos (palavras-chave e disciplinas sugeridas) e tipos de publicação, editáveis no Django Admin (E07).
+- Comando `seed_taxonomy` com 6 áreas, 24 disciplinas, 30 tópicos e 10 tipos; só cria o que falta.
 
 ### Alterado
 
