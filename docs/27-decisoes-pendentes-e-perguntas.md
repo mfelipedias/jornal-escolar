@@ -70,6 +70,14 @@ Em 2026-09-12 o dono do projeto respondeu às perguntas da primeira versão dest
 | Nome do projeto (terceira rodada, durante a E01) | Deixar mais genérico: "Jornal Escolar" | "Jornal da Rosa" substituído por **"Jornal Escolar"** no código e na documentação; editável em `site.name`. Glifo passa a ser uma folha de jornal; acento rosa mantido; domínio `jornal.projetosrosa.com.br` não muda. → [09](09-design-system.md) |
 | Login Microsoft bloqueado | Não entendeu a questão | Explicado em [32](32-guia-login-microsoft.md). Resumo: quem permite ou não o login com as contas dos professores é a Secretaria da Educação, não nós; se ela bloquear, cada pessoa entra com senha criada por um link que o admin gera. Nada a fazer agora; testamos na etapa E09. |
 
+## Terceira rodada (2026-09-12)
+
+| Pergunta | Resposta | Decisão |
+|---|---|---|
+| Ordem das próximas etapas | Continuar na ordem do plano | Segue da E19; curadoria de notícias continua na Fase 4. → [26](26-plano-de-desenvolvimento.md) |
+| Registro do app na Microsoft | Não pretende fazer tão cedo | E06 parte 2 adiada. Login por senha com link de acesso é o caminho padrão; o botão Microsoft só aparece quando as credenciais forem configuradas. → [32](32-guia-login-microsoft.md) |
+| Termo de uso de imagem | O projeto pode redigir o modelo | Modelo em [33](33-termo-de-autorizacao.md); direção revisa e aprova antes da primeira publicação com aluno. |
+
 ## Decisões que continuam abertas
 
 Nenhuma. Tudo o que não foi decidido tem um padrão definido e pode mudar depois sem impacto estrutural.
@@ -79,3 +87,4 @@ Nenhuma. Tudo o que não foi decidido tem um padrão definido e pode mudar depoi
 - 2026-09-12: versão inicial com perguntas.
 - 2026-09-12: respostas recebidas e incorporadas; documento reescrito como registro.
 - 2026-09-12: segunda rodada de respostas incorporada; guias 31 e 32 criados.
+- 2026-09-12: terceira rodada: Microsoft adiada, termo redigido pelo projeto (33).

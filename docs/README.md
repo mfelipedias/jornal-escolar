@@ -68,6 +68,7 @@ Esta pasta é a fonte de verdade do planejamento. Cada arquivo cobre um tema e p
 |---|---|
 | [31-guia-backup.md](31-guia-backup.md) | Como o backup funciona, o que configurar uma vez, como conferir e como restaurar |
 | [32-guia-login-microsoft.md](32-guia-login-microsoft.md) | Como o login com a conta da escola funciona, o que registrar, e o que acontece se não funcionar |
+| [33-termo-de-autorizacao.md](33-termo-de-autorizacao.md) | Modelo do termo de uso de nome e imagem de alunos e como ele se liga ao sistema |
 
 ## Convenções usadas nos documentos
 

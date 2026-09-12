@@ -11,6 +11,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Página pública da publicação `/publicacoes/<endereço>/` (E18): etiquetas de área e tipo, assinatura, data, tempo de leitura, disciplinas, bloco de evento, capa com `srcset`, corpo, fontes, compartilhar (copiar link, WhatsApp, compartilhamento do celular), "Quem fez" e "Leia também". Acessibilidade 100 no Lighthouse.
 - Pré-visualização para autores e editores (rascunhos em `/publicacoes/previa/<id>/`), com faixa de aviso e sem indexação; botões "Pré-visualizar" e "Ver no site" no editor; link "Editar" na página.
 - Publicação arquivada responde 410; página 404 própria.
+- Modelo de termo de autorização de uso de nome e imagem de alunos, com revogação e processo para a secretaria, em `docs/33` (E06b; falta aprovação da direção).
 
 ### Alterado
 

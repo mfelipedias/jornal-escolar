@@ -17,7 +17,7 @@ Alunos não têm conta. Aparecem no jornal de duas formas: creditados em publica
 
 Recomendação (tarefa não técnica da Fase 0, com a direção):
 
-1. Redigir um **termo de autorização** simples, assinado pelo responsável (ou pelo próprio aluno se maior de 18), autorizando: (a) publicação do nome no jornal da escola, com opção "apenas primeiro nome e inicial", e (b) uso de imagem em fotos do jornal. Validade por ano letivo, revogável. Guardado pela secretaria.
+1. Redigir um **termo de autorização** simples, assinado pelo responsável (ou pelo próprio aluno se maior de 18), autorizando: (a) publicação do nome no jornal da escola, com opção "apenas primeiro nome e inicial", e (b) uso de imagem em fotos do jornal. Validade por ano letivo, revogável. Guardado pela secretaria. Modelo em [33](33-termo-de-autorizacao.md).
 2. O sistema registra apenas: `consent_ok` no crédito e na foto (declaração do professor de que o termo existe) e, opcionalmente, um número de referência do termo.
 
 Regras no sistema:
@@ -117,3 +117,4 @@ Ver [24](24-infraestrutura-e-deploy.md). `pg_dump` diário + volume de mídia, c
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: reescrito para alunos sem conta, login Microsoft, sem e-mail, comentários públicos, Cloudflare.
+- 2026-09-12: modelo do termo de autorização criado em [33](33-termo-de-autorizacao.md).
