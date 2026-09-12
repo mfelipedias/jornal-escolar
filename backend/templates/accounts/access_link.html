@@ -1,0 +1,35 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Criar senha · {{ jornal.name }}{% endblock title %}
+{% block head %}
+  <meta name="robots" content="noindex">
+{% endblock head %}
+{% block auth_content %}
+  <h1 class="text-center font-serif text-h2 font-semibold">
+    {% if link.purpose == "password_reset" %}
+      Nova senha
+    {% else %}
+      Boas-vindas!
+    {% endif %}
+  </h1>
+  <p class="mt-2 text-center text-ui text-ink-2">
+    {{ link.user.public_name }}, crie a senha que você vai usar para entrar no jornal.
+  </p>
+  <form method="post" class="mt-8 space-y-5" novalidate>
+    {% csrf_token %}
+    <input type="email"
+           name="username"
+           value="{{ link.user.email }}"
+           autocomplete="username"
+           hidden
+           readonly>
+    {% include "components/form_field.html" with field=form.new_password1 type="password" autocomplete="new-password" help=form.new_password1.help_text %}
+    {% include "components/form_field.html" with field=form.new_password2 type="password" autocomplete="new-password" %}
+    <button type="submit"
+            class="w-full rounded-field bg-accent px-4 py-3 text-ui font-medium text-white transition hover:bg-accent-2">
+      Criar senha e entrar
+    </button>
+  </form>
+  <p class="mt-8 text-center text-meta text-ink-3">
+    Este link é pessoal, vale até {{ link.expires_at|date:"j/m/Y" }} e só pode ser usado uma vez.
+  </p>
+{% endblock auth_content %}

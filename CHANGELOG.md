@@ -34,6 +34,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Limite de tentativas de login (5 por e-mail e 30 por IP a cada 15 minutos); sessão de 14 dias sem uso; senha mínima de 10 caracteres.
 - Layout `auth.html`, telas de sair, conta desativada, cadastro fechado e erros de login; cabeçalho com "Entrar" ou nome, "Admin" e "Sair".
 - Configuração "Login com a conta Microsoft da escola ligado" no admin.
+- Links de acesso (`/acesso/<código>/`): uso único, 7 dias, criar ou redefinir senha e entrar; gerar um novo cancela os anteriores (E10).
+- No admin de Usuários: ação "Gerar link de acesso" com o endereço para copiar, "Desativar" e "Reativar" contas, coluna "entra com" e perfil editável junto do usuário; lista somente leitura de links.
+- Comando `access_link <email>`.
+- Perfil (`TeacherProfile`) criado automaticamente para cada conta, com endereço único derivado do nome.
 
 ### Alterado
 

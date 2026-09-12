@@ -8,6 +8,7 @@ app_name = "accounts"
 urlpatterns = [
     path("entrar/", views.login, name="login"),
     path("sair/", logout, name="logout"),
+    path("acesso/<uuid:token>/", views.access_link, name="access_link"),
 ]
 
 # Rotas que precisam vir antes de include("allauth.urls") em config/urls.py.
