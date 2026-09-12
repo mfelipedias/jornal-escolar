@@ -22,6 +22,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Comandos `make assets-install`, `assets-dev` e `assets`.
 - factory-boy com `UserFactory` e fixtures compartilhadas (`staff_user`, `editor_user`, `admin_user`, `admin_client`) (E05).
 - GitHub Actions: lint, checagem de migrações, testes com PostgreSQL e build do frontend.
+- `README.md` com preparação do computador e comandos; `CLAUDE.md` com instruções para assistentes de código (E06).
 
 ### Corrigido
 
