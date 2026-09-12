@@ -96,6 +96,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         editable=False,
         help_text="Calculado a partir do papel: só administradores.",
     )
+    avatar = models.ForeignKey(
+        "publications.MediaAsset",
+        verbose_name="foto",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
     date_joined = models.DateTimeField("cadastrado em", default=timezone.now)
     deactivated_at = models.DateTimeField("desativado em", null=True, blank=True)
 

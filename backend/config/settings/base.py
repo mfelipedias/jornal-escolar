@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.taxonomy",
+    "apps.publications",
 ]
 
 MIDDLEWARE = [
@@ -189,3 +190,11 @@ DJANGO_VITE = {
 
 MEDIA_URL = env.str("MEDIA_URL", default="/media/")
 MEDIA_ROOT = Path(env.str("MEDIA_ROOT", default=str(BASE_DIR / "media")))
+
+# Uploads de imagem (docs/23, "Uploads")
+MEDIA_MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+MEDIA_MAX_DIMENSION = 6000
+MEDIA_USER_QUOTA_BYTES = 1024 * 1024 * 1024
+MEDIA_UPLOADS_PER_HOUR = 60
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2_621_440  # corpo não-arquivo (padrão do Django)
+FILE_UPLOAD_MAX_MEMORY_SIZE = MEDIA_MAX_UPLOAD_BYTES + 1024 * 1024

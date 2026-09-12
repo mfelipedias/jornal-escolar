@@ -38,6 +38,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - No admin de Usuários: ação "Gerar link de acesso" com o endereço para copiar, "Desativar" e "Reativar" contas, coluna "entra com" e perfil editável junto do usuário; lista somente leitura de links.
 - Comando `access_link <email>`.
 - Perfil (`TeacherProfile`) criado automaticamente para cada conta, com endereço único derivado do nome.
+- Upload de imagens (`MediaAsset`, `POST /x/media/`): só JPEG, PNG e WebP pelo conteúdo real, até 10 MB e 6000 px, sem EXIF/GPS, rotação da câmera aplicada, variantes WebP de 480, 960 e 1600 px, cota de 1 GB e 60 envios por hora por pessoa (E11).
+- `GET/PATCH /x/media/<id>/` para texto alternativo, crédito, licença, pessoas na foto e autorização; admin de imagens com miniatura; foto de perfil (`avatar`) no usuário.
 
 ### Alterado
 

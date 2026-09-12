@@ -83,6 +83,7 @@ Cookies `Secure`, `HttpOnly`, `SameSite=Lax`; expiração em 14 dias de inativid
 - Nomes gerados (`<uuid>.<ext>`), caminho por ano/mês.
 - Servidos de `/media/` com `Content-Type` correto e `nosniff`.
 - Quota por usuário (1 GB) e limpeza de órfãos.
+- Implementação (E11): `apps/publications/media.py`. A orientação da câmera é aplicada antes de descartar o EXIF. Arquivos truncados são recusados na decodificação completa. Limite de 60 envios por hora por pessoa com o limitador próprio `apps/core/ratelimit.py` (em vez de `django-ratelimit`). Apagar um `MediaAsset` apaga original e variantes.
 
 ## Auditoria
 
