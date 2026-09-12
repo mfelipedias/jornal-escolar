@@ -1,0 +1,83 @@
+# Integração contínua: roda a cada push e pull request (docs/24, "CI").
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Lint e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      db:
+        image: postgres:17
+        env:
+          POSTGRES_DB: jornal
+          POSTGRES_USER: jornal
+          POSTGRES_PASSWORD: jornal-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jornal -d jornal"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      SECRET_KEY: chave-somente-para-ci
+      DATABASE_URL: postgres://jornal:jornal-ci@localhost:5432/jornal
+      DJANGO_SETTINGS_MODULE: config.settings.test
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Instalar dependências do backend
+        run: uv sync --directory backend --frozen
+
+      - name: Lint (ruff e djlint)
+        run: make lint
+
+      - name: Migrações em dia com os modelos
+        run: uv run --directory backend python manage.py makemigrations --check --dry-run
+
+      - name: Testes
+        run: uv run --directory backend pytest --create-db
+
+  frontend:
+    name: Build do frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar pacotes
+        run: npm ci --prefix frontend
+
+      - name: Build
+        run: npm run build --prefix frontend
+
+      - name: Manifest gerado
+        run: test -f backend/static/dist/manifest.json

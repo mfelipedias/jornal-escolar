@@ -98,6 +98,7 @@ jornal_escolar/
 - **Services e selectors.** Views são finas. Regras (criar publicação, transitar estado, registrar leitura) ficam em `services.py` como funções puras que recebem `user` e objetos. Consultas complexas ficam em `selectors.py`. Facilita testes sem cliente HTTP.
 - **Uma migração por mudança lógica**, com nome descritivo (`0003_article_search_vector`).
 - **Templates:** `layouts/` para esqueletos, `components/` para peças, `<app>/partials/` para fragmentos HTMX. Um fragmento é sempre também incluído pela página completa, garantindo que a página funcione sem JS.
+- **Fixtures e fábricas (E05):** fixtures compartilhadas ficam em `backend/conftest.py` (e não em `tests/conftest.py`), para valer também nos testes dentro de `apps/*/tests/`. Fábricas em `backend/tests/factories.py`, importadas como `from tests.factories import UserFactory`.
 - **Testes:** cada service tem teste unitário; cada rota tem ao menos um teste de integração com status e permissão; três a cinco fluxos e2e (login, criar e publicar, revisar, reagir, buscar).
 - **Tipagem:** type hints em services e selectors; mypy opcional no CI.
 - **Nomes de URL sempre em português** (rotas públicas) e nomes internos de rota em inglês (`publications:detail`).

@@ -2,17 +2,9 @@ import pytest
 from django.urls import reverse
 
 from apps.accounts.models import User
+from tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def admin_client(client):
-    admin = User.objects.create_superuser(
-        "dono@escola.sp.gov.br", "senha-forte-123", full_name="Dono"
-    )
-    client.force_login(admin)
-    return client
 
 
 @pytest.mark.parametrize("url_name", ["admin:accounts_user_changelist", "admin:accounts_user_add"])
@@ -22,10 +14,8 @@ def test_admin_user_pages_render(admin_client, url_name):
     assert response.status_code == 200
 
 
-def test_admin_change_page_renders(admin_client):
-    user = User.objects.create_user("ana@escola.sp.gov.br", full_name="Ana")
-
-    response = admin_client.get(reverse("admin:accounts_user_change", args=[user.pk]))
+def test_admin_change_page_renders(admin_client, staff_user):
+    response = admin_client.get(reverse("admin:accounts_user_change", args=[staff_user.pk]))
 
     assert response.status_code == 200
 
@@ -48,9 +38,9 @@ def test_admin_creates_staff_without_password(admin_client):
     assert not user.is_staff
 
 
-def test_editor_cannot_access_django_admin(client):
-    editor = User.objects.create_user("ed@escola.sp.gov.br", full_name="Ed", role=User.Role.EDITOR)
-    client.force_login(editor)
+@pytest.mark.parametrize("trait", [{}, {"editor": True}])
+def test_non_admin_cannot_access_django_admin(client, trait):
+    client.force_login(UserFactory(**trait))
 
     response = client.get(reverse("admin:index"))
 

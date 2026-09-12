@@ -20,6 +20,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Tokens do design system, glifo e wordmark "Jornal Escolar", favicon.
 - `base.html`, `layouts/public.html`, masthead, rodapé com crédito e versão, página inicial provisória.
 - Comandos `make assets-install`, `assets-dev` e `assets`.
+- factory-boy com `UserFactory` e fixtures compartilhadas (`staff_user`, `editor_user`, `admin_user`, `admin_client`) (E05).
+- GitHub Actions: lint, checagem de migrações, testes com PostgreSQL e build do frontend.
 
 ### Corrigido
 
