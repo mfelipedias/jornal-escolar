@@ -1,0 +1,113 @@
+{% comment %}
+  Barra de filtros (docs/09 "filter-bar", docs/12). Funciona sem JavaScript: formulário GET.
+  Parâmetros: chips (listing.Chip), options (listing.FilterOptions), selected (dict com
+  area, disciplinas, tipos), filters (listing.ListingFilters).
+  Painel com HTMX, período, professor e ordem chegam na E37.
+{% endcomment %}
+<div class="flex flex-wrap items-center gap-2">
+  <details class="group w-full"
+           {% if not chips and not options.areas and not options.disciplines and not options.types %}hidden{% endif %}>
+    <summary class="btn-secondary min-h-11 cursor-pointer list-none">
+      <svg class="size-4"
+           viewBox="0 0 20 20"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.6"
+           stroke-linecap="round"
+           aria-hidden="true">
+        <path d="M3 5h14M6 10h8M9 15h2" />
+      </svg>
+      Filtrar
+      <span class="text-ink-3 group-open:hidden" aria-hidden="true">▾</span>
+      <span class="hidden text-ink-3 group-open:inline" aria-hidden="true">▴</span>
+    </summary>
+    <form method="get"
+          class="mt-3 grid gap-6 rounded-card border border-line bg-white p-4 sm:p-6 md:grid-cols-3">
+      {% if options.areas %}
+        <fieldset>
+          <legend class="editor-panel-title">Área</legend>
+          <div class="flex flex-wrap gap-2">
+            <label class="chip">
+              <input type="radio"
+                     name="area"
+                     value=""
+                     class="sr-only"
+                     {% if not selected.area %}checked{% endif %}>
+              <span class="chip-label">Todas</span>
+            </label>
+            {% for area in options.areas %}
+              <label class="chip">
+                <input type="radio"
+                       name="area"
+                       value="{{ area.slug }}"
+                       class="sr-only"
+                       {% if selected.area == area.slug %}checked{% endif %}>
+                <span class="chip-label">{{ area.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+      {% endif %}
+      {% if options.disciplines %}
+        <fieldset>
+          <legend class="editor-panel-title">Disciplina</legend>
+          {% if options.areas and not selected.area %}
+            <p class="-mt-1 mb-2 text-meta text-ink-3">Escolha uma área para ver só as disciplinas dela.</p>
+          {% endif %}
+          <div class="flex max-h-64 flex-wrap gap-2 overflow-y-auto">
+            {% for discipline in options.disciplines %}
+              <label class="chip">
+                <input type="checkbox"
+                       name="disciplina"
+                       value="{{ discipline.slug }}"
+                       class="sr-only"
+                       {% if discipline.slug in selected.disciplinas %}checked{% endif %}>
+                <span class="chip-label">{{ discipline.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+      {% endif %}
+      {% if options.types %}
+        <fieldset>
+          <legend class="editor-panel-title">Tipo</legend>
+          <div class="flex flex-wrap gap-2">
+            {% for article_type in options.types %}
+              <label class="chip">
+                <input type="checkbox"
+                       name="tipo"
+                       value="{{ article_type.slug }}"
+                       class="sr-only"
+                       {% if article_type.slug in selected.tipos %}checked{% endif %}>
+                <span class="chip-label">{{ article_type.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+      {% endif %}
+      <div class="flex flex-wrap items-center gap-3 md:col-span-3">
+        <button type="submit" class="btn-primary min-h-11 px-5">Aplicar filtros</button>
+        {% if filters.has_user_filters %}
+          <a href="{{ request.path }}" class="btn-ghost min-h-11">Limpar filtros</a>
+        {% endif %}
+      </div>
+    </form>
+  </details>
+  {% if chips %}
+    <ul class="flex flex-wrap items-center gap-2" aria-label="Filtros aplicados">
+      {% for chip in chips %}
+        <li>
+          {% if chip.remove_url %}
+            <a href="{{ request.path }}{{ chip.remove_url }}"
+               class="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-accent bg-accent-soft py-1 pr-2 pl-3 text-meta text-accent-2 hover:bg-white"
+               aria-label="Remover filtro {{ chip.label }}">
+              {{ chip.label }} <span aria-hidden="true">×</span>
+            </a>
+          {% else %}
+            <span class="inline-flex min-h-8 items-center rounded-full bg-paper-2 px-3 py-1 text-meta text-ink-2">{{ chip.label }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>

@@ -21,10 +21,10 @@
     <header class="mx-auto max-w-reading">
       <div class="flex flex-wrap items-center gap-2">
         {% if area %}
-          {% include "components/tag.html" with kind="area" area=area label="" url="" %}
+          {% include "components/tag.html" with kind="area" area=area label="" url=area.get_absolute_url %}
         {% endif %}
         {% if article.type %}
-          {% include "components/tag.html" with kind="type" label=article.type.name area=None url="" %}
+          {% include "components/tag.html" with kind="type" label=article.type.name area=None url=article.type.get_absolute_url %}
         {% endif %}
         {% if can_edit %}
           <a href="{% url 'publications:edit' article.pk %}"
@@ -52,7 +52,13 @@
           {% endif %}
         </p>
         {% if article.disciplines.all %}
-          <p class="mt-1 text-meta text-ink-3">{{ article.disciplines.all|join:", " }}</p>
+          <p class="mt-1 text-meta text-ink-3">
+            {% for discipline in article.disciplines.all %}
+              <a href="{{ discipline.get_absolute_url }}"
+                 class="underline decoration-line underline-offset-2 hover:text-accent hover:decoration-accent">{{ discipline.name }}</a>
+              {% if not forloop.last %},{% endif %}
+            {% endfor %}
+          </p>
         {% endif %}
       </div>
       {% if article.event_at %}

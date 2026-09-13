@@ -1,0 +1,30 @@
+{% comment %}Bloco lateral "Quem escreve sobre X" (docs/12). Parâmetros: writers, title.{% endcomment %}
+{% if writers %}
+  <aside aria-labelledby="writers-title">
+    <h2 id="writers-title"
+        class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
+      {{ title }}
+    </h2>
+    <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+      {% for person in writers %}
+        <li class="flex items-center gap-3">
+          {% if person.avatar_url %}
+            <img src="{{ person.avatar_url }}"
+                 alt=""
+                 width="40"
+                 height="40"
+                 loading="lazy"
+                 class="size-10 shrink-0 rounded-full object-cover">
+          {% else %}
+            <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-paper-2 font-serif text-ui font-semibold text-ink-2"
+                  aria-hidden="true">{{ person.name|slice:":1" }}</span>
+          {% endif %}
+          <span class="min-w-0">
+            <span class="block truncate text-ui font-medium text-ink">{{ person.name }}</span>
+            {% if person.detail %}<span class="block truncate text-meta text-ink-3">{{ person.detail }}</span>{% endif %}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  </aside>
+{% endif %}

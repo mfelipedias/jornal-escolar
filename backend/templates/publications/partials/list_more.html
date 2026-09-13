@@ -1,0 +1,7 @@
+{% comment %}"Carregar mais" das listas: cards no fim da grade e botão da página seguinte.{% endcomment %}
+<ul hx-swap-oob="beforeend:#article-grid">
+  {% for card in cards %}
+    <li>{% include "components/card.html" with card=card variant="standard" %}</li>
+  {% endfor %}
+</ul>
+{% include "components/pagination.html" with page_obj=page_obj mode="more" %}

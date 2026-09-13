@@ -1,0 +1,33 @@
+{% extends "publications/list.html" %}
+{% block title %}{{ discipline.name }} · {{ jornal.name }}{% endblock title %}
+{% block description %}{{ discipline.description|default:jornal.tagline }}{% endblock description %}
+{% block list_header %}
+  {% with classes=area.color_classes %}
+    <header class="site-container border-b border-line pt-10 pb-8 sm:pt-14">
+      <a href="{{ area.get_absolute_url }}"
+         class="inline-flex items-center gap-1.5 text-meta font-semibold tracking-wide uppercase hover:underline {{ classes.text }}">
+        <span class="size-2 rounded-full {{ classes.solid_bg }}" aria-hidden="true"></span>
+        {{ area.name }}
+      </a>
+      <h1 class="mt-2 font-serif text-h1 font-semibold text-balance">{{ discipline.name }}</h1>
+      {% if discipline.description %}<p class="mt-3 max-w-reading font-serif text-lead text-ink-2">{{ discipline.description }}</p>{% endif %}
+      <p class="mt-3 text-meta text-ink-2">{% include "publications/partials/list_count.html" %}</p>
+    </header>
+  {% endwith %}
+{% endblock list_header %}
+{% block list_layout %}mt-10 grid gap-14 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12{% endblock list_layout %}
+{% block grid_columns %}{% endblock grid_columns %}
+{% block list_empty %}
+  {% if filters.has_user_filters %}
+    {% include "components/empty_state.html" with title="Nenhuma publicação com esses filtros" text="Tente tirar um dos filtros." action_url=request.path action_label="Limpar filtros" %}
+  {% else %}
+    {% with title="Ainda não há publicações em "|add:discipline.name %}
+      {% include "components/empty_state.html" with title=title text="Professores desta disciplina podem ser os primeiros." action_url=area.get_absolute_url action_label="Ver outras disciplinas" %}
+    {% endwith %}
+  {% endif %}
+{% endblock list_empty %}
+{% block list_aside %}
+  {% with title="Quem escreve sobre "|add:discipline.name %}
+    {% include "taxonomy/partials/writers_aside.html" with writers=writers title=title %}
+  {% endwith %}
+{% endblock list_aside %}

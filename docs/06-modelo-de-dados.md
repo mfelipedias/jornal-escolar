@@ -90,6 +90,7 @@ Substitui convite por e-mail. Gerado pelo admin e entregue manualmente.
 | Campo | Tipo | Notas |
 |---|---|---|
 | name, slug | varchar | |
+| short_name | varchar(30) | Nome no menu do cabeçalho ("Natureza"); vazio usa `name` (E21) |
 | description | text | |
 | color | varchar(16) | Nome de uma cor do design system |
 | order | smallint | |
@@ -324,3 +325,4 @@ erDiagram
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: reescrito: sem `StudentProfile` e `Invitation`; `AccessLink`, `staff_kind`, campos de aluno em `ArticleContributor`, `Comment`, `Notification` no MVP, `ErrorLog`, novas chaves de configuração.
+- 2026-09-12: E21: `KnowledgeArea.short_name` para o menu do cabeçalho; os nomes completos das áreas ("Ciências da Natureza e suas Tecnologias") não cabem numa linha. A migração preenche as seis áreas do seed.

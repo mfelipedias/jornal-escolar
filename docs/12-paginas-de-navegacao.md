@@ -92,3 +92,10 @@ Rotas: `/sobre/`, `/privacidade/`, `/colaborar/` · Nome: `core:page`
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: "Quem escreve" com cargos; páginas estáticas ajustadas.
+- 2026-09-12: E21 implementada: `/publicacoes/`, `/areas/<slug>/`, `/disciplinas/<slug>/`, `/tipos/<slug>/` e `/agenda/` (`publications/listing.py`, `taxonomy/views.py`). Na prática:
+  - Filtros da E21: área (uma), disciplina e tipo (várias, combinadas com "ou" dentro do mesmo campo e "e" entre campos). O painel abre num `<details>` com formulário GET, sem JavaScript; chips removíveis mostram o que está aplicado. Professor, período, ordem, HTMX na troca de filtro e folha inferior no celular ficam na E37.
+  - Com uma área escolhida, o formulário só oferece as disciplinas dela e disciplinas de outra área vindas pela URL são ignoradas. Remover o chip da área remove também as disciplinas.
+  - "Carregar mais" usa a própria página (`?pagina=N` com HTMX), como a home; `/x/articles/` continua reservado para a E37.
+  - Página de área: "Professores desta área" virou "Quem escreve sobre a área", com quem marcou a área ou uma disciplina dela no perfil ou já publicou nela; sem link até o perfil público existir (E22). O destaque `hero` só aparece sem filtros e com capa.
+  - Agenda: próximos (todos) e "Já aconteceram" com 20 por página, numerada.
+  - Cabeçalho ganhou a linha de áreas (nome curto, ponto na cor da área, sublinhado na área atual), Agenda e Sobre; no celular a linha rola na horizontal em vez de abrir menu.

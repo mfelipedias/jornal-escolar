@@ -97,12 +97,42 @@ def upcoming_events(limit: int = 4) -> tuple[list[Article], bool]:
 
     Devolve (eventos, já_aconteceu).
     """
-    events = published().filter(type__has_event_date=True, event_at__isnull=False)
-    today = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    events = for_cards(published().filter(type__has_event_date=True, event_at__isnull=False))
+    today = _start_of_today()
     upcoming = list(events.filter(event_at__gte=today).order_by("event_at")[:limit])
     if upcoming:
         return upcoming, False
     return list(events.filter(event_at__lt=today).order_by("-event_at")[:1]), True
+
+
+def _start_of_today():
+    return timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def agenda() -> tuple[QuerySet[Article], QuerySet[Article]]:
+    """Página /agenda/: (próximos em ordem de data, já aconteceram do mais recente)."""
+    events = for_cards(published().filter(type__has_event_date=True, event_at__isnull=False))
+    today = _start_of_today()
+    return (
+        events.filter(event_at__gte=today).order_by("event_at"),
+        events.filter(event_at__lt=today).order_by("-event_at"),
+    )
+
+
+def writers_about(area: KnowledgeArea, discipline: Discipline | None = None, limit: int = 12):
+    """Quem escreve sobre a área (ou disciplina): pelo perfil ou por já ter publicado nela."""
+    if discipline:
+        by_profile = Q(profile__disciplines=discipline)
+        by_articles = Q(contributions__article__disciplines=discipline)
+    else:
+        by_profile = Q(profile__areas=area) | Q(profile__disciplines__area=area)
+        by_articles = Q(contributions__article__disciplines__area=area)
+    published_by = by_articles & Q(
+        contributions__role__in=ArticleContributor.EDITING_ROLES,
+        contributions__article__status=Article.Status.PUBLISHED,
+    )
+    ids = User.objects.filter(by_profile | published_by).values("pk")
+    return writers(limit=limit, queryset=User.objects.filter(pk__in=ids))
 
 
 def recent_for_area_strips(limit: int = 60) -> list[Article]:
@@ -110,10 +140,11 @@ def recent_for_area_strips(limit: int = 60) -> list[Article]:
     return list(for_cards(published())[:limit])
 
 
-def writers(limit: int = 8) -> QuerySet[User]:
+def writers(limit: int = 8, queryset: QuerySet[User] | None = None) -> QuerySet[User]:
     """Quem escreve: equipe com perfil público, quem publicou por último primeiro."""
+    base = queryset if queryset is not None else User.objects.all()
     return (
-        User.objects.filter(is_active=True, profile__is_public=True)
+        base.filter(is_active=True, profile__is_public=True)
         .select_related("profile", "avatar")
         .annotate(
             last_published=Max(

@@ -7,6 +7,7 @@ AREAS = [
     {
         "name": "Linguagens e suas Tecnologias",
         "slug": "linguagens",
+        "short_name": "Linguagens",
         "color": "coral",
         "description": "Leitura, escrita, artes, corpo e línguas.",
         "disciplines": [
@@ -20,6 +21,7 @@ AREAS = [
     {
         "name": "Matemática e suas Tecnologias",
         "slug": "matematica",
+        "short_name": "Matemática",
         "color": "azul",
         "description": "Números, formas, dados e decisões financeiras.",
         "disciplines": ["Matemática", "Educação Financeira"],
@@ -27,6 +29,7 @@ AREAS = [
     {
         "name": "Ciências da Natureza e suas Tecnologias",
         "slug": "ciencias-da-natureza",
+        "short_name": "Natureza",
         "color": "verde",
         "description": "Vida, matéria, energia e o planeta.",
         "disciplines": ["Biologia", "Física", "Química"],
@@ -34,6 +37,7 @@ AREAS = [
     {
         "name": "Ciências Humanas e Sociais Aplicadas",
         "slug": "ciencias-humanas",
+        "short_name": "Humanas",
         "color": "ambar",
         "description": "Sociedade, tempo, espaço e pensamento.",
         "disciplines": ["História", "Geografia", "Filosofia", "Sociologia"],
@@ -41,6 +45,7 @@ AREAS = [
     {
         "name": "Formação e Projetos",
         "slug": "formacao-e-projetos",
+        "short_name": "Projetos",
         "color": "violeta",
         "description": "Projetos, tecnologia, estudos e escolhas para o futuro.",
         "disciplines": [
@@ -54,6 +59,7 @@ AREAS = [
     {
         "name": "Escola e Comunidade",
         "slug": "escola-e-comunidade",
+        "short_name": "Comunidade",
         "color": "petroleo",
         "description": "O que acontece na escola e ao redor dela.",
         "disciplines": [

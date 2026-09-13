@@ -31,6 +31,7 @@ def seed_taxonomy() -> SeedResult:
             slug=area_data["slug"],
             defaults={
                 "name": area_data["name"],
+                "short_name": area_data.get("short_name", ""),
                 "color": area_data["color"],
                 "description": area_data["description"],
                 "order": area_order * 10,

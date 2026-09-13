@@ -47,6 +47,7 @@ class KnowledgeAreaFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Área {n}")
     slug = factory.Sequence(lambda n: f"area-{n}")
     color = "verde"
+    short_name = ""
 
 
 class DisciplineFactory(factory.django.DjangoModelFactory):

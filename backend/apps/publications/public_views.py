@@ -1,5 +1,6 @@
 """Páginas públicas das publicações (docs/11)."""
 
+from django.core.paginator import Paginator
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -7,7 +8,7 @@ from django.views.decorators.http import require_GET
 
 from apps.editorial import permissions
 
-from . import presentation, selectors
+from . import listing, presentation, selectors
 from .models import Article
 
 
@@ -37,6 +38,28 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
         response["X-Robots-Tag"] = "noindex"
         response["Cache-Control"] = "private, no-store"
     return response
+
+
+@require_GET
+def article_list(request: HttpRequest) -> HttpResponse:
+    """/publicacoes/: todas as publicações com filtros por área, disciplina e tipo (docs/12)."""
+    return listing.render_listing(request, "publications/list.html", listing.parse(request.GET))
+
+
+AGENDA_PAST_PER_PAGE = 20
+
+
+@require_GET
+def agenda(request: HttpRequest) -> HttpResponse:
+    """/agenda/: próximos eventos e os que já aconteceram (paginados)."""
+    upcoming, past = selectors.agenda()
+    past_page = Paginator(past, AGENDA_PAST_PER_PAGE).get_page(request.GET.get("pagina"))
+    context = {
+        "upcoming": [presentation.event(a) for a in upcoming] if past_page.number == 1 else [],
+        "past": [presentation.event(a) for a in past_page],
+        "page_obj": past_page,
+    }
+    return render(request, "publications/agenda.html", context)
 
 
 @require_GET

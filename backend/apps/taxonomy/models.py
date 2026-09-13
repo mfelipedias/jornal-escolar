@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.db import models
+from django.urls import reverse
 from django.utils.text import slugify
 
 from apps.core.models import TimeStampedModel
@@ -118,10 +119,23 @@ class KnowledgeArea(OrderedSluggedModel):
         default=AreaColor.GRAFITE,
         help_text="Cor usada em etiquetas, cards e no cabeçalho da área.",
     )
+    short_name = models.CharField(
+        "nome curto",
+        max_length=30,
+        blank=True,
+        help_text='Usado no menu do cabeçalho, ex.: "Natureza". Se vazio, usa o nome.',
+    )
 
     class Meta(OrderedSluggedModel.Meta):
         verbose_name = "área do conhecimento"
         verbose_name_plural = "áreas do conhecimento"
+
+    def get_absolute_url(self) -> str:
+        return reverse("taxonomy:area", args=[self.slug])
+
+    @property
+    def nav_name(self) -> str:
+        return self.short_name or self.name
 
     @property
     def color_classes(self) -> dict[str, str]:
@@ -140,6 +154,9 @@ class Discipline(OrderedSluggedModel):
         verbose_name = "disciplina"
         verbose_name_plural = "disciplinas"
         ordering = ["area__order", "order", "name"]
+
+    def get_absolute_url(self) -> str:
+        return reverse("taxonomy:discipline", args=[self.slug])
 
 
 class Topic(SluggedModel):
@@ -179,3 +196,6 @@ class ArticleType(OrderedSluggedModel):
     class Meta(OrderedSluggedModel.Meta):
         verbose_name = "tipo de publicação"
         verbose_name_plural = "tipos de publicação"
+
+    def get_absolute_url(self) -> str:
+        return reverse("taxonomy:type", args=[self.slug])

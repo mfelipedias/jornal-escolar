@@ -6,6 +6,8 @@ app_name = "publications"
 
 urlpatterns = [
     # Público
+    path("publicacoes/", public_views.article_list, name="list"),
+    path("agenda/", public_views.agenda, name="agenda"),
     path("publicacoes/previa/<int:pk>/", public_views.preview, name="preview"),
     path("publicacoes/<slug:slug>/", public_views.detail, name="detail"),
     # Painel

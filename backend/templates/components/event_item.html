@@ -1,0 +1,26 @@
+{% comment %}
+  Item de agenda (docs/10 e docs/12): dia e mês em destaque, título, horário, local e área.
+  Parâmetros: event (presentation.EventItem); past=True mostra "Aconteceu";
+  show_area=True mostra a etiqueta da área; size="sm" (home) ou "md" (/agenda/).
+{% endcomment %}
+<article class="group relative flex gap-4">
+  <time datetime="{{ event.event_at|date:'c' }}"
+        class="flex shrink-0 flex-col items-center rounded-field bg-paper-2 leading-none {% if size == 'md' %}w-16 py-2.5{% else %}w-12 py-1.5{% endif %}">
+    <span class="font-serif font-semibold text-ink {% if size == 'md' %}text-h2{% else %}text-h3{% endif %}">{{ event.event_at|date:"j" }}</span>
+    <span class="mt-1 text-meta text-ink-2">{{ event.event_at|date:"M"|lower }}</span>
+  </time>
+  <div class="min-w-0">
+    {% if past %}<p class="text-meta font-semibold tracking-wide text-ink-3 uppercase">Aconteceu</p>{% endif %}
+    <h3 class="font-serif leading-snug font-semibold text-ink {% if size == 'md' %}text-h3{% else %}text-[1.0625rem]{% endif %}">
+      <a href="{{ event.url }}"
+         class="after:absolute after:inset-0 group-hover:text-accent">{{ event.title }}</a>
+    </h3>
+    <p class="mt-0.5 text-meta text-ink-3">
+      {{ event.event_at|date:"l, H\hi"|lower }}
+      {% if event.location %}· {{ event.location }}{% endif %}
+    </p>
+    {% if show_area and event.area %}
+      <div class="mt-2">{% include "components/tag.html" with kind="area" area=event.area label="" url="" %}</div>
+    {% endif %}
+  </div>
+</article>

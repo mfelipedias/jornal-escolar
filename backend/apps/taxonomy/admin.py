@@ -15,12 +15,12 @@ class DisciplineInline(admin.TabularInline):
 
 @admin.register(KnowledgeArea)
 class KnowledgeAreaAdmin(admin.ModelAdmin):
-    list_display = ("name", "color", "order", "is_active", "discipline_count")
-    list_editable = ("color", "order", "is_active")
+    list_display = ("name", "short_name", "color", "order", "is_active", "discipline_count")
+    list_editable = ("short_name", "color", "order", "is_active")
     list_filter = ("is_active",)
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
-    fields = ("name", "slug", "color", "description", "order", "is_active")
+    fields = ("name", "short_name", "slug", "color", "description", "order", "is_active")
     inlines = [DisciplineInline]
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[KnowledgeArea]:

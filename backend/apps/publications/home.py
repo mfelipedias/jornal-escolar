@@ -9,7 +9,6 @@ from dataclasses import dataclass, field
 from django.core.cache import cache
 from django.core.paginator import Page, Paginator
 
-from apps.accounts.models import User
 from apps.taxonomy.models import KnowledgeArea
 
 from . import presentation, selectors
@@ -34,20 +33,10 @@ class HomeBlocks:
     has_content: bool
     featured: list[presentation.ArticleCard] = field(default_factory=list)
     featured_ids: list[int] = field(default_factory=list)
-    events: list[Article] = field(default_factory=list)
+    events: list[presentation.EventItem] = field(default_factory=list)
     events_past: bool = False
     writers: list[presentation.Credit] = field(default_factory=list)
     strips: list[AreaStrip] = field(default_factory=list)
-
-
-def _writer(user: User) -> presentation.Credit:
-    profile = getattr(user, "profile", None)
-    return presentation.Credit(
-        name=user.public_name,
-        detail=(profile.headline if profile else "") or user.get_staff_kind_display(),
-        is_staff=True,
-        avatar_url=user.avatar.variant_url("w480") if user.avatar_id else "",
-    )
 
 
 def _strips(articles: list[Article], skip_ids: set[int]) -> list[AreaStrip]:
@@ -78,9 +67,9 @@ def build_blocks() -> HomeBlocks:
         has_content=True,
         featured=[presentation.card(a) for a in featured],
         featured_ids=featured_ids,
-        events=events,
+        events=[presentation.event(a) for a in events],
         events_past=events_past,
-        writers=[_writer(u) for u in selectors.writers()],
+        writers=[presentation.writer(u) for u in selectors.writers()],
         strips=strips,
     )
 

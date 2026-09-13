@@ -86,6 +86,38 @@ def main_area(article: Article) -> KnowledgeArea | None:
 
 
 @dataclass
+class EventItem:
+    """Item de agenda (home e /agenda/)."""
+
+    title: str
+    url: str
+    event_at: datetime
+    location: str = ""
+    area: KnowledgeArea | None = None
+
+
+def event(article: Article) -> EventItem:
+    return EventItem(
+        title=article.title,
+        url=article.get_absolute_url(),
+        event_at=article.event_at,
+        location=article.event_location,
+        area=main_area(article),
+    )
+
+
+def writer(user) -> Credit:
+    """Membro da equipe em "Quem escreve": nome, apresentação curta ou cargo, foto."""
+    profile = getattr(user, "profile", None)
+    return Credit(
+        name=user.public_name,
+        detail=(profile.headline if profile else "") or user.get_staff_kind_display(),
+        is_staff=True,
+        avatar_url=user.avatar.variant_url("w480") if user.avatar_id else "",
+    )
+
+
+@dataclass
 class CardImage:
     """Imagem do card. É decorativa: o título ao lado já diz do que se trata."""
 

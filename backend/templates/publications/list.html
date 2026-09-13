@@ -1,0 +1,43 @@
+{% extends "layouts/public.html" %}
+{% comment %}
+  Lista de publicações (docs/12). As páginas de área, disciplina e tipo estendem este
+  template trocando os blocos list_header, list_before e list_aside.
+{% endcomment %}
+{% block title %}Publicações · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  {% block list_header %}
+    <header class="site-container pt-10 sm:pt-14">
+      <h1 class="font-serif text-h1 font-semibold">Publicações</h1>
+      <p class="mt-2 text-ui text-ink-2">{% include "publications/partials/list_count.html" %}</p>
+    </header>
+  {% endblock list_header %}
+  <div class="site-container pb-16">
+    <div class="mt-6">{% include "components/filter_bar.html" %}</div>
+    {% block list_before %}
+    {% endblock list_before %}
+    <div class="{% block list_layout %}mt-10{% endblock list_layout %}">
+      <section aria-labelledby="list-title" class="min-w-0">
+        <h2 id="list-title" class="sr-only">Lista de publicações</h2>
+        {% if cards %}
+          <ul id="article-grid"
+              class="grid gap-x-8 gap-y-12 sm:grid-cols-2 {% block grid_columns %}lg:grid-cols-3{% endblock grid_columns %}">
+            {% for card in cards %}
+              <li>{% include "components/card.html" with card=card variant="standard" %}</li>
+            {% endfor %}
+          </ul>
+          {% include "components/pagination.html" with page_obj=page_obj mode="more" %}
+        {% else %}
+          {% block list_empty %}
+            {% if filters.has_user_filters %}
+              {% include "components/empty_state.html" with title="Nenhuma publicação com esses filtros" text="Tente tirar um dos filtros ou escolher outra área." action_url=request.path action_label="Limpar filtros" %}
+            {% else %}
+              {% include "components/empty_state.html" with title="Ainda não há publicações" text="As primeiras publicações aparecem aqui em breve." %}
+            {% endif %}
+          {% endblock list_empty %}
+        {% endif %}
+      </section>
+      {% block list_aside %}
+      {% endblock list_aside %}
+    </div>
+  </div>
+{% endblock content %}

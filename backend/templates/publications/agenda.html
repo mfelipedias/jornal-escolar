@@ -1,0 +1,37 @@
+{% extends "layouts/public.html" %}
+{% block title %}Agenda · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <div class="site-container pt-10 pb-16 sm:pt-14">
+    <header class="max-w-reading">
+      <h1 class="font-serif text-h1 font-semibold">Agenda</h1>
+      <p class="mt-2 font-serif text-lead text-ink-2">O que vai acontecer na escola e o que já aconteceu.</p>
+    </header>
+    {% if page_obj.number == 1 %}
+      <section class="mt-10" aria-labelledby="upcoming-title">
+        <h2 id="upcoming-title"
+            class="border-b border-line pb-2 font-serif text-h2 font-semibold">Próximos</h2>
+        {% if upcoming %}
+          <ul class="mt-6 grid gap-8 md:grid-cols-2">
+            {% for event in upcoming %}
+              <li>{% include "components/event_item.html" with event=event size="md" show_area=True %}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          {% include "components/empty_state.html" with title="Nenhum evento marcado" text="Quando a equipe publicar um evento com data, ele aparece aqui." compact=True %}
+        {% endif %}
+      </section>
+    {% endif %}
+    {% if past %}
+      <section class="mt-14" aria-labelledby="past-title">
+        <h2 id="past-title"
+            class="border-b border-line pb-2 font-serif text-h2 font-semibold">Já aconteceram</h2>
+        <ul class="mt-6 grid gap-8 md:grid-cols-2">
+          {% for event in past %}
+            <li>{% include "components/event_item.html" with event=event size="md" show_area=True %}</li>
+          {% endfor %}
+        </ul>
+        {% include "components/pagination.html" with page_obj=page_obj mode="numbers" %}
+      </section>
+    {% endif %}
+  </div>
+{% endblock content %}
