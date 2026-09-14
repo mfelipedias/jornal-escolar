@@ -6,6 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- Revisão por colega (E29): estados "Em revisão" e "Alterações sugeridas". No editor, o autor pede a leitura de um colega (com nota e "pode publicar por mim"), cancela o pedido ou reenvia depois das sugestões; o revisor designado, editores e admin sugerem alterações (com nota), aprovam e devolvem, aprovam e publicam (quando permitido) ou recusam a revisão. O painel lateral mostra com quem está a revisão, a nota, as alterações sugeridas e o selo "Revisado por".
+- Notificações no painel para pedido de revisão, alterações sugeridas, aprovação, pedido cancelado, revisão recusada e edição do autor durante a revisão.
+- Histórico editorial (`EditorialEvent`): toda mudança de estado registra quem, quando, de qual estado para qual e a nota (inclusive o motivo de arquivar); também revisor designado ou removido, aprovação, créditos alterados (sem nome de aluno), edição depois de publicar e edição por terceiro. "Atualizar créditos anteriores" no perfil passa a gravar evento. No admin, só leitura.
+- "Minhas publicações" mostra os chips "Em revisão" e "Alterações sugeridas".
+- `seed_demo` cria uma publicação em revisão e uma com alterações sugeridas.
+
+### Alterado
+
+- O revisor designado edita o texto enquanto a revisão está com ele, mas não altera créditos. O crédito de revisão só entra e sai pelo fluxo de revisão.
+- No celular, "Pedir revisão" e "Arquivar" ficam na folha "Detalhes" do editor.
+- O selo de estado usa "Alterações sugeridas" (antes "Alterações pedidas").
+
 ## [1.0.0] - 2026-09-14
 
 ### Adicionado

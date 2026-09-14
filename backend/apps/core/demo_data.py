@@ -130,7 +130,9 @@ STAFF = [
     },
 ]
 
-# status: "published" (padrão), "draft" ou "archived".
+# status: "published" (padrão), "draft", "archived", "in_review" ou "changes_requested".
+# Em revisão: reviewer (chave da pessoa), review_note, reviewer_may_publish e, para
+# "changes_requested", changes_note (o que o revisor pediu).
 # event: (dias a partir de hoje, hora, local). days_ago: quando foi publicada.
 # featured: posição no destaque da home (precisa de capa).
 ARTICLES = [
@@ -539,6 +541,53 @@ Texto em construção. Falta confirmar a lista com a coordenação.""",
         "status": "draft",
         "cover": False,
         "body": "",
+    },
+    {
+        "author": "luciana",
+        "title": "Memórias do bairro: entrevistas com moradores antigos",
+        "subtitle": "A turma do 1º ano ouviu quem viu o bairro crescer.",
+        "type": "Reportagem",
+        "disciplines": ["História", "Sociologia"],
+        "topics": ["História do Brasil"],
+        "status": "in_review",
+        "reviewer": "patricia",
+        "review_note": "Pode olhar a introdução e se as citações estão claras?",
+        "reviewer_may_publish": True,
+        "students": [("Beatriz L.", "1ª série A")],
+        "cover": False,
+        "body": """\
+Durante um mês, os alunos do 1º ano conversaram com seis moradores que chegaram ao bairro \
+nas décadas de 1960 e 1970.
+
+## O que mudou
+
+Onde hoje fica a avenida havia um córrego a céu aberto. "A gente pescava lambari ali", \
+lembrou seu Antônio, de 78 anos.
+
+## Próximos passos
+
+As entrevistas completas vão virar um podcast da turma.""",
+    },
+    {
+        "author": "renato",
+        "title": "Quanto custa o lanche? Pesquisa de preços na cantina",
+        "subtitle": "Alunos compararam preços e montaram um cardápio que cabe no bolso.",
+        "type": "Projeto",
+        "disciplines": ["Matemática", "Educação Financeira"],
+        "topics": ["Educação Financeira"],
+        "status": "changes_requested",
+        "reviewer": "andre",
+        "review_note": "Confere as contas da tabela?",
+        "changes_note": "A soma do segundo cardápio não fecha; e falta dizer quando os "
+        "preços foram coletados.",
+        "cover": False,
+        "body": """\
+Os alunos do 8º ano anotaram os preços da cantina durante duas semanas e montaram três \
+cardápios semanais.
+
+- Cardápio econômico: R$ 18,50 por semana
+- Cardápio equilibrado: R$ 24,00 por semana
+- Cardápio livre: R$ 31,00 por semana""",
     },
     {
         "author": "marcelo",

@@ -12,9 +12,10 @@ class Article(TimeStampedModel):
 
     class Status(models.TextChoices):
         DRAFT = "draft", "Rascunho"
+        IN_REVIEW = "in_review", "Em revisão"
+        CHANGES_REQUESTED = "changes_requested", "Alterações sugeridas"
         PUBLISHED = "published", "Publicado"
         ARCHIVED = "archived", "Arquivado"
-        # in_review e changes_requested entram na E29 (revisão por colega).
 
     title = models.CharField("título", max_length=120, default="Sem título")
     subtitle = models.CharField("linha fina", max_length=220, blank=True)

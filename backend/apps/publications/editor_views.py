@@ -20,6 +20,7 @@ from apps.accounts.models import User
 from apps.core.http import json_error
 from apps.core.ratelimit import hit
 from apps.editorial import permissions
+from apps.editorial import selectors as editorial_selectors
 
 from . import media, selectors, services
 from .models import Article, ArticleContributor, MediaAsset
@@ -73,12 +74,39 @@ def sidebar_context(request: HttpRequest, article: Article, **extra: Any) -> dic
         "can_archive": permissions.can_archive(request.user, article),
         "can_restore": permissions.can_restore(request.user, article),
         "archive_requires_note": permissions.archive_requires_note(request.user, article),
+        **review_context(request, article),
         "event_at_local": (
             timezone.localtime(article.event_at).strftime("%Y-%m-%dT%H:%M")
             if article.event_at
             else ""
         ),
         **extra,
+    }
+
+
+def review_context(request: HttpRequest, article: Article) -> dict[str, Any]:
+    """Revisão por colega no editor: estado, quem revisa e o que a pessoa pode fazer."""
+    user = request.user
+    can_request = permissions.can_request_review(user, article)
+    summary = editorial_selectors.review_summary(article)
+    profile = getattr(user, "profile", None)
+    return {
+        "review": summary,
+        "can_request_review": can_request,
+        "can_cancel_review": permissions.can_cancel_review(user, article),
+        "can_review": permissions.can_review(user, article),
+        "can_approve_and_publish": permissions.can_approve_and_publish(user, article),
+        "can_decline_review": permissions.can_decline_review(user, article),
+        "can_resume": permissions.can_resume(user, article),
+        "reviewer_candidates": (
+            editorial_selectors.reviewer_candidates(article, user) if can_request else []
+        ),
+        "current_reviewer_id": summary.reviewer.user_id if summary.reviewer else None,
+        "default_can_publish": (
+            summary.reviewer.can_publish
+            if summary.reviewer
+            else bool(profile and profile.reviewers_may_publish)
+        ),
     }
 
 
@@ -347,34 +375,77 @@ def search_users(request: HttpRequest) -> HttpResponse:
     )
 
 
+# ação → (serviço, mensagem de sucesso)
+TRANSITIONS = {
+    "publish": (services.publish, "Publicado! A publicação já está no ar."),
+    "archive": (services.archive, "Publicação arquivada. Ela não aparece mais no site."),
+    "restore": (services.restore, "Publicação restaurada como rascunho."),
+    "request_review": (
+        services.request_review,
+        "Revisão pedida. O colega foi avisado no painel.",
+    ),
+    "cancel_review": (services.cancel_review, "Pedido de revisão cancelado."),
+    "request_changes": (
+        services.request_changes,
+        "Alterações sugeridas. Os autores foram avisados.",
+    ),
+    "approve": (services.approve, "Revisão aprovada. Os autores publicam quando quiserem."),
+    "approve_publish": (services.approve_and_publish, "Aprovado e publicado!"),
+    "decline_review": (services.decline_review, "Revisão recusada. Os autores foram avisados."),
+    "resume": (services.resume, "O texto voltou a ser rascunho."),
+}
+
+
 @require_POST
 @login_required
 def transition(request: HttpRequest, pk: int, action: str) -> HttpResponse:
-    """POST /x/articles/<id>/transition/<action>/: publish | archive | restore.
+    """POST /x/articles/<id>/transition/<action>/ (docs/04).
 
+    Ações: publish, archive, restore; revisão: request_review, cancel_review, request_changes,
+    approve, approve_publish, decline_review, resume.
     Volta ao editor ou, com next= (ex.: "Minhas publicações"), ao endereço interno indicado.
+    Quem deixa de poder editar (o revisor, depois de decidir) volta ao painel.
     """
     article = get_object_or_404(Article, pk=pk)
-    edit_url = _next_url(request, reverse("publications:edit", args=[article.pk]))
+    if action not in TRANSITIONS:
+        return HttpResponse(status=404)
+    user, note = request.user, request.POST.get("note", "")
     try:
-        if action == "publish":
-            services.publish(request.user, article)
-            messages.success(request, "Publicado! A publicação já está no ar.")
+        if action == "request_review":
+            reviewer = User.objects.filter(
+                pk=int(request.POST.get("reviewer") or 0), is_active=True
+            ).first()
+            if reviewer is None:
+                raise ValidationError("Escolha o colega que vai revisar.")
+            services.request_review(
+                user,
+                article,
+                reviewer,
+                note=note,
+                can_publish=request.POST.get("can_publish") == "on",
+            )
         elif action == "archive":
-            services.archive(request.user, article, note=request.POST.get("note", ""))
-            messages.success(request, "Publicação arquivada. Ela não aparece mais no site.")
-        elif action == "restore":
-            services.restore(request.user, article)
-            messages.success(request, "Publicação restaurada como rascunho.")
+            services.archive(user, article, note=note)
+        elif action in ("request_changes", "approve", "approve_publish", "decline_review"):
+            TRANSITIONS[action][0](user, article, note)
         else:
-            return HttpResponse(status=404)
+            TRANSITIONS[action][0](user, article)
+        messages.success(request, TRANSITIONS[action][1])
     except PermissionDenied:
         raise
     except services.ChecklistError as exc:
         messages.error(request, "Ainda falta: " + " ".join(item.message for item in exc.items))
-    except ValidationError as exc:
-        messages.error(request, " ".join(exc.messages))
+    except (ValidationError, ValueError) as exc:
+        text = " ".join(exc.messages) if isinstance(exc, ValidationError) else "Dados inválidos."
+        messages.error(request, text)
 
+    article.refresh_from_db()
+    fallback = (
+        reverse("publications:edit", args=[article.pk])
+        if permissions.can_edit(user, article)
+        else reverse("dashboard:home")
+    )
+    edit_url = _next_url(request, fallback)
     if request.headers.get("HX-Request"):
         response = HttpResponse(status=204)
         response["HX-Redirect"] = edit_url

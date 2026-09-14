@@ -1,0 +1,53 @@
+{% comment %}
+  Estado da revisão por colega no painel lateral do editor (docs/04, docs/16).
+  Parâmetros: article, review (editorial.selectors.ReviewSummary), can_resume.
+  A tela completa de revisão, com comentários e histórico, é da E31.
+{% endcomment %}
+{% load humanize %}
+{% if article.status == "in_review" or article.status == "changes_requested" or review.approved_by %}
+  <section id="editor-review"
+           class="editor-panel"
+           aria-labelledby="review-title">
+    <h2 id="review-title" class="editor-panel-title">Revisão</h2>
+    {% if article.status == "in_review" %}
+      <p class="text-ui text-ink">
+        Em revisão
+        {% if review.reviewer %}com <strong class="font-medium">{{ review.reviewer.display_name }}</strong>{% endif %}
+      </p>
+      <p class="mt-1 text-meta text-ink-3">
+        {% if review.requested_at %}Pedida {{ review.requested_at|naturaltime }}{% endif %}
+        {% if review.requested_by %}por {{ review.requested_by.public_name }}{% endif %}
+      </p>
+      {% if review.reviewer %}
+        <p class="mt-1 text-meta text-ink-2">
+          {% if review.reviewer.can_publish %}
+            Pode publicar pelos autores.
+          {% else %}
+            Devolve aos autores; não publica.
+          {% endif %}
+        </p>
+      {% endif %}
+      {% if review.request_note %}<p class="mt-2 border-l-2 border-line pl-2 text-meta text-ink-2">“{{ review.request_note }}”</p>{% endif %}
+    {% elif article.status == "changes_requested" %}
+      <p class="text-ui text-ink">
+        Alterações sugeridas
+        {% if review.changes_by %}por <strong class="font-medium">{{ review.changes_by.public_name }}</strong>{% endif %}
+      </p>
+      {% if review.changes_note %}<p class="mt-2 border-l-2 border-area-coral pl-2 text-meta text-ink-2">“{{ review.changes_note }}”</p>{% endif %}
+      <p class="mt-2 text-meta text-ink-3">Faça os ajustes e reenvie para revisão, ou publique.</p>
+      {% if can_resume %}
+        <form hx-post="{% url 'publications:transition' article.pk 'resume' %}"
+              class="mt-2">
+          <button type="submit" class="btn-ghost px-0 text-meta">Voltar a rascunho</button>
+        </form>
+      {% endif %}
+    {% endif %}
+    {% if review.approved_by and article.status != "in_review" %}
+      <p class="inline-flex items-center gap-1.5 rounded-full bg-area-verde-soft px-2.5 py-0.5 text-meta text-area-verde">
+        <span aria-hidden="true">✓</span>
+        Revisado por {{ review.approved_by.public_name }}
+      </p>
+      <p class="mt-1 text-meta text-ink-3">em {{ review.approved_at|date:"d/m/Y" }}</p>
+    {% endif %}
+  </section>
+{% endif %}

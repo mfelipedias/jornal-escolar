@@ -116,7 +116,20 @@ Checklist automática no editor:
 8. Imagem de capa com texto alternativo. Aviso (obrigatório para destaque na home).
 9. Fontes citadas quando a publicação nasceu de uma sugestão externa (Fase 4). Aviso.
 
+## Implementação (E29)
+
+- **Um revisor por vez.** O revisor designado é o crédito `reviewer` com conta. Pedir revisão a outro colega (por exemplo, ao reenviar) substitui o anterior; o crédito removido fica registrado no histórico.
+- **Cancelar pedido** pode ser feito pelo autor a qualquer momento (a revisão é opcional); o texto volta a `draft`, o crédito de revisão sai e o revisor é avisado. Enquanto está `in_review`, o autor não publica: cancela antes. Editores publicam de qualquer estado.
+- **Recusar revisão** (`in_review → draft`) pelo próprio revisor, que sai dos créditos; os autores são avisados.
+- **Retomar** (`changes_requested → draft`) e **publicar direto de `changes_requested`** ficam com autores e editores, como no editor ([16](16-editor-de-publicacoes.md)).
+- **Sugerir alterações exige uma nota** até existirem os comentários editoriais (E32); depois a condição passa a ser ao menos um comentário aberto.
+- Ninguém revisa o próprio texto: autores e coautores (mesmo editores) não aprovam nem sugerem alterações nos textos que assinam.
+- O revisor designado vê o texto em qualquer estado não publicado, edita só enquanto está `in_review` e não altera créditos.
+- Eventos: toda mudança de estado grava `status_change` (de, para, quem, nota). Além dele, `reviewer_assigned`, `reviewer_removed` (cancelado ou recusado), `approved`, `contributor_changed` (créditos; alunos e convidados sem nome), `edited_after_publish` e `edited_by_third_party` (no máximo um por pessoa a cada 15 minutos, por causa do autosave).
+- O autor editando durante a revisão avisa o revisor no painel (um aviso não lido por vez).
+
 ## Histórico
 
 - 2026-09-12: versão inicial (seis estados, aprovação obrigatória).
 - 2026-09-12: reescrito. Autopublicação pela equipe, revisão opcional, estado "aprovado" removido, alunos como crédito sem conta, notificações só no painel.
+- 2026-09-14: E29. Seção "Implementação": um revisor por vez, cancelar a qualquer momento, recusar revisão, nota obrigatória para sugerir alterações até a E32 e tipos de evento `reviewer_removed` e `approved`.

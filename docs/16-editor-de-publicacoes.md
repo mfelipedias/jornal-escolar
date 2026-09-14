@@ -141,7 +141,15 @@ Módulo `apps/publications/rendering.py`:
 - Créditos: colega por busca (`/x/users/search/`), aluno (nome validado pela política, turma, autorização e opção de nome completo autorizado) e outros sem conta. A pessoa responsável da equipe (autor ou coautor) não pode ser removida se for a única.
 - Imagens no corpo e capa ficam para a E16.
 
+## Implementação (E29)
+
+- "Pedir revisão" abre uma caixa com a lista de colegas (sem quem assina o texto), nota e "pode publicar por mim", marcado conforme a preferência do perfil. Em `changes_requested` o botão vira "Reenviar para revisão", com o último revisor já escolhido. O menu secundário virou um botão ao lado de "Publicar".
+- Em `in_review` o autor vê "Em revisão com X" e "Cancelar pedido"; o revisor designado (ou editor) vê "Revisar", com comentário, "Sugerir alterações", "Aprovar e devolver aos autores", "Aprovar e publicar" (quando permitido) e "Não posso revisar". Depois de decidir, quem não pode mais editar volta ao painel. A tela de revisão completa é da E31.
+- O painel lateral ganhou a seção "Revisão": com quem está, nota do pedido, alterações sugeridas (com "Voltar a rascunho") e o selo "Revisado por X".
+- No celular, "Pedir revisão" e "Arquivar" saem da barra e ficam no fim da folha "Detalhes", porque a barra não comporta tantos botões em 390 px.
+
 ## Histórico
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: créditos de aluno sem conta com autorização; botão "Publicar" como padrão; revisão opcional.
+- 2026-09-14: E29: fluxo de revisão no editor (seção "Implementação (E29)").

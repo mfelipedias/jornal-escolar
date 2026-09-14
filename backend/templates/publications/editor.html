@@ -52,10 +52,34 @@
           <p class="text-ui font-medium">Detalhes</p>
           <button type="button" class="btn-ghost" @click="details = false">Fechar</button>
         </div>
+        {% include "publications/partials/review_status.html" %}
         {% include "publications/partials/checklist.html" %}
         {% include "publications/partials/meta_form.html" %}
         {% include "publications/partials/cover.html" %}
         {% include "publications/partials/credits.html" %}
+        {% if can_request_review or can_archive %}
+          {# No celular estas ações saem da barra do editor e ficam aqui. #}
+          <div class="flex flex-col items-start gap-2 border-t border-line pt-4 sm:hidden">
+            {% if can_request_review %}
+              <button type="button"
+                      class="btn-secondary"
+                      @click="details = false; $dispatch('open-editor-action', 'request')">
+                {% if article.status == "changes_requested" %}
+                  Reenviar para revisão
+                {% else %}
+                  Pedir revisão a um colega
+                {% endif %}
+              </button>
+            {% endif %}
+            {% if can_archive %}
+              <button type="button"
+                      class="btn-ghost px-0 text-danger"
+                      @click="details = false; $dispatch('open-editor-action', 'archive')">
+                Arquivar esta publicação
+              </button>
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
     </aside>
   </div>

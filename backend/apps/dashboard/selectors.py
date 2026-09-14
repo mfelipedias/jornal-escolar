@@ -3,7 +3,7 @@
 "Minhas" são as publicações em que a pessoa aparece nos créditos: como autora ou coautora
 em qualquer estado; em outros papéis (colaboração, edição) só depois de publicadas, porque
 rascunhos e arquivados não são visíveis para quem não edita (apps/editorial/permissions.py).
-Revisão fica de fora até a Fase 2 (aba "Revisando").
+Os textos em que a pessoa só revisa ficam na aba "Revisões pedidas a mim" (E31).
 """
 
 from dataclasses import dataclass
@@ -24,11 +24,12 @@ HOME_DRAFTS = 3
 HOME_PUBLISHED = 3
 HOME_NOTIFICATIONS = 5
 
-# Chips de "Minhas publicações": ?estado= → estado do modelo. "Em revisão" e
-# "Alterações sugeridas" entram com a revisão por colega (Fase 2).
+# Chips de "Minhas publicações": ?estado= → estado do modelo (docs/15).
 STATUS_FILTERS: dict[str, tuple[str, str | None]] = {
     "": ("Todos", None),
     "rascunhos": ("Rascunhos", Status.DRAFT),
+    "em-revisao": ("Em revisão", Status.IN_REVIEW),
+    "alteracoes-sugeridas": ("Alterações sugeridas", Status.CHANGES_REQUESTED),
     "publicados": ("Publicados", Status.PUBLISHED),
     "arquivados": ("Arquivados", Status.ARCHIVED),
 }

@@ -78,7 +78,7 @@ def test_tags_and_statuses(page):
     for label in ["Ciências Humanas", "Geral", "Física", "Energia solar"]:
         assert label in page
     assert "bg-area-violeta-soft" in page
-    for label in ["Rascunho", "Em revisão", "Alterações pedidas", "Aprovado", "Publicado"]:
+    for label in ["Rascunho", "Em revisão", "Alterações sugeridas", "Aprovado", "Publicado"]:
         assert label in page
 
 

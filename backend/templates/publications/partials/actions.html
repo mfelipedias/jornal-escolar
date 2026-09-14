@@ -1,8 +1,15 @@
-{% comment %}Botões de estado na barra do editor. Parâmetros: article, can_publish, can_archive, can_restore, blocking, oob.{% endcomment %}
+{% comment %}
+  Botões de estado na barra do editor (docs/16, "Publicar e pedir revisão").
+  Parâmetros: article, can_publish, can_archive, can_restore, blocking, oob e os da revisão
+  (review, can_request_review, can_cancel_review, can_review, can_approve_and_publish,
+  can_decline_review, reviewer_candidates, current_reviewer_id, default_can_publish).
+{% endcomment %}
 <div id="editor-actions"
      {% if oob %}hx-swap-oob="true"{% endif %}
      class="flex items-center gap-2"
-     x-data="{ archiving: false }">
+     x-data="{ open: '' }"
+     @keydown.escape="open = ''"
+     @open-editor-action.window="open = $event.detail">
   {% if article.status == "published" %}
     <span class="hidden text-meta text-ok md:inline">No ar desde {{ article.published_at|date:"d/m/Y" }}</span>
     <a href="{{ article.get_absolute_url }}"
@@ -21,15 +28,16 @@
     </form>
   {% endif %}
   {% if can_archive %}
+    {# No celular, Arquivar e Pedir revisão ficam na folha Detalhes (a barra não cabe). #}
     <button type="button"
-            class="btn-ghost"
-            @click="archiving = !archiving"
-            :aria-expanded="archiving">Arquivar</button>
-    <form x-show="archiving"
+            class="btn-ghost hidden sm:inline-flex"
+            @click="open = open === 'archive' ? '' : 'archive'"
+            :aria-expanded="open === 'archive'">Arquivar</button>
+    <form x-show="open === 'archive'"
           x-cloak
-          @click.outside="archiving = false"
+          @click.outside="open = ''"
           hx-post="{% url 'publications:transition' article.pk 'archive' %}"
-          class="absolute top-14 right-4 z-40 w-80 rounded-card border border-line bg-white p-4 shadow-popover">
+          class="editor-popover">
       <p class="text-ui font-medium">Arquivar esta publicação?</p>
       <p class="mt-1 text-meta text-ink-2">Ela sai do site, mas continua guardada e pode ser restaurada.</p>
       <label for="archive-note" class="mt-3 block text-meta font-medium">
@@ -40,14 +48,128 @@
                 name="note"
                 rows="2"
                 {% if archive_requires_note %}required{% endif %}
-                class="mt-1 block w-full rounded-field border border-line px-2 py-1.5 text-ui focus:border-accent focus:outline-none"></textarea>
+                class="field mt-1"></textarea>
       <div class="mt-3 flex justify-end gap-2">
-        <button type="button" class="btn-ghost" @click="archiving = false">Cancelar</button>
+        <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
         <button type="submit" class="btn-danger">Arquivar</button>
       </div>
     </form>
   {% endif %}
-  {% if can_publish %}
+  {# Autor com o texto em revisão: com quem está e "Cancelar pedido" #}
+  {% if can_cancel_review %}
+    {% if review.reviewer %}
+      <span class="hidden text-meta text-ink-2 md:inline">Em revisão com {{ review.reviewer.display_name }}</span>
+    {% endif %}
+    <form hx-post="{% url 'publications:transition' article.pk 'cancel_review' %}"
+          hx-confirm="Cancelar o pedido de revisão? O texto volta a ser rascunho e o colega é avisado.">
+      <button type="submit" class="btn-secondary">Cancelar pedido</button>
+    </form>
+  {% endif %}
+  {# Pedir revisão (rascunho) ou reenviar (alterações sugeridas) #}
+  {% if can_request_review %}
+    <button type="button"
+            class="btn-secondary hidden sm:inline-flex"
+            @click="open = open === 'request' ? '' : 'request'"
+            :aria-expanded="open === 'request'">
+      {% if article.status == "changes_requested" %}
+        Reenviar para revisão
+      {% else %}
+        Pedir revisão
+      {% endif %}
+    </button>
+    <form x-show="open === 'request'"
+          x-cloak
+          @click.outside="open = ''"
+          hx-post="{% url 'publications:transition' article.pk 'request_review' %}"
+          data-flush-before
+          class="editor-popover">
+      <p class="text-ui font-medium">Pedir a leitura de um colega</p>
+      <p class="mt-1 text-meta text-ink-2">A revisão é opcional. O colega recebe um aviso no painel.</p>
+      {% if reviewer_candidates %}
+        <label for="review-reviewer" class="mt-3 block text-meta font-medium">Colega</label>
+        <select id="review-reviewer" name="reviewer" required class="field mt-1">
+          <option value="">Escolha…</option>
+          {% for member in reviewer_candidates %}
+            <option value="{{ member.pk }}"
+                    {% if member.pk == current_reviewer_id %}selected{% endif %}>{{ member.public_name }}</option>
+          {% endfor %}
+        </select>
+        <label for="review-note" class="mt-3 block text-meta font-medium">Nota (opcional)</label>
+        <textarea id="review-note"
+                  name="note"
+                  rows="2"
+                  maxlength="500"
+                  placeholder="Ex.: olha a introdução e os dados"
+                  class="field mt-1"></textarea>
+        <label class="mt-3 flex items-start gap-2 text-meta text-ink-2">
+          <input type="checkbox"
+                 name="can_publish"
+                 class="mt-0.5"
+                 {% if default_can_publish %}checked{% endif %}>
+          <span>Pode publicar por mim (se aprovar, o colega já põe no ar)</span>
+        </label>
+        <div class="mt-3 flex justify-end gap-2">
+          <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
+          <button type="submit" class="btn-primary">Pedir revisão</button>
+        </div>
+      {% else %}
+        <p class="mt-3 text-meta text-ink-2">Não há colegas disponíveis para revisar.</p>
+      {% endif %}
+    </form>
+  {% endif %}
+  {# Revisor designado, editor ou admin decidindo #}
+  {% if can_review %}
+    <button type="button"
+            class="btn-primary"
+            @click="open = open === 'review' ? '' : 'review'"
+            :aria-expanded="open === 'review'">Revisar</button>
+    <form x-show="open === 'review'"
+          x-cloak
+          @click.outside="open = ''"
+          class="editor-popover">
+      <p class="text-ui font-medium">Sua revisão</p>
+      {% if review.request_note %}
+        <p class="mt-1 text-meta text-ink-2">
+          Nota{% if review.requested_by %} de {{ review.requested_by.public_name }}{% endif %}: “{{ review.request_note }}”
+        </p>
+      {% endif %}
+      <label for="review-decision-note" class="mt-3 block text-meta font-medium">Comentário para os autores</label>
+      <textarea id="review-decision-note"
+                name="note"
+                rows="3"
+                maxlength="1000"
+                placeholder="Obrigatório para sugerir alterações"
+                class="field mt-1"></textarea>
+      <div class="mt-3 flex flex-col gap-2">
+        <button type="submit"
+                class="btn-secondary"
+                hx-post="{% url 'publications:transition' article.pk 'request_changes' %}"
+                data-flush-before>Sugerir alterações</button>
+        <button type="submit"
+                class="btn-secondary"
+                hx-post="{% url 'publications:transition' article.pk 'approve' %}"
+                data-flush-before>Aprovar e devolver aos autores</button>
+        {% if can_approve_and_publish %}
+          <button type="submit"
+                  class="btn-primary"
+                  hx-post="{% url 'publications:transition' article.pk 'approve_publish' %}"
+                  data-flush-before
+                  {% if blocking %}disabled title="Complete os itens obrigatórios em “Antes de publicar”"{% endif %}>
+            Aprovar e publicar
+          </button>
+        {% endif %}
+        {% if can_decline_review %}
+          <button type="submit"
+                  class="btn-ghost"
+                  hx-post="{% url 'publications:transition' article.pk 'decline_review' %}"
+                  hx-confirm="Recusar esta revisão? Os autores serão avisados para escolher outro colega.">
+            Não posso revisar
+          </button>
+        {% endif %}
+      </div>
+    </form>
+  {% endif %}
+  {% if can_publish and not can_review %}
     <form hx-post="{% url 'publications:transition' article.pk 'publish' %}"
           data-flush-before>
       <button type="submit"

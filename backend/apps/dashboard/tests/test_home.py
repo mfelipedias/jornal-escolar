@@ -157,6 +157,8 @@ def test_collaborator_sees_only_published(ana):
     assert selectors.status_counts(ana) == {
         "": 1,
         "rascunhos": 0,
+        "em-revisao": 0,
+        "alteracoes-sugeridas": 0,
         "publicados": 1,
         "arquivados": 0,
     }

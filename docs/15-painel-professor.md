@@ -87,3 +87,4 @@ Modelo `Notification`. Sino com contador de não lidas; lista das últimas 20 co
   - Ações por linha: Abrir, Ver no jornal e, no menu "mais", Duplicar como rascunho, Arquivar (só quando não pede motivo; editor arquivando texto alheio usa o editor) e Restaurar como rascunho.
   - Duplicar copia texto, capa, tipo, disciplinas, tópicos, evento, fontes e créditos (sem revisão e edição); quem duplica vira autor. As imagens viram cópias novas, porque cada imagem pertence a uma publicação só.
   - O menu mostra só os itens da Fase 1. Perfil, Conta, Notificações e Nova publicação passaram a usar o layout do painel; o editor volta para "Minhas publicações".
+- 2026-09-14: E29: chips "Em revisão" e "Alterações sugeridas" em "Minhas publicações" (`?estado=em-revisao` e `?estado=alteracoes-sugeridas`). A aba de revisões pedidas a mim continua para a E31.

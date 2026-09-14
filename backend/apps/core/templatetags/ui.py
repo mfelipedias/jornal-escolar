@@ -5,12 +5,12 @@ from django.core.paginator import Page
 
 register = template.Library()
 
-# Estados editoriais: rótulo e classes do status-badge. in_review, changes_requested e
-# approved ainda não existem no modelo (E29), mas o componente já sabe desenhá-los.
+# Estados editoriais: rótulo e classes do status-badge. "approved" não é estado do modelo
+# (docs/04 removeu a aprovação), mas o componente sabe desenhá-lo para o selo "revisado".
 STATUS_BADGES: dict[str, tuple[str, str]] = {
     "draft": ("Rascunho", "bg-paper-2 text-ink-2"),
     "in_review": ("Em revisão", "bg-area-ambar-soft text-area-ambar"),
-    "changes_requested": ("Alterações pedidas", "bg-area-coral-soft text-area-coral"),
+    "changes_requested": ("Alterações sugeridas", "bg-area-coral-soft text-area-coral"),
     "approved": ("Aprovado", "bg-area-azul-soft text-area-azul"),
     "published": ("Publicado", "bg-area-verde-soft text-area-verde"),
     "archived": ("Arquivado", "bg-area-grafite-soft text-area-grafite"),

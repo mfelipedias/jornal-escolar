@@ -46,9 +46,17 @@ def test_lists_only_my_articles_with_counts(client, ana, articles):
     ]
     assert "Alheia" not in html
     counts = {chip["key"]: chip["count"] for chip in response.context["chips"]}
-    assert counts == {"": 3, "rascunhos": 1, "publicados": 1, "arquivados": 1}
-    # Estados e aba da Fase 2 ainda não aparecem.
-    assert "Em revisão" not in html
+    assert counts == {
+        "": 3,
+        "rascunhos": 1,
+        "em-revisao": 0,
+        "alteracoes-sugeridas": 0,
+        "publicados": 1,
+        "arquivados": 1,
+    }
+    # Chips da revisão por colega (E29); a aba de revisões pedidas a mim é da E31.
+    assert "Em revisão" in html
+    assert "Alterações sugeridas" in html
     assert "Revisando" not in html
 
 

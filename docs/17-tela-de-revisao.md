@@ -72,3 +72,4 @@ Lista de `EditorialEvent` em ordem cronológica. Editor+ vê "Ver versões" (`Ar
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: reescrito para revisão opcional entre pares; sem fila geral; "pode publicar por mim"; sem e-mail.
+- 2026-09-14: E29: transições implementadas nos serviços (ver [04](04-fluxo-editorial.md), "Implementação"). O autor pode cancelar o pedido a qualquer momento, sem esperar 15 dias: a revisão é opcional e o prazo só atrasaria quem precisa publicar. "Sugerir alterações" exige uma nota até a E32.

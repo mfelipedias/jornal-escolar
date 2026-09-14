@@ -250,6 +250,17 @@ def _create_article(data: dict, people: dict[str, User], variant: int, result: D
         )
         if status == "archived":
             publications.archive(author, article)
+    elif status in ("in_review", "changes_requested"):
+        reviewer = people[data["reviewer"]]
+        publications.request_review(
+            author,
+            article,
+            reviewer,
+            note=data.get("review_note", ""),
+            can_publish=data.get("reviewer_may_publish", False),
+        )
+        if status == "changes_requested":
+            publications.request_changes(reviewer, article, data["changes_note"])
     result.articles += 1
     return article
 

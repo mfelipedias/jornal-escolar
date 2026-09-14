@@ -205,7 +205,7 @@ Restrição: `(article, user, role)` único quando `user` não nulo; `is_student
 | Campo | Tipo | Notas |
 |---|---|---|
 | article, actor, from_status, to_status | | Nulos quando não muda estado |
-| kind | varchar | `status_change`, `reviewer_assigned`, `contributor_changed`, `edited_after_publish`, `edited_by_third_party`, `credit_anonymized` |
+| kind | varchar | `status_change`, `reviewer_assigned`, `reviewer_removed`, `approved`, `contributor_changed`, `edited_after_publish`, `edited_by_third_party`, `credit_anonymized` |
 | note | text | |
 | created_at | | |
 
@@ -329,3 +329,4 @@ erDiagram
 - 2026-09-12: E21: `KnowledgeArea.short_name` para o menu do cabeçalho; os nomes completos das áreas ("Ciências da Natureza e suas Tecnologias") não cabem numa linha. A migração preenche as seis áreas do seed.
 - 2026-09-14: E23: `TeacherProfile.onboarded_at`. Quem já tinha entrado alguma vez é marcado como concluído pela migração.
 - 2026-09-14: E25: `StaticPage` troca o texto simples `body` por `body_json` e `body_html` (a migração converte os parágrafos) e mantém `lead` e `is_published`.
+- 2026-09-14: E29: `EditorialEvent` criado, com os tipos `reviewer_removed` (pedido cancelado ou revisão recusada) e `approved` (docs/04 e docs/17 já citavam o evento de aprovação). `Article.status` ganha `in_review` e `changes_requested`.

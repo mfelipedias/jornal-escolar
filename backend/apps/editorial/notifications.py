@@ -91,6 +91,67 @@ def article_archived(article: Article, actor: User, note: str = "") -> int:
     )
 
 
+# --- revisão por colega (docs/04, "Notificações") ---
+
+
+def _with_note(message: str, note: str, label: str = "Nota") -> str:
+    note = " ".join(note.split())
+    return f"{message} {label}: {note}" if note else message
+
+
+def review_requested(article: Article, actor: User, reviewer: User, note: str = "") -> int:
+    if reviewer.pk == actor.pk or not reviewer.is_active:
+        return 0
+    message = _with_note(f"{actor.public_name} pediu que você revise “{article.title}”.", note)
+    return _notify_many([reviewer], Notification.Kind.REVIEW_REQUESTED, message, article, actor)
+
+
+def review_cancelled(article: Article, actor: User, reviewer: User) -> int:
+    if reviewer.pk == actor.pk or not reviewer.is_active:
+        return 0
+    message = f"{actor.public_name} cancelou o pedido de revisão de “{article.title}”."
+    return _notify_many([reviewer], Notification.Kind.SYSTEM, message, article, actor)
+
+
+def edited_during_review(article: Article, actor: User, reviewer: User) -> int:
+    """O autor continua editando durante a revisão; o revisor fica sabendo (docs/16)."""
+    if reviewer.pk == actor.pk or not reviewer.is_active:
+        return 0
+    message = f"{actor.public_name} alterou “{article.title}” durante a revisão."
+    return _notify_many([reviewer], Notification.Kind.EDITED_BY_OTHER, message, article, actor)
+
+
+def changes_requested(article: Article, actor: User, note: str) -> int:
+    message = _with_note(f"{actor.public_name} sugeriu alterações em “{article.title}”.", note)
+    return _notify_many(
+        article_team(article, exclude=actor),
+        Notification.Kind.CHANGES_REQUESTED,
+        message,
+        article,
+        actor,
+    )
+
+
+def review_approved(article: Article, actor: User, note: str = "") -> int:
+    message = _with_note(
+        f"{actor.public_name} revisou “{article.title}” e aprovou. Publique quando quiser.", note
+    )
+    return _notify_many(
+        article_team(article, exclude=actor), Notification.Kind.APPROVED, message, article, actor
+    )
+
+
+def review_declined(article: Article, actor: User, note: str = "") -> int:
+    message = _with_note(
+        f"{actor.public_name} não pôde revisar “{article.title}”. Escolha outro colega.",
+        note,
+        "Motivo",
+    )
+    return _notify_many(
+        article_team(article, exclude=actor), Notification.Kind.SYSTEM, message, article, actor
+    )
+
+
 # --- leitura ---
 
 

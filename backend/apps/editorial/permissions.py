@@ -3,7 +3,8 @@
 Views, templates e testes usam estas funções; nenhuma regra é repetida em outro lugar.
 Todas recebem o usuário (pode ser anônimo) e devolvem bool.
 
-Na E12 cobre rascunho, publicado e arquivado. Revisor designado entra na E30.
+A E12 cobriu rascunho, publicado e arquivado; a E29 acrescentou a revisão por colega
+(em revisão, alterações sugeridas). A matriz completa com testes célula a célula é da E30.
 """
 
 from django.contrib.auth.models import AnonymousUser
@@ -38,19 +39,41 @@ def is_author(user: AnyUser, article: Article) -> bool:
     ).exists()
 
 
+def reviewer_credit(article: Article) -> ArticleContributor | None:
+    """O colega designado para revisar (há no máximo um por vez; docs/04)."""
+    return (
+        article.contributors.filter(role=ArticleContributor.Role.REVIEWER, user__isnull=False)
+        .select_related("user")
+        .first()
+    )
+
+
+def is_designated_reviewer(user: AnyUser, article: Article) -> bool:
+    if not is_staff_member(user):
+        return False
+    return article.contributors.filter(user=user, role=ArticleContributor.Role.REVIEWER).exists()
+
+
 def can_create_article(user: AnyUser) -> bool:
     return is_staff_member(user)
 
 
 def can_view(user: AnyUser, article: Article) -> bool:
-    """Publicado: todo mundo. Rascunho e arquivado: autores e editores."""
+    """Publicado: todo mundo. Outros estados: autores, revisor designado e editores."""
     if article.status == Article.Status.PUBLISHED:
         return True
-    return is_editor(user) or is_author(user, article)
+    return is_editor(user) or is_author(user, article) or is_designated_reviewer(user, article)
 
 
 def can_edit(user: AnyUser, article: Article) -> bool:
-    return is_editor(user) or is_author(user, article)
+    """Autores e editores; o revisor designado também, enquanto a revisão está com ele."""
+    if is_editor(user) or is_author(user, article):
+        return True
+    return article.status == Article.Status.IN_REVIEW and is_designated_reviewer(user, article)
+
+
+# Estados de onde o autor publica sozinho (em revisão, precisa cancelar o pedido antes).
+AUTHOR_PUBLISH_FROM = (Article.Status.DRAFT, Article.Status.CHANGES_REQUESTED)
 
 
 def can_publish(user: AnyUser, article: Article) -> bool:
@@ -61,7 +84,58 @@ def can_publish(user: AnyUser, article: Article) -> bool:
     # "never" (reservado): toda publicação precisa de outra pessoa (docs/02, "Política editorial").
     if get_setting("editorial.self_publish") == "never":
         return False
-    return article.status == Article.Status.DRAFT and is_author(user, article)
+    return article.status in AUTHOR_PUBLISH_FROM and is_author(user, article)
+
+
+# --- revisão por colega (docs/04, docs/17) ---
+
+
+def can_request_review(user: AnyUser, article: Article) -> bool:
+    """Pedir revisão (ou reenviar depois de alterações sugeridas): autores e editores."""
+    if article.status not in (Article.Status.DRAFT, Article.Status.CHANGES_REQUESTED):
+        return False
+    return is_editor(user) or is_author(user, article)
+
+
+def can_be_reviewer(member: AnyUser, article: Article) -> bool:
+    """Qualquer colega ativo, menos quem assina o texto: ninguém revisa o próprio texto."""
+    return is_staff_member(member) and not is_author(member, article)
+
+
+def can_cancel_review(user: AnyUser, article: Article) -> bool:
+    if article.status != Article.Status.IN_REVIEW:
+        return False
+    return is_editor(user) or is_author(user, article)
+
+
+def can_review(user: AnyUser, article: Article) -> bool:
+    """Sugerir alterações ou aprovar: revisor designado, editor e admin, nunca um autor."""
+    if article.status != Article.Status.IN_REVIEW or is_author(user, article):
+        return False
+    return is_editor(user) or is_designated_reviewer(user, article)
+
+
+def can_approve_and_publish(user: AnyUser, article: Article) -> bool:
+    """Aprovar e publicar: editor, ou revisor a quem o autor deu "pode publicar por mim"."""
+    if not can_review(user, article):
+        return False
+    if is_editor(user):
+        return True
+    return article.contributors.filter(
+        user=user, role=ArticleContributor.Role.REVIEWER, can_publish=True
+    ).exists()
+
+
+def can_decline_review(user: AnyUser, article: Article) -> bool:
+    """Recusar a revisão: só o próprio revisor designado."""
+    return article.status == Article.Status.IN_REVIEW and is_designated_reviewer(user, article)
+
+
+def can_resume(user: AnyUser, article: Article) -> bool:
+    """Retomar como rascunho depois de alterações sugeridas: autores e editores."""
+    if article.status != Article.Status.CHANGES_REQUESTED:
+        return False
+    return is_editor(user) or is_author(user, article)
 
 
 def can_archive(user: AnyUser, article: Article) -> bool:
@@ -82,7 +156,8 @@ def can_restore(user: AnyUser, article: Article) -> bool:
 
 
 def can_edit_credits(user: AnyUser, article: Article) -> bool:
-    return can_edit(user, article)
+    """O revisor edita o texto, mas não os créditos: se achar erro, comenta (docs/17)."""
+    return is_editor(user) or is_author(user, article)
 
 
 def can_upload_media(user: AnyUser) -> bool:

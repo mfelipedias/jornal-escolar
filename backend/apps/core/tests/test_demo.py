@@ -46,6 +46,11 @@ def test_cria_site_de_demonstracao_e_e_idempotente(dev, client):
     assert published.count() >= 15
     assert articles.filter(status=Article.Status.DRAFT).exists()
     assert articles.filter(status=Article.Status.ARCHIVED).exists()
+    # Revisão por colega (E29): uma com o revisor e uma devolvida com alterações sugeridas.
+    in_review = articles.get(status=Article.Status.IN_REVIEW)
+    assert in_review.contributors.filter(role="reviewer", user__in=people).exists()
+    assert in_review.events.filter(kind="reviewer_assigned").exists()
+    assert articles.filter(status=Article.Status.CHANGES_REQUESTED).exists()
     assert published.values("type").distinct().count() >= 8
     assert published.values("disciplines__area").distinct().count() >= 5
     assert published.exclude(cover=None).count() >= 6

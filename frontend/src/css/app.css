@@ -311,6 +311,22 @@
     color: var(--color-ink-2);
   }
 
+  /* Caixas que abrem da barra do editor (arquivar, pedir revisão, revisar) */
+  .editor-popover {
+    position: absolute;
+    top: 3.5rem;
+    right: 1rem;
+    z-index: 40;
+    width: min(20rem, calc(100vw - 2rem));
+    max-height: calc(100vh - 4.5rem);
+    overflow-y: auto;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    background-color: white;
+    padding: 1rem;
+    box-shadow: var(--shadow-popover);
+  }
+
   .field {
     display: block;
     width: 100%;

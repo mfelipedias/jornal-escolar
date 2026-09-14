@@ -214,18 +214,30 @@ def update_past_credits(user: User) -> int:
     """Leva o nome de exibição novo aos créditos já existentes.
 
     Por padrão o crédito guarda o nome do momento em que foi dado (docs/14, "Regras").
-    O registro em EditorialEvent entra quando o modelo existir (E29).
+    Cada publicação alterada ganha um EditorialEvent de créditos.
     """
+    from apps.editorial import events
     from apps.publications.models import ArticleContributor
 
-    credits = ArticleContributor.objects.filter(user=user, is_student=False).exclude(
-        display_name=user.public_name
+    credits = (
+        ArticleContributor.objects.filter(user=user, is_student=False)
+        .exclude(display_name=user.public_name)
+        .select_related("article")
     )
     changed = 0
+    articles = {}
     for credit in credits:
         credit.display_name = user.public_name
         credit.save(update_fields=["display_name"])  # o sinal renova o cache público
+        articles[credit.article_id] = credit.article
         changed += 1
+    for article in articles.values():
+        events.record(
+            article,
+            user,
+            events.Kind.CONTRIBUTOR_CHANGED,
+            note=f"Nome no crédito atualizado para {user.public_name}.",
+        )
     return changed
 
 

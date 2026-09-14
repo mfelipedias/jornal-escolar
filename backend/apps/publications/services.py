@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from apps.accounts.models import User
-from apps.editorial import notifications, permissions
+from apps.editorial import events, notifications, permissions
 from apps.taxonomy.models import ArticleType, Discipline, Topic
 
 from . import rendering
@@ -24,6 +24,9 @@ from .cache import invalidate_public_content
 from .credits import student_name_error
 from .media import copy_asset
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
+
+Status = Article.Status
+EventKind = events.Kind
 
 TITLE_MAX = 120
 REVISION_WINDOW = timedelta(minutes=15)
@@ -206,11 +209,25 @@ def update_article(
         columns += ["body_html", "body_text", "reading_minutes"]
     current.last_edited_by = user
     current.save(update_fields=[*columns, "last_edited_by", "updated_at"])
-    if current.status == Article.Status.PUBLISHED:
+    if current.status == Status.PUBLISHED:
         record_edit_revision(current, user)
-    notifications.article_edited_by_other(current, user)
+        events.record_edit(current, user, EventKind.EDITED_AFTER_PUBLISH)
+    _after_edit(current, user)
     _sync(article, current, [*columns, "status", "updated_at"])
     return current
+
+
+def _after_edit(article: Article, user: User) -> None:
+    """Efeitos de qualquer edição: aviso e evento quando quem edita não assina o texto
+    (editor, admin ou revisor); aviso ao revisor quando o autor mexe durante a revisão."""
+    if permissions.is_author(user, article):
+        if article.status == Status.IN_REVIEW:
+            reviewer = permissions.reviewer_credit(article)
+            if reviewer is not None:
+                notifications.edited_during_review(article, user, reviewer.user)
+        return
+    notifications.article_edited_by_other(article, user)
+    events.record_edit(article, user, EventKind.EDITED_BY_THIRD_PARTY)
 
 
 def _check_conflict(user: User, current: Article, expected_updated_at: datetime | None) -> None:
@@ -266,14 +283,31 @@ def add_staff_credit(
 ) -> ArticleContributor:
     if not permissions.can_edit_credits(user, article):
         raise PermissionDenied
+    if role == ArticleContributor.Role.REVIEWER:
+        raise ValidationError("Para convidar um revisor, use “Pedir revisão”.")
     notifications.article_edited_by_other(article, user)
-    contributor, _ = ArticleContributor.objects.get_or_create(
+    contributor, created = ArticleContributor.objects.get_or_create(
         article=article,
         user=member,
         role=role,
         defaults={"display_name": member.public_name, "order": _next_order(article)},
     )
+    if created:
+        _credit_event(article, user, contributor, "adicionado")
     return contributor
+
+
+def _credit_event(article: Article, user: User, credit: ArticleContributor, action: str) -> None:
+    """Evento de créditos. Nome só de quem é da equipe; aluno e convidado ficam sem nome
+    na auditoria (docs/23: o crédito pode ser anonimizado depois)."""
+    role = credit.get_role_display()
+    if credit.user_id:
+        what = f"{credit.display_name} ({role})"
+    elif credit.is_student:
+        what = f"Crédito de aluno ({role})"
+    else:
+        what = f"Crédito sem conta ({role})"
+    events.record(article, user, EventKind.CONTRIBUTOR_CHANGED, note=f"{what} {action}.")
 
 
 @transaction.atomic
@@ -294,7 +328,7 @@ def add_student_credit(
     if error:
         raise ValidationError({"name": error})
     notifications.article_edited_by_other(article, user)
-    return ArticleContributor.objects.create(
+    credit = ArticleContributor.objects.create(
         article=article,
         display_name=" ".join(name.split()),
         role=role,
@@ -303,6 +337,8 @@ def add_student_credit(
         consent_ok=consent_ok,
         order=_next_order(article),
     )
+    _credit_event(article, user, credit, "adicionado")
+    return credit
 
 
 @transaction.atomic
@@ -323,13 +359,15 @@ def add_guest_credit(
     if role not in ArticleContributor.Role.values or role == ArticleContributor.Role.REVIEWER:
         raise ValidationError({"role": "Papel inválido."})
     notifications.article_edited_by_other(article, user)
-    return ArticleContributor.objects.create(
+    credit = ArticleContributor.objects.create(
         article=article,
         display_name=name[:80],
         role=role,
         contribution_note=" ".join(contribution_note.split())[:80],
         order=_next_order(article),
     )
+    _credit_event(article, user, credit, "adicionado")
+    return credit
 
 
 @transaction.atomic
@@ -345,7 +383,10 @@ def remove_credit(user: User, article: Article, contributor: ArticleContributor)
     is_responsible = contributor.user_id and contributor.role in ArticleContributor.EDITING_ROLES
     if is_responsible and not responsible.exists():
         raise ValidationError("A publicação precisa de ao menos um autor ou coautor da equipe.")
+    if contributor.role == ArticleContributor.Role.REVIEWER and article.status == Status.IN_REVIEW:
+        raise ValidationError("Para trocar o revisor, cancele o pedido de revisão.")
     notifications.article_edited_by_other(article, user)
+    _credit_event(article, user, contributor, "removido")
     contributor.delete()
 
 
@@ -389,7 +430,7 @@ def set_metadata(
     )
     current.disciplines.set(Discipline.objects.filter(pk__in=discipline_ids, is_active=True))
     current.topics.set(Topic.objects.filter(pk__in=topic_ids, is_active=True))
-    notifications.article_edited_by_other(current, user)
+    _after_edit(current, user)
     _sync(article, current, ["type_id", "event_at", "event_location", "sources", "updated_at"])
     return current
 
@@ -408,7 +449,7 @@ def set_cover(user: User, article: Article, asset: MediaAsset | None, caption: s
     current.cover_caption = " ".join(caption.split())[:200] if asset else ""
     current.last_edited_by = user
     current.save(update_fields=["cover", "cover_caption", "last_edited_by", "updated_at"])
-    notifications.article_edited_by_other(current, user)
+    _after_edit(current, user)
     _sync(article, current, ["cover_id", "cover_caption", "updated_at"])
     return current
 
@@ -509,25 +550,39 @@ def unique_article_slug(article: Article) -> str:
     return slug
 
 
+def _set_status(
+    current: Article, user: User, status: str, fields: list[str], note: str = ""
+) -> None:
+    """Grava a mudança de estado e o evento dela (docs/04: toda transição gera
+    EditorialEvent). fields são as outras colunas alteradas antes da chamada."""
+    from_status = current.status
+    current.status = status
+    current.save(update_fields=list(dict.fromkeys(["status", *fields, "updated_at"])))
+    events.status_change(current, user, from_status, note)
+
+
+def _publish_locked(user: User, current: Article) -> list[str]:
+    """Publica a publicação já travada. Devolve as colunas alteradas."""
+    blocking = [item for item in checklist(current) if item.blocking]
+    if blocking:
+        raise ChecklistError(blocking)
+    if not current.slug:
+        current.slug = unique_article_slug(current)  # definitivo a partir daqui
+    current.published_at = current.published_at or timezone.now()
+    current.archived_at = None
+    fields = ["slug", "published_at", "archived_at"]
+    _set_status(current, user, Status.PUBLISHED, fields)
+    create_revision(current, user, ArticleRevision.Reason.PUBLISHED)
+    notifications.article_published(current, user)
+    return ["status", *fields, "updated_at"]
+
+
 @transaction.atomic
 def publish(user: User, article: Article) -> Article:
     current = _locked(article)
     if not permissions.can_publish(user, current):
         raise PermissionDenied
-    blocking = [item for item in checklist(current) if item.blocking]
-    if blocking:
-        raise ChecklistError(blocking)
-
-    if not current.slug:
-        current.slug = unique_article_slug(current)  # definitivo a partir daqui
-    current.status = Article.Status.PUBLISHED
-    current.published_at = current.published_at or timezone.now()
-    current.archived_at = None
-    fields = ["slug", "status", "published_at", "archived_at", "updated_at"]
-    current.save(update_fields=fields)
-    create_revision(current, user, ArticleRevision.Reason.PUBLISHED)
-    notifications.article_published(current, user)
-    _sync(article, current, fields)
+    _sync(article, current, _publish_locked(user, current))
     return current
 
 
@@ -539,15 +594,13 @@ def archive(user: User, article: Article, note: str = "") -> Article:
         raise PermissionDenied
     if permissions.archive_requires_note(user, current) and not note.strip():
         raise ValidationError({"note": "Explique por que está arquivando o texto de outra pessoa."})
-    current.status = Article.Status.ARCHIVED
     current.archived_at = timezone.now()
     current.is_featured = False
     current.featured_order = None
-    fields = ["status", "archived_at", "is_featured", "featured_order", "updated_at"]
-    current.save(update_fields=fields)
-    # A nota também vai para EditorialEvent quando o modelo existir (E29).
+    fields = ["archived_at", "is_featured", "featured_order"]
+    _set_status(current, user, Status.ARCHIVED, fields, note)
     notifications.article_archived(current, user, note)
-    _sync(article, current, fields)
+    _sync(article, current, ["status", *fields, "updated_at"])
     return current
 
 
@@ -556,11 +609,146 @@ def restore(user: User, article: Article) -> Article:
     current = _locked(article)
     if not permissions.can_restore(user, current):
         raise PermissionDenied
-    current.status = Article.Status.DRAFT
     current.archived_at = None
-    fields = ["status", "archived_at", "updated_at"]
-    current.save(update_fields=fields)
-    _sync(article, current, fields)
+    _set_status(current, user, Status.DRAFT, ["archived_at"])
+    _sync(article, current, ["status", "archived_at", "updated_at"])
+    return current
+
+
+# --- revisão por colega (docs/04, docs/17) ---
+
+
+@transaction.atomic
+def request_review(
+    user: User, article: Article, reviewer: User, *, note: str = "", can_publish: bool = False
+) -> Article:
+    """Pede (ou reenvia) a revisão a um colega (docs/04, "pedir revisão").
+
+    Há um revisor por vez: escolher outro colega substitui o anterior. can_publish é o
+    "pode publicar por mim" do autor.
+    """
+    current = _locked(article)
+    if not permissions.can_request_review(user, current):
+        raise PermissionDenied
+    if reviewer.pk == user.pk or not permissions.can_be_reviewer(reviewer, current):
+        raise ValidationError({"reviewer": "Escolha um colega ativo que não assine este texto."})
+    note = note.strip()
+    previous = current.contributors.filter(role=ArticleContributor.Role.REVIEWER)
+    for old in previous.exclude(user=reviewer):
+        _credit_event(current, user, old, "removido")
+        old.delete()
+    credit, _ = ArticleContributor.objects.get_or_create(
+        article=current,
+        user=reviewer,
+        role=ArticleContributor.Role.REVIEWER,
+        defaults={"display_name": reviewer.public_name, "order": _next_order(current)},
+    )
+    if credit.can_publish != can_publish:
+        credit.can_publish = can_publish
+        credit.save(update_fields=["can_publish"])
+
+    current.submitted_at = timezone.now()
+    _set_status(current, user, Status.IN_REVIEW, ["submitted_at"], note)
+    create_revision(current, user, ArticleRevision.Reason.SUBMITTED)
+    permission = "pode publicar" if can_publish else "só devolve ao autor"
+    events.record(
+        current, user, EventKind.REVIEWER_ASSIGNED, note=f"{reviewer.public_name} ({permission})."
+    )
+    notifications.review_requested(current, user, reviewer, note)
+    _sync(article, current, ["status", "submitted_at", "updated_at"])
+    return current
+
+
+def _remove_reviewer(current: Article, user: User, reason: str) -> User | None:
+    credit = permissions.reviewer_credit(current)
+    if credit is None:
+        return None
+    events.record(
+        current, user, EventKind.REVIEWER_REMOVED, note=f"{credit.display_name}: {reason}"
+    )
+    reviewer = credit.user
+    credit.delete()
+    return reviewer
+
+
+@transaction.atomic
+def cancel_review(user: User, article: Article) -> Article:
+    """O autor desiste do pedido: volta a rascunho e o revisor é avisado."""
+    current = _locked(article)
+    if not permissions.can_cancel_review(user, current):
+        raise PermissionDenied
+    _set_status(current, user, Status.DRAFT, [])
+    reviewer = _remove_reviewer(current, user, "pedido cancelado.")
+    if reviewer is not None:
+        notifications.review_cancelled(current, user, reviewer)
+    _sync(article, current, ["status", "updated_at"])
+    return current
+
+
+@transaction.atomic
+def decline_review(user: User, article: Article, note: str = "") -> Article:
+    """O revisor não pode revisar: volta a rascunho para o autor escolher outro colega."""
+    current = _locked(article)
+    if not permissions.can_decline_review(user, current):
+        raise PermissionDenied
+    _set_status(current, user, Status.DRAFT, [], note)
+    _remove_reviewer(current, user, "revisão recusada.")
+    notifications.review_declined(current, user, note)
+    _sync(article, current, ["status", "updated_at"])
+    return current
+
+
+@transaction.atomic
+def request_changes(user: User, article: Article, note: str) -> Article:
+    """Sugerir alterações: devolve ao autor com uma nota obrigatória.
+
+    Com os comentários editoriais (E32), a condição passa a ser ao menos um comentário
+    aberto (docs/17).
+    """
+    current = _locked(article)
+    if not permissions.can_review(user, current):
+        raise PermissionDenied
+    if not note.strip():
+        raise ValidationError({"note": "Escreva o que precisa mudar antes de devolver."})
+    _set_status(current, user, Status.CHANGES_REQUESTED, [], note)
+    notifications.changes_requested(current, user, note)
+    _sync(article, current, ["status", "updated_at"])
+    return current
+
+
+@transaction.atomic
+def approve(user: User, article: Article, note: str = "") -> Article:
+    """Aprovar: volta a rascunho com o selo "revisado"; o autor publica quando quiser."""
+    current = _locked(article)
+    if not permissions.can_review(user, current):
+        raise PermissionDenied
+    _set_status(current, user, Status.DRAFT, [])
+    events.record(current, user, EventKind.APPROVED, note=note)
+    notifications.review_approved(current, user, note)
+    _sync(article, current, ["status", "updated_at"])
+    return current
+
+
+@transaction.atomic
+def approve_and_publish(user: User, article: Article, note: str = "") -> Article:
+    """Aprovar e publicar: revisor com "pode publicar por mim", editor ou admin."""
+    current = _locked(article)
+    if not permissions.can_approve_and_publish(user, current):
+        raise PermissionDenied
+    columns = _publish_locked(user, current)  # checklist primeiro: sem ela, nada é gravado
+    events.record(current, user, EventKind.APPROVED, note=note)
+    _sync(article, current, columns)
+    return current
+
+
+@transaction.atomic
+def resume(user: User, article: Article) -> Article:
+    """Depois de alterações sugeridas, o autor retoma o texto como rascunho."""
+    current = _locked(article)
+    if not permissions.can_resume(user, current):
+        raise PermissionDenied
+    _set_status(current, user, Status.DRAFT, [])
+    _sync(article, current, ["status", "updated_at"])
     return current
 
 
