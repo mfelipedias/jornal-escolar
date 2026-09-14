@@ -6,6 +6,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [1.0.0] - 2026-09-14
+
 ### Adicionado
 
 - Seed de demonstração (E28): `manage.py seed_demo` cria 8 pessoas fictícias da equipe (sem senha), 19 publicações de 10 tipos e 6 áreas (com rascunhos, uma arquivada, créditos de alunos com autorização), capas e fotos de perfil desenhadas localmente, eventos na agenda e os 3 destaques da home. Idempotente, recusa rodar sem `DEBUG=True` e não troca destaques escolhidos de verdade. `seed_demo --apagar` remove tudo o que criou, inclusive os arquivos.
