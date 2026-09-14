@@ -1,7 +1,8 @@
 """Menu lateral do painel (docs/15, "Menu lateral").
 
-Só entram os itens da Fase 1. Revisões, Comentários, Sugestões, Pautas e Editorial
-aparecem quando as fases deles chegarem: basta acrescentar a linha aqui.
+Só entram os itens da Fase 1; Destaques e Páginas (E25) só para editor+. Revisões,
+Comentários, Sugestões, Pautas e Editorial aparecem quando as fases deles chegarem: basta
+acrescentar a linha aqui.
 """
 
 from dataclasses import dataclass
@@ -30,6 +31,8 @@ ACTIVE_BY_VIEW = {
     "accounts:profile_edit": "profile",
     "accounts:account_settings": "account",
     "editorial:notifications": "home",
+    "editorial:featured": "featured",
+    "core:page_list": "pages",
 }
 
 
@@ -39,6 +42,12 @@ def menu_items(user: User, view_name: str = "") -> list[MenuItem]:
         ("home", "Início", reverse("dashboard:home"), "home", False),
         ("my_articles", "Minhas publicações", reverse("dashboard:my_articles"), "list", False),
         ("create", "Nova publicação", reverse("publications:create"), "plus", False),
+    ]
+    if permissions.can_feature(user):
+        rows.append(("featured", "Destaques", reverse("editorial:featured"), "star", False))
+    if permissions.can_edit_pages(user):
+        rows.append(("pages", "Páginas", reverse("core:page_list"), "file", False))
+    rows += [
         ("profile", "Perfil", reverse("accounts:profile_edit"), "user", False),
         ("account", "Conta", reverse("accounts:account_settings"), "key", False),
     ]

@@ -1,8 +1,19 @@
+from datetime import datetime
+from typing import Any
+
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DEFAULT_DB_ALIAS, DatabaseError, connections, transaction
 from django.db.migrations.executor import MigrationExecutor
 
+from apps.accounts.models import User
+from apps.editorial import permissions
+from apps.publications import rendering
+
 from . import site_settings
 from .models import StaticPage
+
+PAGE_TITLE_MAX = 120
+PAGE_LEAD_MAX = 240
 
 
 def check_database() -> bool:
@@ -80,8 +91,75 @@ def seed_site() -> dict[str, int]:
     """Cria configurações e páginas institucionais que faltam, sem alterar as existentes."""
     created_pages = 0
     for data in INITIAL_PAGES:
-        _, created = StaticPage.objects.get_or_create(
-            slug=data["slug"], defaults={k: v for k, v in data.items() if k != "slug"}
-        )
+        defaults = {k: v for k, v in data.items() if k not in ("slug", "body")}
+        document = text_to_document(data["body"])
+        defaults.update(body_json=document, body_html=rendering.render(document, set()).html)
+        _, created = StaticPage.objects.get_or_create(slug=data["slug"], defaults=defaults)
         created_pages += created
     return {"configurações": site_settings.ensure_defaults(), "páginas": created_pages}
+
+
+def text_to_document(text: str) -> dict:
+    """Texto simples (parágrafos separados por linha em branco) → documento do editor."""
+    blocks = [b.strip() for b in text.replace("\r\n", "\n").split("\n\n") if b.strip()]
+    content = []
+    for block in blocks:
+        inline: list[dict] = []
+        for index, line in enumerate(block.split("\n")):
+            if index:
+                inline.append({"type": "hardBreak"})
+            if line:
+                inline.append({"type": "text", "text": line})
+        content.append({"type": "paragraph", "content": inline})
+    return {"type": "doc", "content": content}
+
+
+class PageConflictError(Exception):
+    """Outra pessoa salvou a página depois da versão que o editor carregou."""
+
+
+@transaction.atomic
+def update_page(
+    user: User, page: StaticPage, *, expected_updated_at: datetime | None = None, **fields: Any
+) -> StaticPage:
+    """Autosave de título, linha fina e corpo de uma página institucional (editor+).
+
+    O HTML é sempre gerado aqui, a partir do documento limpo; figuras são descartadas
+    (páginas institucionais não têm imagens).
+    """
+    if not permissions.can_edit_pages(user):
+        raise PermissionDenied
+    unknown = set(fields) - {"title", "lead", "body_json"}
+    if unknown:
+        raise ValueError(f"Campos não editáveis: {sorted(unknown)}")
+    current = StaticPage.objects.select_for_update().get(pk=page.pk)
+    if (
+        expected_updated_at is not None
+        and current.updated_at != expected_updated_at
+        and current.updated_by_id not in (None, user.pk)
+    ):
+        raise PageConflictError
+    if "title" in fields:
+        title = " ".join(str(fields["title"] or "").split())
+        if len(title) > PAGE_TITLE_MAX:
+            raise ValidationError({"title": f"O título pode ter até {PAGE_TITLE_MAX} caracteres."})
+        # Título apagado no meio da digitação: mantém o anterior em vez de falhar o autosave.
+        current.title = title or current.title
+    if "lead" in fields:
+        current.lead = " ".join(str(fields["lead"] or "").split())[:PAGE_LEAD_MAX]
+    if "body_json" in fields:
+        result = rendering.render(fields["body_json"], allowed_assets=set())
+        current.body_json = result.document
+        current.body_html = result.html
+    current.updated_by = user
+    current.save()
+    return current
+
+
+def set_page_published(user: User, page: StaticPage, published: bool) -> StaticPage:
+    if not permissions.can_edit_pages(user):
+        raise PermissionDenied
+    page.is_published = published
+    page.updated_by = user
+    page.save(update_fields=["is_published", "updated_by", "updated_at"])
+    return page

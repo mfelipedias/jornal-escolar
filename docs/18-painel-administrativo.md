@@ -103,3 +103,6 @@ Comandos de gerenciamento para o admin:
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: links de acesso no lugar de convites; seed completo da escola; comentários; log de erros.
+- 2026-09-14: E25 adiantou dois itens do editorial para a Fase 1, fora de `/painel/editorial/` (que continua na Fase 2), com itens próprios no menu do painel só para editor+:
+  - Destaques em `/painel/destaques/`: ordenação por setas (arrastar fica para depois). A capa é exigida só de quem entra; um destaque antigo sem capa pode ser reordenado. Ao arquivar, a publicação sai dos destaques.
+  - Páginas estáticas em `/painel/paginas/`, com o editor das publicações sem imagens (figuras são descartadas no servidor) e botão para pôr no ar ou tirar do ar. No admin, `StaticPage` edita só título, linha fina e publicação, com link para o editor.

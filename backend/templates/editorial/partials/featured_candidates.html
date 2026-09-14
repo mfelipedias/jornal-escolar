@@ -1,0 +1,27 @@
+{% comment %}Resultados da busca de destaques (editorial:featured_search).{% endcomment %}
+<div id="featured-candidates" class="mt-4">
+  {% if candidates %}
+    <ul class="divide-y divide-line rounded-card border border-line bg-white">
+      {% for article in candidates %}
+        <li class="flex items-center gap-3 px-3 py-2.5 sm:px-4"
+            data-candidate="{{ article.pk }}">
+          <div class="min-w-0 flex-1">
+            <p class="line-clamp-2 text-ui font-medium text-ink">{{ article.title }}</p>
+            <p class="text-meta text-ink-3">
+              {% if article.type %}{{ article.type.name }} ·{% endif %}
+              {{ article.published_at|date:"j/m/Y" }}
+            </p>
+          </div>
+          {% include "editorial/partials/feature_button.html" with pk=article.pk action="adicionar" label="Adicionar" title="Adicionar aos destaques" article_title=article.title disabled=is_full %}
+        </li>
+      {% endfor %}
+    </ul>
+    {% if is_full %}
+      <p class="mt-2 text-meta text-ink-3">Já há {{ max_featured }} destaques. Remova um para adicionar outro.</p>
+    {% endif %}
+  {% elif query %}
+    <p class="text-ui text-ink-3">Nenhuma publicação com capa encontrada para “{{ query }}”.</p>
+  {% else %}
+    <p class="text-ui text-ink-3">Nenhuma outra publicação no ar com imagem de capa.</p>
+  {% endif %}
+</div>

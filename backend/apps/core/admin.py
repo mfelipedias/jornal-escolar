@@ -3,6 +3,8 @@ from typing import Any
 from django import forms
 from django.contrib import admin
 from django.http import HttpRequest, HttpResponse
+from django.urls import reverse
+from django.utils.html import format_html
 
 from . import site_settings
 from .models import SiteSetting, StaticPage
@@ -79,9 +81,19 @@ class SiteSettingAdmin(admin.ModelAdmin):
 class StaticPageAdmin(admin.ModelAdmin):
     list_display = ("title", "slug", "is_published", "updated_at", "updated_by")
     list_filter = ("is_published",)
-    readonly_fields = ("updated_by", "updated_at")
-    fields = ("slug", "title", "lead", "body", "is_published", "updated_by", "updated_at")
+    readonly_fields = ("text", "updated_by", "updated_at")
+    fields = ("slug", "title", "lead", "text", "is_published", "updated_by", "updated_at")
     view_on_site = True
+
+    @admin.display(description="texto")
+    def text(self, obj: StaticPage) -> str:
+        """O corpo é escrito no editor do painel, não aqui (docs/18)."""
+        if not obj.pk:
+            return "Salve a página e depois escreva o texto no painel."
+        return format_html(
+            '<a href="{}">Editar o texto no painel</a>',
+            reverse("core:page_edit", args=[obj.slug]),
+        )
 
     def save_model(self, request: HttpRequest, obj: StaticPage, form: Any, change: bool) -> None:
         obj.updated_by = request.user

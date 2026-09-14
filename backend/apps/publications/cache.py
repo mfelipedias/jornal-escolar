@@ -5,6 +5,7 @@ chaves antigas deixam de ser lidas (expiram sozinhas). Os sinais ficam em signal
 """
 
 from django.core.cache import cache
+from django.db import transaction
 
 VERSION_KEY = "public-content:version"
 
@@ -18,3 +19,10 @@ def bump_public_version() -> None:
         cache.incr(VERSION_KEY)
     except ValueError:  # chave ainda não existe
         cache.set(VERSION_KEY, 2, timeout=None)
+
+
+def invalidate_public_content() -> None:
+    """Sobe a versão agora e de novo depois do commit: quem remontar o cache no meio da
+    transação não deixa guardada a versão antiga."""
+    bump_public_version()
+    transaction.on_commit(bump_public_version)

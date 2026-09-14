@@ -8,6 +8,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Destaques da home `/painel/destaques/` (E25, só editor e admin): lista dos até 3 destaques com setas para subir, descer e remover, busca entre as publicações no ar com capa para adicionar e prévia do bloco como a home mostra. Novos destaques exigem capa; a mudança aparece na home na hora.
+- Páginas institucionais no painel `/painel/paginas/` (E25, só editor e admin): Sobre, Como participar e Privacidade escritas com o mesmo editor das publicações (sem imagens), com salvamento automático e botões para pôr no ar ou tirar do ar. O admin passa a apontar para esse editor.
 - Painel da equipe (E24): layout com menu lateral (aberto no computador, só ícones no tablet, gaveta no celular), sino de notificações no cabeçalho e versão no rodapé do menu. Mostra só os itens da Fase 1; "Administração" só para admin. Perfil, Conta, Notificações e Nova publicação passaram a usar esse layout, e o cabeçalho do jornal ganhou o link "Painel".
 - Início do painel `/painel/`: pendências (notificações não lidas e "Complete seu perfil"), continuar escrevendo (3 rascunhos), suas últimas publicadas e números de publicadas e rascunhos.
 - "Minhas publicações" `/painel/publicacoes/`: tabela no computador e lista no celular com título, tipo, estado, meu papel e última atualização; filtro por estado (Todos, Rascunhos, Publicados, Arquivados); ações Abrir, Ver no jornal, Duplicar como rascunho (com cópia das imagens), Arquivar e Restaurar.

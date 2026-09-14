@@ -190,3 +190,23 @@ def search_staff_for_credit(article: Article, query: str, limit: int = 8) -> Que
         .exclude(pk__in=already)
         .order_by("full_name")[:limit]
     )
+
+
+def chosen_featured() -> list[Article]:
+    """Só os destaques marcados por editor+, na ordem da home (tela de destaques)."""
+    return list(
+        for_cards(
+            published()
+            .filter(is_featured=True)
+            .order_by(F("featured_order").asc(nulls_last=True), "-published_at")
+        )
+    )
+
+
+def featured_candidates(query: str = "", limit: int = 8) -> list[Article]:
+    """Publicadas com capa que ainda não são destaque, filtradas pelo título."""
+    candidates = published().filter(cover__isnull=False, is_featured=False)
+    query = " ".join(query.split())
+    if query:
+        candidates = candidates.filter(title__icontains=query)
+    return list(candidates.select_related("type", "cover")[:limit])

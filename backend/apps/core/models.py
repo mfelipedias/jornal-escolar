@@ -51,8 +51,9 @@ class SiteSetting(models.Model):
 class StaticPage(TimeStampedModel):
     """Páginas institucionais editáveis: Sobre, Privacidade, Como colaborar (docs/12).
 
-    Por ora o corpo é texto simples (parágrafos separados por linha em branco).
-    Na E25 ganha o mesmo editor das publicações (body_json + body_html).
+    O corpo é escrito no painel com o mesmo editor das publicações (docs/18): o documento
+    fica em body_json e o HTML limpo, gerado pelo servidor (publications/rendering.py), em
+    body_html. Sem imagens por enquanto.
     """
 
     class Slug(models.TextChoices):
@@ -63,11 +64,8 @@ class StaticPage(TimeStampedModel):
     slug = models.SlugField("página", max_length=32, unique=True, choices=Slug.choices)
     title = models.CharField("título", max_length=120)
     lead = models.CharField("linha fina", max_length=240, blank=True)
-    body = models.TextField(
-        "texto",
-        blank=True,
-        help_text="Separe parágrafos com uma linha em branco.",
-    )
+    body_json = models.JSONField("corpo (documento do editor)", default=dict, blank=True)
+    body_html = models.TextField("corpo em HTML", blank=True)
     is_published = models.BooleanField(
         "publicada",
         default=True,

@@ -1,0 +1,20 @@
+{% comment %}
+  Botão de uma ação sobre os destaques. Parâmetros: pk, action (adicionar, remover, subir,
+  descer), label, title, article_title, disabled.
+{% endcomment %}
+<form method="post"
+      action="{% url 'editorial:feature' pk %}"
+      hx-post="{% url 'editorial:feature' pk %}"
+      hx-target="#featured-board"
+      hx-swap="outerHTML"
+      hx-include="#featured-q">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="{{ action }}">
+  <button type="submit"
+          class="{% if action == 'adicionar' %}btn-secondary{% else %}btn-ghost{% endif %}"
+          title="{{ title }}"
+          aria-label="{{ title }}: {{ article_title }}"
+          {% if disabled %}disabled{% endif %}>
+    {{ label }}
+  </button>
+</form>

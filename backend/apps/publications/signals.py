@@ -7,7 +7,7 @@ from django.dispatch import receiver
 
 from apps.accounts.models import TeacherProfile, User
 
-from .cache import bump_public_version
+from .cache import invalidate_public_content
 from .models import Article, ArticleContributor, MediaAsset
 
 
@@ -24,10 +24,7 @@ def delete_media_files(sender: type[MediaAsset], instance: MediaAsset, **kwargs:
 
 
 def _bump() -> None:
-    # Agora e de novo depois do commit: quem remontar o cache no meio da transação
-    # não deixa guardada a versão antiga.
-    bump_public_version()
-    transaction.on_commit(bump_public_version)
+    invalidate_public_content()
 
 
 @receiver(post_save, sender=Article, dispatch_uid="publications_article_public_cache")

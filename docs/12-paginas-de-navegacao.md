@@ -77,7 +77,7 @@ Ver [19](19-busca-e-filtros.md). Resumo da tela:
 
 Rotas: `/sobre/`, `/privacidade/`, `/colaborar/` · Nome: `core:page`
 
-- Conteúdo de `StaticPage`, editado no admin com o mesmo editor das publicações.
+- Conteúdo de `StaticPage`, editado no painel (`/painel/paginas/`, editor+) com o mesmo editor das publicações.
 - Layout de coluna de leitura, sem sidebar.
 - "Como participar" (`/colaborar/`) explica que alunos participam entregando textos a um professor, que a equipe entra pelo admin, e como pedir remoção de nome ou comentário; inclui o e-mail de contato do rodapé. Não menciona o nome da escola.
 - "Privacidade" explica cookies, comentários (nome público), créditos de alunos e ausência de rastreadores.
@@ -104,3 +104,4 @@ Rotas: `/sobre/`, `/privacidade/`, `/colaborar/` · Nome: `core:page`
   - Sem paginação: a equipe de uma escola cabe numa página.
   - Nomes em "Quem escreve sobre a área", na home e em "Quem fez" da publicação levam ao perfil (se público); a home e a página de área ganharam "Ver toda a equipe". "Quem escreve" entrou no cabeçalho.
   - Cabeçalho ganhou a linha de áreas (nome curto, ponto na cor da área, sublinhado na área atual), Agenda e Sobre; no celular a linha rola na horizontal em vez de abrir menu.
+- 2026-09-14: E25: páginas estáticas editadas no painel, não no admin (ver [18](18-painel-administrativo.md)).

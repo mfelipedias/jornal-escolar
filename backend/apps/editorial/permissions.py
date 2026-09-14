@@ -103,3 +103,8 @@ def can_edit_media(user: AnyUser, asset: MediaAsset) -> bool:
 def can_feature(user: AnyUser) -> bool:
     """Definir destaques da home."""
     return is_editor(user)
+
+
+def can_edit_pages(user: AnyUser) -> bool:
+    """Editar e publicar as páginas institucionais (Sobre, Privacidade, Como participar)."""
+    return is_editor(user)

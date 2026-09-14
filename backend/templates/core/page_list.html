@@ -1,0 +1,56 @@
+{% extends "layouts/dashboard.html" %}
+{% load humanize %}
+{% comment %}Páginas institucionais (docs/18): editar no editor, pôr no ar ou tirar do ar.{% endcomment %}
+{% block title %}Páginas · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <h1 class="font-serif text-h1 font-semibold">Páginas</h1>
+  <p class="mt-2 max-w-reading text-ui text-ink-2">
+    Textos fixos do jornal, com link no rodapé quando estão no ar.
+  </p>
+  <ul class="mt-8 divide-y divide-line rounded-card border border-line bg-white">
+    {% for page in pages %}
+      <li class="flex flex-wrap items-center gap-3 px-4 py-4"
+          data-page="{{ page.slug }}">
+        <div class="min-w-0 flex-1">
+          <p class="font-medium text-ink">{{ page.title }}</p>
+          <p class="flex flex-wrap items-center gap-2 text-meta text-ink-3">
+            <span>/{{ page.slug }}/</span>
+            {% if page.is_published %}
+              <span class="text-ok">No ar</span>
+            {% else %}
+              <span>Fora do ar</span>
+            {% endif %}
+            <span>
+              Atualizada {{ page.updated_at|naturaltime }}
+              {% if page.updated_by %}por {{ page.updated_by.public_name }}{% endif %}
+            </span>
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-1">
+          <a href="{% url 'core:page_edit' page.slug %}"
+             class="btn-secondary"
+             aria-label="Editar “{{ page.title }}”">Editar</a>
+          {% if page.is_published %}
+            <a href="{{ page.get_absolute_url }}"
+               class="btn-ghost"
+               aria-label="Ver “{{ page.title }}” no jornal">Ver no jornal</a>
+          {% endif %}
+          <form method="post" action="{% url 'core:page_publish' page.slug %}">
+            {% csrf_token %}
+            {% if page.is_published %}
+              <input type="hidden" name="publicada" value="0">
+              <button type="submit"
+                      class="btn-ghost"
+                      aria-label="Tirar “{{ page.title }}” do ar">Tirar do ar</button>
+            {% else %}
+              <input type="hidden" name="publicada" value="1">
+              <button type="submit"
+                      class="btn-ghost"
+                      aria-label="Pôr “{{ page.title }}” no ar">Pôr no ar</button>
+            {% endif %}
+          </form>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock content %}

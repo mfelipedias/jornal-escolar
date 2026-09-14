@@ -1,4 +1,5 @@
 // Editor de publicações (docs/16): TipTap 3 sem framework, autosave e barra de ferramentas.
+// Também edita as páginas institucionais (E25): sem mediaUrl, imagens ficam desligadas.
 // Os nós habilitados aqui precisam bater com backend/apps/publications/rendering.py.
 import { Editor } from "@tiptap/core";
 import Typography from "@tiptap/extension-typography";
@@ -40,7 +41,8 @@ export function initEditor(root) {
   const countEl = root.querySelector("[data-editor-count]");
   const toolbar = root.querySelector("[data-editor-toolbar]");
   const linkForm = root.querySelector("[data-link-form]");
-  const backupKey = `jornal:editor:${data.articleId}`;
+  const backupKey = `jornal:editor:${data.storageKey || data.articleId}`;
+  const imagesEnabled = Boolean(data.mediaUrl);
 
   let updatedAt = data.updatedAt;
   let dirty = false;
@@ -68,12 +70,13 @@ export function initEditor(root) {
       Placeholder.configure({ placeholder: "Comece a escrever…" }),
       CharacterCount,
       Typography,
-      Figure,
+      ...(imagesEnabled ? [Figure] : []),
     ],
     content: data.body,
     editorProps: {
-      attributes: { "aria-label": "Texto da publicação", role: "textbox", "aria-multiline": "true" },
+      attributes: { "aria-label": data.bodyLabel || "Texto da publicação", role: "textbox", "aria-multiline": "true" },
       handleDrop: (view, event, _slice, moved) => {
+        if (!imagesEnabled) return false;
         const files = imageFiles(event.dataTransfer?.files);
         if (moved || !files.length) return false;
         event.preventDefault();
@@ -82,6 +85,7 @@ export function initEditor(root) {
         return true;
       },
       handlePaste: (_view, event) => {
+        if (!imagesEnabled) return false;
         const files = imageFiles(event.clipboardData?.files);
         if (!files.length) return false;
         event.preventDefault();
@@ -234,6 +238,7 @@ export function initEditor(root) {
     redo: () => editor.chain().focus().redo().run(),
     link: () => openLinkForm(),
     image: () => {
+      if (!imagesEnabled) return;
       if (editor.isActive("figure")) openImageDialog(editor.state.selection.from);
       else fileInput.click();
     },
@@ -309,7 +314,7 @@ export function initEditor(root) {
   fileInput.multiple = true;
   fileInput.hidden = true;
   fileInput.dataset.imageInput = "";
-  root.appendChild(fileInput);
+  if (imagesEnabled) root.appendChild(fileInput);
   fileInput.addEventListener("change", () => {
     imageFiles(fileInput.files).forEach((file) => insertUploadedImage(file));
     fileInput.value = "";
@@ -379,13 +384,13 @@ export function initEditor(root) {
     return found;
   }
 
-  const dialog = document.querySelector("[data-image-dialog]");
-  const dialogForm = dialog.querySelector("form");
+  const dialog = imagesEnabled ? document.querySelector("[data-image-dialog]") : null;
+  const dialogForm = dialog?.querySelector("form");
   let dialogPos = null;
 
   async function openImageDialog(pos, isNew = false) {
     const node = editor.state.doc.nodeAt(pos);
-    if (!node || node.type.name !== "figure") return;
+    if (!dialog || !node || node.type.name !== "figure") return;
     dialogPos = pos;
     const fields = dialogForm.elements;
     fields.alt.value = node.attrs.alt || "";
@@ -415,7 +420,7 @@ export function initEditor(root) {
     fields.alt.focus();
   }
 
-  dialogForm.addEventListener("submit", async (event) => {
+  dialogForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (event.submitter?.value === "cancel") {
       dialog.close();

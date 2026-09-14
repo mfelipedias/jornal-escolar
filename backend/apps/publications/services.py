@@ -11,7 +11,7 @@ from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Max, Q
+from django.db.models import F, Max, Q
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -20,6 +20,7 @@ from apps.editorial import notifications, permissions
 from apps.taxonomy.models import ArticleType, Discipline, Topic
 
 from . import rendering
+from .cache import invalidate_public_content
 from .credits import student_name_error
 from .media import copy_asset
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
@@ -541,7 +542,8 @@ def archive(user: User, article: Article, note: str = "") -> Article:
     current.status = Article.Status.ARCHIVED
     current.archived_at = timezone.now()
     current.is_featured = False
-    fields = ["status", "archived_at", "is_featured", "updated_at"]
+    current.featured_order = None
+    fields = ["status", "archived_at", "is_featured", "featured_order", "updated_at"]
     current.save(update_fields=fields)
     # A nota também vai para EditorialEvent quando o modelo existir (E29).
     notifications.article_archived(current, user, note)
@@ -560,3 +562,77 @@ def restore(user: User, article: Article) -> Article:
     current.save(update_fields=fields)
     _sync(article, current, fields)
     return current
+
+
+# --- destaques da home (docs/10, docs/18) ---
+
+MAX_FEATURED = 3
+
+
+def featured_ids() -> list[int]:
+    """Destaques marcados hoje, na ordem da home (sem as mais recentes que completam o bloco)."""
+    return list(
+        Article.objects.filter(status=Article.Status.PUBLISHED, is_featured=True)
+        .order_by(F("featured_order").asc(nulls_last=True), "-published_at")
+        .values_list("pk", flat=True)
+    )
+
+
+@transaction.atomic
+def set_featured(user: User, article_ids: list[int]) -> list[int]:
+    """Define os destaques da home, na ordem dada. Quem sai da lista deixa de ser destaque.
+
+    Só publicações no ar entram. Quem entra agora precisa ter capa (docs/18); um destaque
+    antigo sem capa pode continuar e ser reordenado (a home usa o layout tipográfico).
+    """
+    if not permissions.can_feature(user):
+        raise PermissionDenied
+    ids = list(dict.fromkeys(article_ids))
+    if len(ids) > MAX_FEATURED:
+        raise ValidationError(f"A página inicial mostra até {MAX_FEATURED} destaques.")
+    current = set(featured_ids())
+    articles = Article.objects.select_for_update().in_bulk(ids)
+    for pk in ids:
+        article = articles.get(pk)
+        if article is None or article.status != Article.Status.PUBLISHED:
+            raise ValidationError("Só publicações que estão no ar podem ser destaque.")
+        if pk not in current and not article.cover_id:
+            raise ValidationError(
+                f"“{article.title}” não tem imagem de capa. Destaques precisam de capa."
+            )
+    # .update() não dispara sinais nem mexe em updated_at (não gera conflito no editor);
+    # por isso a versão do conteúdo público sobe aqui.
+    Article.objects.filter(is_featured=True).exclude(pk__in=ids).update(
+        is_featured=False, featured_order=None
+    )
+    for order, pk in enumerate(ids, start=1):
+        Article.objects.filter(pk=pk).update(is_featured=True, featured_order=order)
+    invalidate_public_content()
+    return ids
+
+
+def feature(user: User, article: Article) -> list[int]:
+    ids = featured_ids()
+    if article.pk in ids:
+        return ids
+    if len(ids) >= MAX_FEATURED:
+        raise ValidationError(
+            f"Já há {MAX_FEATURED} destaques. Remova um antes de adicionar outro."
+        )
+    return set_featured(user, [*ids, article.pk])
+
+
+def unfeature(user: User, article: Article) -> list[int]:
+    return set_featured(user, [pk for pk in featured_ids() if pk != article.pk])
+
+
+def move_featured(user: User, article: Article, step: int) -> list[int]:
+    """Sobe (step=-1) ou desce (step=1) um lugar na ordem dos destaques."""
+    ids = featured_ids()
+    if article.pk not in ids:
+        raise ValidationError("Esta publicação não está nos destaques.")
+    index = ids.index(article.pk)
+    target = index + step
+    if 0 <= target < len(ids):
+        ids[index], ids[target] = ids[target], ids[index]
+    return set_featured(user, ids)

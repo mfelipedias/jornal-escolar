@@ -1,0 +1,56 @@
+{% extends "layouts/editor.html" %}
+{% comment %}
+  Editor de página institucional: o mesmo editor das publicações (frontend/src/js/editor.js),
+  sem imagens e sem painel lateral. Salva sozinho em core:page_save_body.
+{% endcomment %}
+{% block title %}{{ page.title }} · Páginas · {{ jornal.name }}{% endblock title %}
+{% block editor_back %}
+  <a href="{% url 'core:page_list' %}"
+     class="flex items-center gap-2 text-ui text-ink-2 hover:text-accent">
+    <span aria-hidden="true">←</span>
+    <span>Páginas</span>
+  </a>
+{% endblock editor_back %}
+{% block editor_status %}
+  <span class="text-meta text-ink-3">
+    {% if page.is_published %}
+      No ar
+    {% else %}
+      Fora do ar
+    {% endif %}
+  </span>
+  <span class="hidden text-meta text-ink-3 sm:inline"
+        data-save-status
+        role="status"
+        aria-live="polite">Tudo salvo</span>
+{% endblock editor_status %}
+{% block editor_actions %}
+  {% if page.is_published %}
+    <a href="{{ page.get_absolute_url }}" class="btn-secondary">Ver no jornal</a>
+  {% endif %}
+{% endblock editor_actions %}
+{% block content %}
+  {{ editor_data|json_script:"editor-data" }}
+  <div class="px-4 pt-10 pb-32 sm:px-8" data-editor-root>
+    <div class="mx-auto w-full max-w-reading">
+      <label for="editor-title" class="sr-only">Título</label>
+      <textarea id="editor-title"
+                data-editor-title
+                rows="1"
+                maxlength="120"
+                placeholder="Título"
+                class="block w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-h1 font-semibold text-ink placeholder:text-ink-3/60 focus:ring-0 focus:outline-none sm:text-display"></textarea>
+      <label for="editor-subtitle" class="sr-only">Linha fina</label>
+      <textarea id="editor-subtitle"
+                data-editor-subtitle
+                rows="1"
+                maxlength="240"
+                placeholder="Linha fina: uma frase que resume a página"
+                class="mt-4 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-lead text-ink-2 placeholder:text-ink-3/60 focus:ring-0 focus:outline-none"></textarea>
+      {% include "publications/partials/toolbar.html" with no_images=True %}
+      <div id="editor-body" class="article-body mt-8" data-editor-body></div>
+      <p class="mt-10 border-t border-line pt-3 text-meta text-ink-3"
+         data-editor-count></p>
+    </div>
+  </div>
+{% endblock content %}

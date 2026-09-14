@@ -1,0 +1,107 @@
+{% comment %}
+  Quadro dos destaques: lista ordenada, busca para adicionar e prévia do bloco da home.
+  É devolvido inteiro por editorial:feature (o HTMX troca #featured-board).
+{% endcomment %}
+<div id="featured-board"
+     class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+  <div class="space-y-8">
+    {% if error %}
+      <p class="rounded-card border border-danger bg-white px-4 py-3 text-ui text-danger"
+         role="alert">{{ error }}</p>
+    {% endif %}
+    <section aria-labelledby="featured-chosen-title">
+      <h2 id="featured-chosen-title" class="font-serif text-h3 font-semibold">
+        Escolhidos <span class="text-ui font-normal text-ink-3">{{ chosen|length }} de {{ max_featured }}</span>
+      </h2>
+      {% if chosen %}
+        <ol class="mt-4 divide-y divide-line rounded-card border border-line bg-white">
+          {% for item in chosen %}
+            <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
+                data-featured="{{ item.article.pk }}">
+              <span class="w-5 text-center font-serif text-h3 text-ink-3">{{ forloop.counter }}</span>
+              {% if item.card.image %}
+                <img src="{{ item.card.image.src }}"
+                     alt=""
+                     class="hidden aspect-[3/2] w-20 rounded-field bg-paper-2 object-cover sm:block">
+              {% else %}
+                <span class="hidden aspect-[3/2] w-20 items-center justify-center rounded-field bg-paper-2 text-center text-meta text-ink-3 sm:flex">sem capa</span>
+              {% endif %}
+              <div class="min-w-0 flex-1">
+                <p class="line-clamp-2 font-medium text-ink">{{ item.article.title }}</p>
+                <p class="text-meta text-ink-3">
+                  {% if item.card.type_name %}{{ item.card.type_name }} ·{% endif %}
+                  {{ item.article.published_at|date:"j/m/Y" }}
+                </p>
+              </div>
+              <div class="flex shrink-0 items-center gap-1">
+                {% if not forloop.first %}
+                  {% include "editorial/partials/feature_button.html" with pk=item.article.pk action="subir" label="↑" title="Subir" article_title=item.article.title %}
+                {% endif %}
+                {% if not forloop.last %}
+                  {% include "editorial/partials/feature_button.html" with pk=item.article.pk action="descer" label="↓" title="Descer" article_title=item.article.title %}
+                {% endif %}
+                {% include "editorial/partials/feature_button.html" with pk=item.article.pk action="remover" label="Remover" title="Remover dos destaques" article_title=item.article.title %}
+              </div>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="mt-4 rounded-card border border-dashed border-line px-4 py-6 text-center text-ui text-ink-3">
+          Nenhum destaque escolhido. A home mostra as publicações mais recentes.
+        </p>
+      {% endif %}
+    </section>
+    <section aria-labelledby="featured-add-title">
+      <h2 id="featured-add-title" class="font-serif text-h3 font-semibold">Adicionar</h2>
+      <p class="mt-1 text-meta text-ink-3">Só aparecem publicações no ar com imagem de capa.</p>
+      <form method="get"
+            action="{% url 'editorial:featured' %}"
+            class="mt-3 flex gap-2"
+            role="search"
+            hx-get="{% url 'editorial:featured_search' %}"
+            hx-target="#featured-candidates"
+            hx-swap="outerHTML"
+            hx-trigger="submit, input changed delay:300ms from:#featured-q">
+        <label for="featured-q" class="sr-only">Buscar pelo título</label>
+        <input id="featured-q"
+               name="q"
+               type="search"
+               value="{{ query }}"
+               placeholder="Buscar pelo título"
+               autocomplete="off"
+               class="field min-w-0 flex-1">
+        <button type="submit" class="btn-secondary">Buscar</button>
+      </form>
+      {% include "editorial/partials/featured_candidates.html" %}
+    </section>
+  </div>
+  <aside aria-labelledby="featured-preview-title">
+    <h2 id="featured-preview-title" class="font-serif text-h3 font-semibold">Prévia na home</h2>
+    {% if preview %}
+      <div class="mt-4 space-y-3 rounded-card border border-line bg-paper p-3"
+           data-featured-preview>
+        {% for item in preview %}
+          {% with card=item.card %}
+            {% if forloop.first %}
+              <div class="border-t-[3px] {{ card.area.color_classes.border|default:'border-line' }} {% if not card.image %}bg-paper-2 px-3 py-4{% endif %}">
+                {% if card.image %}
+                  <img src="{{ card.image.src }}"
+                       alt=""
+                       class="mt-2 aspect-video w-full rounded-field bg-paper-2 object-cover">
+                {% endif %}
+                <p class="mt-2 font-serif text-h3 leading-snug font-semibold text-balance text-ink">{{ card.title }}</p>
+              </div>
+            {% else %}
+              <div class="border-t border-line pt-2">
+                <p class="line-clamp-2 font-serif text-ui font-semibold text-ink">{{ card.title }}</p>
+              </div>
+            {% endif %}
+            {% if not item.chosen %}<p class="text-meta text-ink-3">Mais recente (automático)</p>{% endif %}
+          {% endwith %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="mt-4 text-ui text-ink-3">Ainda não há publicações no ar.</p>
+    {% endif %}
+  </aside>
+</div>

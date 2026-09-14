@@ -8,11 +8,13 @@
   <div class="flex min-h-screen flex-col bg-paper">
     <header class="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
       <div class="flex h-14 items-center gap-3 px-4 sm:px-6">
-        <a href="{% url 'dashboard:my_articles' %}"
-           class="flex items-center gap-2 text-ui text-ink-2 hover:text-accent">
-          <span aria-hidden="true">←</span>
-          <span>Minhas publicações</span>
-        </a>
+        {% block editor_back %}
+          <a href="{% url 'dashboard:my_articles' %}"
+             class="flex items-center gap-2 text-ui text-ink-2 hover:text-accent">
+            <span aria-hidden="true">←</span>
+            <span>Minhas publicações</span>
+          </a>
+        {% endblock editor_back %}
         <span class="h-5 w-px bg-line" aria-hidden="true"></span>
         {% block editor_status %}
         {% endblock editor_status %}

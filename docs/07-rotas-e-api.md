@@ -152,3 +152,4 @@ Sem endpoints de escrita. Sem dados de alunos além do nome de exibição já p�
 - 2026-09-12: login Microsoft e links de acesso no lugar de convites; notificações; comentários públicos; transições revisadas; IA congelada.
 - 2026-09-14: E23: rotas do assistente de primeiro acesso.
 - 2026-09-14: E24: `/x/articles/<id>/duplicate/` e `next` nas transições.
+- 2026-09-14: E25: `/painel/destaques/` (`editorial:featured`), `/x/featured/search/`, `/x/articles/<id>/feature/` com `acao` (`adicionar`, `remover`, `subir`, `descer`), `/painel/paginas/` (`core:page_list`), `/painel/paginas/<slug>/editar/`, `/painel/paginas/<slug>/publicar/` e `PUT /x/pages/<slug>/body/`.

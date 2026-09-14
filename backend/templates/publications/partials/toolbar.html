@@ -1,4 +1,7 @@
-{% comment %}Barra de ferramentas do editor (docs/16). Os comandos ficam em frontend/src/js/editor.js.{% endcomment %}
+{% comment %}
+  Barra de ferramentas do editor (docs/16). Os comandos ficam em frontend/src/js/editor.js.
+  Parâmetro: no_images=True esconde o botão de imagem (páginas institucionais).
+{% endcomment %}
 <div class="sticky top-14 z-20 -mx-4 mt-8 border-y border-line bg-paper/95 px-2 py-1.5 backdrop-blur sm:mx-0 sm:rounded-field sm:border"
      role="toolbar"
      aria-label="Formatação do texto"
@@ -41,10 +44,12 @@
             class="editor-btn"
             data-cmd="horizontalRule"
             title="Separador">—</button>
-    <button type="button"
-            class="editor-btn"
-            data-cmd="image"
-            title="Imagem (também dá para arrastar ou colar)">Imagem</button>
+    {% if not no_images %}
+      <button type="button"
+              class="editor-btn"
+              data-cmd="image"
+              title="Imagem (também dá para arrastar ou colar)">Imagem</button>
+    {% endif %}
     <span class="editor-sep" aria-hidden="true"></span>
     <button type="button"
             class="editor-btn"
