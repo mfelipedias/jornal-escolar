@@ -1,6 +1,5 @@
 {% extends "publications/list.html" %}
 {% block title %}{{ area.name }} · {{ jornal.name }}{% endblock title %}
-{% block description %}{{ area.description|default:jornal.tagline }}{% endblock description %}
 {% block list_header %}
   {% with classes=area.color_classes %}
     <header class="border-b-[3px] {{ classes.border }} {{ classes.soft_bg }}">
@@ -29,7 +28,8 @@
   {% endif %}
 {% endblock list_before %}
 {% block list_layout %}mt-12 grid gap-14 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12{% endblock list_layout %}
-{% block grid_columns %}{% endblock grid_columns %}
+{% block grid_columns %}
+{% endblock grid_columns %}
 {% block list_empty %}
   {% include "components/empty_state.html" with title="Ainda não há publicações nesta área" text="Professores da área podem ser os primeiros." %}
 {% endblock list_empty %}

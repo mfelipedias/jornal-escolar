@@ -10,11 +10,14 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
+from apps.core import seo
+from apps.core.site_settings import get_setting
 from apps.publications import presentation
 from apps.publications import selectors as publication_selectors
 from apps.taxonomy.models import KnowledgeArea
 
 from . import selectors
+from . import seo as profile_seo
 from .models import TeacherProfile, User
 
 PROFILE_PER_PAGE = 10
@@ -155,6 +158,7 @@ def teacher_detail(request: HttpRequest, slug: str) -> HttpResponse:
                 for key, label in TABS
             ],
             "total": counts[selectors.TAB_ALL],
+            "seo": profile_seo.page_meta(person, profile),
         }
     )
     response = render(request, "accounts/teacher_detail.html", context)
@@ -235,5 +239,13 @@ def teacher_list(request: HttpRequest) -> HttpResponse:
         "order_recent_url": _chip_url(query, ordem=""),
         "order_name_url": _chip_url(query, ordem="nome"),
         "has_filters": bool(area or kind),
+        "seo": seo.PageMeta(
+            title="Quem escreve",
+            description=(
+                "Professores, monitores, coordenação e toda a equipe que escreve no "
+                f"{get_setting('site.name')}."
+            ),
+            path=reverse("accounts:teacher_list"),
+        ),
     }
     return render(request, "accounts/teacher_list.html", context)

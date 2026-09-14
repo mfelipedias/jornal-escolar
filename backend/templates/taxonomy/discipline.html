@@ -1,6 +1,5 @@
 {% extends "publications/list.html" %}
 {% block title %}{{ discipline.name }} · {{ jornal.name }}{% endblock title %}
-{% block description %}{{ discipline.description|default:jornal.tagline }}{% endblock description %}
 {% block list_header %}
   {% with classes=area.color_classes %}
     <header class="site-container border-b border-line pt-10 pb-8 sm:pt-14">
@@ -16,7 +15,8 @@
   {% endwith %}
 {% endblock list_header %}
 {% block list_layout %}mt-10 grid gap-14 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12{% endblock list_layout %}
-{% block grid_columns %}{% endblock grid_columns %}
+{% block grid_columns %}
+{% endblock grid_columns %}
 {% block list_empty %}
   {% if filters.has_user_filters %}
     {% include "components/empty_state.html" with title="Nenhuma publicação com esses filtros" text="Tente tirar um dos filtros." action_url=request.path action_label="Limpar filtros" %}

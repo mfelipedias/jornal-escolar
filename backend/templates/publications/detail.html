@@ -1,13 +1,5 @@
 {% extends "layouts/public.html" %}
 {% block title %}{{ article.title }} · {{ jornal.name }}{% endblock title %}
-{% block description %}{{ article.summary|default:jornal.tagline }}{% endblock description %}
-{% block head %}
-  {% if preview %}
-    <meta name="robots" content="noindex">
-  {% else %}
-    <link rel="canonical" href="{{ share_url }}">
-  {% endif %}
-{% endblock head %}
 {% block content %}
   {% if preview %}
     <div class="border-b border-warn/30 bg-area-ambar-soft">

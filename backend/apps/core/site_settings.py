@@ -47,6 +47,14 @@ REGISTRY: dict[str, SettingSpec] = {
             "Jornal digital da comunidade escolar",
         ),
         SettingSpec(
+            "site.description",
+            "Descrição para buscadores",
+            "text",
+            "",
+            "Texto curto (até 160 caracteres) que o Google e as redes sociais mostram para a "
+            "página inicial. Se vazio, usa a frase de apresentação. Não cite o nome da escola.",
+        ),
+        SettingSpec(
             "site.footer_credit",
             "Crédito no rodapé",
             "text",

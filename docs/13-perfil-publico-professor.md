@@ -92,3 +92,4 @@ Alunos não têm conta no sistema, por decisão da escola. Um perfil público de
   - Conta desativada: página no ar só se houver publicação creditada; sem "desde", bio, formação, interesses e links.
   - "Editar perfil" leva ao Django Admin e aparece só para administradores até a tela de configuração (E23), que deve ligar o botão também para o próprio usuário.
   - JSON-LD e Open Graph ficam para a E26 (SEO de todo o site). Participação editorial continua na Fase 6.
+- 2026-09-14: E26: JSON-LD `Person` (`name`, `url`, `jobTitle` = headline ou cargo, `image` = foto 480px) e Open Graph `profile` com a foto (ou a imagem padrão). Cargo "Outro" sem headline não gera `jobTitle`. Perfil oculto: `noindex`, sem JSON-LD e fora do sitemap; conta desativada entra no sitemap só se ainda tiver crédito visível.

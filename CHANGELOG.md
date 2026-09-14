@@ -8,6 +8,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- SEO do site (E26): título, descrição, endereço canônico, Open Graph e Twitter Card nas páginas públicas; JSON-LD `NewsArticle`/`Article` nas publicações (autores da equipe com link do perfil, alunos só com o nome), `Person` no perfil público e `WebSite` na home, sempre com o nome do jornal como quem publica. Imagem padrão de compartilhamento e logo com o glifo.
+- `/sitemap.xml` só com páginas públicas e `/robots.txt` fechando painel, login, admin e pré-visualizações; telas de login com `noindex`.
+- Configuração "Descrição para buscadores" (`site.description`) para a página inicial.
+- Compartilhar: "Copiar link" funciona também sem a Clipboard API (mostra o link selecionado) e o link do WhatsApp sai com o endereço oficial do jornal.
 - Destaques da home `/painel/destaques/` (E25, só editor e admin): lista dos até 3 destaques com setas para subir, descer e remover, busca entre as publicações no ar com capa para adicionar e prévia do bloco como a home mostra. Novos destaques exigem capa; a mudança aparece na home na hora.
 - Páginas institucionais no painel `/painel/paginas/` (E25, só editor e admin): Sobre, Como participar e Privacidade escritas com o mesmo editor das publicações (sem imagens), com salvamento automático e botões para pôr no ar ou tirar do ar. O admin passa a apontar para esse editor.
 - Painel da equipe (E24): layout com menu lateral (aberto no computador, só ícones no tablet, gaveta no celular), sino de notificações no cabeçalho e versão no rodapé do menu. Mostra só os itens da Fase 1; "Administração" só para admin. Perfil, Conta, Notificações e Nova publicação passaram a usar esse layout, e o cabeçalho do jornal ganhou o link "Painel".

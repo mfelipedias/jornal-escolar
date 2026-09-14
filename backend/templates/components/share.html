@@ -1,26 +1,36 @@
 {% comment %}
   Compartilhar (docs/11): copiar link, WhatsApp e compartilhamento nativo do celular. Sem SDKs.
-  Parâmetros: url, title.
+  Parâmetros: url (absoluta), title. Comportamento em frontend/src/js/app.js ("share").
+  Sem JavaScript, o link do WhatsApp continua funcionando.
 {% endcomment %}
 <div class="flex flex-wrap items-center gap-2"
-     x-data="{ copied: false, canShare: !!navigator.share }">
+     x-data="share"
+     data-url="{{ url }}"
+     data-title="{{ title }}">
   <span class="mr-1 text-meta text-ink-3">Compartilhar:</span>
   <button type="button"
           class="btn-secondary min-h-11"
-          @click="navigator.clipboard.writeText('{{ url|escapejs }}').then(() => { copied = true; setTimeout(() => copied = false, 2500) })">
+          x-show="true"
+          x-cloak
+          @click="copy()">
     <span x-text="copied ? 'Link copiado!' : 'Copiar link'">Copiar link</span>
   </button>
   <a class="btn-secondary min-h-11"
-     href="https://wa.me/?text={{ title|urlencode }}%20{{ url|urlencode }}"
+     href="https://wa.me/?text={{ title|urlencode:"" }}%20{{ url|urlencode:"" }}"
      target="_blank"
      rel="noopener noreferrer">WhatsApp</a>
   <button type="button"
           class="btn-secondary min-h-11"
           x-show="canShare"
           x-cloak
-          @click="navigator.share({ title: '{{ title|escapejs }}', url: '{{ url|escapejs }}' }).catch(() => {})">
-    Mais opções
-  </button>
+          @click="native()">Mais opções</button>
+  <input type="text"
+         x-ref="link"
+         hidden
+         readonly
+         value="{{ url }}"
+         aria-label="Link da publicação"
+         class="block w-full rounded-field border border-line bg-white px-3 py-2.5 text-ui text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none sm:w-80">
   <span class="sr-only"
         role="status"
         aria-live="polite"

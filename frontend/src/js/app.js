@@ -99,4 +99,46 @@ Alpine.data("chipFilter", () => ({
   },
 }));
 
+// Compartilhar (docs/11): copiar link, WhatsApp (link comum) e o menu nativo do celular.
+// Sem scripts de redes sociais. A cópia tem plano B para navegadores sem Clipboard API
+// (ou fora de HTTPS): seleciona o campo com o link para a pessoa copiar.
+Alpine.data("share", () => ({
+  copied: false,
+  canShare: false,
+  init() {
+    this.canShare = typeof navigator.share === "function";
+  },
+  get url() {
+    return this.$el.dataset.url;
+  },
+  done() {
+    this.copied = true;
+    setTimeout(() => (this.copied = false), 2500);
+  },
+  fallback() {
+    const field = this.$refs.link;
+    field.hidden = false;
+    field.focus();
+    field.select();
+    try {
+      if (document.execCommand("copy")) this.done();
+    } catch {
+      // Sem cópia automática: o link fica selecionado no campo.
+    }
+  },
+  copy() {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(this.url).then(
+        () => this.done(),
+        () => this.fallback(),
+      );
+    } else {
+      this.fallback();
+    }
+  },
+  native() {
+    navigator.share({ title: this.$el.dataset.title, url: this.url }).catch(() => {});
+  },
+}));
+
 Alpine.start();

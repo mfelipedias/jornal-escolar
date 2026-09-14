@@ -119,3 +119,10 @@ Leitura confortável, crédito claro a quem fez, e caminhos para continuar lendo
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: bloco de comentários públicos; créditos de aluno sem conta.
+- 2026-09-14: E26 implementada (`apps/core/seo.py`, `apps/publications/seo.py`, `templates/components/seo.html`). Na prática:
+  - Cada view pública monta um `PageMeta` ("seo" no contexto); o `base.html` gera description, canônico, Open Graph, Twitter Card e JSON-LD a partir dele. Endereços absolutos usam `SITE_URL`, não o Host da requisição.
+  - `NewsArticle` para os tipos Notícia, Reportagem, Entrevista e Evento; `Article` para os demais. `publisher` é `NewsMediaOrganization` com `site.name` e o logo `static/img/logo.png` (glifo, sem texto).
+  - Autores = autores e coautores com "mostrar nos créditos". Equipe com `url` só se o perfil for público; alunos e convidados só com `name` (sem turma, sem URL). Sem autor, o jornal assina.
+  - `og:image` = variante 1600 da capa (WebP) com largura, altura e `alt`; sem capa, a imagem padrão `static/img/og-default.png` (1200×630, glifo sem texto, para não fixar o nome do jornal).
+  - Pré-visualização: `noindex`, sem canônico e sem JSON-LD.
+  - Compartilhar virou o componente Alpine `share` (`frontend/src/js/app.js`): cópia pela Clipboard API com plano B (campo com o link selecionado) fora de HTTPS; WhatsApp funciona sem JavaScript.

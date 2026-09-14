@@ -1,8 +1,5 @@
 {% extends "layouts/auth.html" %}
 {% block title %}Link inválido · {{ jornal.name }}{% endblock title %}
-{% block head %}
-  <meta name="robots" content="noindex">
-{% endblock head %}
 {% block auth_content %}
   {% include "components/auth_notice.html" with title="Este link não vale mais" text="O link já foi usado, expirou ou foi substituído por um mais novo. Peça um novo link ao administrador do jornal." %}
 {% endblock auth_content %}

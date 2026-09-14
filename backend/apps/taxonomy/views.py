@@ -8,6 +8,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET
 
+from apps.core import seo
 from apps.publications import listing, presentation, selectors
 
 from .models import ArticleType, Discipline, KnowledgeArea
@@ -34,6 +35,11 @@ def area(request: HttpRequest, slug: str) -> HttpResponse:
         "area": area,
         "hero": presentation.card(hero) if hero else None,
         "writers": [presentation.writer(u) for u in selectors.writers_about(area)],
+        "seo": seo.PageMeta(
+            title=area.name,
+            description=area.description or f"Publicações de {area.name}.",
+            path=seo.listing_path(request),
+        ),
     }
     return listing.render_listing(
         request,
@@ -57,6 +63,11 @@ def discipline(request: HttpRequest, slug: str) -> HttpResponse:
             presentation.writer(u)
             for u in selectors.writers_about(discipline.area, discipline=discipline)
         ],
+        "seo": seo.PageMeta(
+            title=discipline.name,
+            description=discipline.description or f"Publicações de {discipline.name}.",
+            path=seo.listing_path(request),
+        ),
     }
     return listing.render_listing(request, "taxonomy/discipline.html", filters, context=context)
 
@@ -65,6 +76,14 @@ def discipline(request: HttpRequest, slug: str) -> HttpResponse:
 def article_type(request: HttpRequest, slug: str) -> HttpResponse:
     article_type = get_object_or_404(ArticleType, slug=slug, is_active=True)
     filters = listing.parse(request.GET, fixed_type=article_type)
+    meta = seo.PageMeta(
+        title=article_type.name,
+        description=article_type.description or f"Publicações do tipo {article_type.name}.",
+        path=seo.listing_path(request),
+    )
     return listing.render_listing(
-        request, "taxonomy/type.html", filters, context={"article_type": article_type}
+        request,
+        "taxonomy/type.html",
+        filters,
+        context={"article_type": article_type, "seo": meta},
     )

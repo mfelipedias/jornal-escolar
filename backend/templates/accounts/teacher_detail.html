@@ -4,10 +4,6 @@
   Conta desativada: só nome, cargo e publicações (show_details falso).
 {% endcomment %}
 {% block title %}{{ name }} · {{ jornal.name }}{% endblock title %}
-{% block description %}{{ profile.headline|default:name }}{% endblock description %}
-{% block head %}
-  {% if not profile.is_public %}<meta name="robots" content="noindex">{% endif %}
-{% endblock head %}
 {% block content %}
   {% if not profile.is_public %}
     <div class="border-b border-warn/30 bg-area-ambar-soft">

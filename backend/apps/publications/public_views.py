@@ -6,9 +6,12 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
+from apps.core import seo
+from apps.core.site_settings import get_setting
 from apps.editorial import permissions
 
 from . import listing, presentation, selectors
+from . import seo as article_seo
 from .models import Article
 
 
@@ -26,7 +29,8 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
             else []
         ),
         "can_edit": permissions.can_edit(request.user, article),
-        "share_url": request.build_absolute_uri(request.path),
+        "share_url": seo.absolute_url(article.get_absolute_url()),
+        "seo": article_seo.page_meta(article, preview=preview),
         "was_updated": bool(
             article.published_at
             and article.updated_at
@@ -43,7 +47,14 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
 @require_GET
 def article_list(request: HttpRequest) -> HttpResponse:
     """/publicacoes/: todas as publicações com filtros por área, disciplina e tipo (docs/12)."""
-    return listing.render_listing(request, "publications/list.html", listing.parse(request.GET))
+    meta = seo.PageMeta(
+        title="Publicações",
+        description=f"Todas as publicações do {get_setting('site.name')}.",
+        path=seo.listing_path(request),
+    )
+    return listing.render_listing(
+        request, "publications/list.html", listing.parse(request.GET), context={"seo": meta}
+    )
 
 
 AGENDA_PAST_PER_PAGE = 20
@@ -58,6 +69,11 @@ def agenda(request: HttpRequest) -> HttpResponse:
         "upcoming": [presentation.event(a) for a in upcoming] if past_page.number == 1 else [],
         "past": [presentation.event(a) for a in past_page],
         "page_obj": past_page,
+        "seo": seo.PageMeta(
+            title="Agenda",
+            description="O que vai acontecer na escola e o que já aconteceu.",
+            path=seo.listing_path(request),
+        ),
     }
     return render(request, "publications/agenda.html", context)
 

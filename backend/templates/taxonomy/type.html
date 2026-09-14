@@ -1,6 +1,5 @@
 {% extends "publications/list.html" %}
 {% block title %}{{ article_type.name }} · {{ jornal.name }}{% endblock title %}
-{% block description %}{{ article_type.description|default:jornal.tagline }}{% endblock description %}
 {% block list_header %}
   <header class="site-container pt-10 sm:pt-14">
     <p class="text-meta font-semibold tracking-wide text-accent uppercase">Tipo de publicação</p>
