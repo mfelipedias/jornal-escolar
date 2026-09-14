@@ -23,11 +23,11 @@
         <a href="{% url 'publications:create' %}"
            class="rounded-field bg-accent px-3 py-1.5 text-ui text-white hover:bg-accent-2">Escrever</a>
         {% include "components/notification_bell.html" %}
+        <a href="{% url 'dashboard:home' %}"
+           class="text-ink-2 hover:text-accent">Painel</a>
         <a href="{% url 'accounts:profile_edit' %}"
            class="hidden text-ink-2 hover:text-accent sm:inline"
            title="Meu perfil">{{ user.public_name }}</a>
-        <a href="{% url 'accounts:profile_edit' %}"
-           class="text-ink-2 hover:text-accent sm:hidden">Perfil</a>
         {% if user.is_staff %}
           <a href="{% url 'admin:index' %}" class="text-ink-2 hover:text-accent">Admin</a>
         {% endif %}

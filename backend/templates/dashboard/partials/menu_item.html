@@ -1,0 +1,11 @@
+{% comment %}Item do menu lateral do painel. Parâmetro: item (apps.dashboard.menu.MenuItem).{% endcomment %}
+<li>
+  <a href="{{ item.url }}"
+     title="{{ item.label }}"
+     class="flex items-center gap-3 rounded-field px-3 py-2 text-ui md:justify-center md:px-0 lg:justify-start lg:px-3
+            {% if item.active %}bg-accent-soft font-medium text-accent-2{% else %}text-ink-2 hover:bg-paper hover:text-ink{% endif %}"
+     {% if item.active %}aria-current="page"{% endif %}>
+    {% include "dashboard/partials/icon.html" with name=item.icon %}
+    <span class="md:sr-only lg:not-sr-only">{{ item.label }}</span>
+  </a>
+</li>

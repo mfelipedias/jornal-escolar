@@ -1,0 +1,114 @@
+{% extends "layouts/dashboard.html" %}
+{% load humanize %}
+{% comment %}
+  Início do painel (docs/15): pendências, continuar escrevendo, últimas publicadas e números.
+  Sugestões (Fase 4), leituras e comentários (Fase 3) ainda não aparecem.
+{% endcomment %}
+{% block title %}Painel · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="font-serif text-h1 font-semibold">Olá, {{ user.public_name }}</h1>
+      <p class="mt-1 text-ui text-ink-2">O que precisa da sua atenção agora.</p>
+    </div>
+    <a href="{% url 'publications:create' %}" class="btn-primary">Nova publicação</a>
+  </div>
+  {% if pending %}
+    <section aria-labelledby="sec-pendencias"
+             class="mt-8 rounded-card border border-line bg-white">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+        <h2 id="sec-pendencias" class="font-serif text-h3 font-semibold">Pendências</h2>
+        {% if unread_total %}
+          <a href="{% url 'editorial:notifications' %}"
+             class="text-meta text-ink-2 hover:text-accent">
+            Ver todas as notificações
+            {% if unread_hidden %}(mais {{ unread_hidden }}){% endif %}
+          </a>
+        {% endif %}
+      </div>
+      <ul class="divide-y divide-line" data-pending>
+        {% for item in pending %}
+          <li>
+            <a href="{{ item.url }}"
+               class="flex items-start gap-3 px-4 py-3 hover:bg-paper-2"
+               data-kind="{{ item.kind }}">
+              <span class="mt-1.5 size-2 shrink-0 rounded-full
+                           {% if item.kind == 'profile' %}bg-warn{% else %}bg-accent{% endif %}"
+                    aria-hidden="true"></span>
+              <span class="min-w-0">
+                <span class="block text-ui text-ink">{{ item.message }}</span>
+                {% if item.when %}<span class="block text-meta text-ink-3">{{ item.when|naturaltime }}</span>{% endif %}
+              </span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+  <section aria-labelledby="sec-numeros" class="mt-8">
+    <h2 id="sec-numeros" class="sr-only">Números</h2>
+    <div class="grid grid-cols-2 gap-3 sm:max-w-md">
+      {% url 'dashboard:my_articles' as list_url %}
+      {% with published_url=list_url|add:"?estado=publicados" drafts_url=list_url|add:"?estado=rascunhos" %}
+        {% include "components/stat.html" with value=stats.published label="Publicadas" url=published_url %}
+        {% include "components/stat.html" with value=stats.drafts label="Rascunhos" url=drafts_url %}
+      {% endwith %}
+    </div>
+  </section>
+  <div class="mt-10 grid gap-10 lg:grid-cols-2">
+    <section aria-labelledby="sec-rascunhos">
+      <div class="flex items-baseline justify-between gap-2 border-b border-line pb-2">
+        <h2 id="sec-rascunhos" class="font-serif text-h3 font-semibold">Continuar escrevendo</h2>
+        {% if drafts %}
+          <a href="{% url 'dashboard:my_articles' %}?estado=rascunhos"
+             class="text-meta text-ink-2 hover:text-accent">Todos os rascunhos</a>
+        {% endif %}
+      </div>
+      {% if drafts %}
+        <ul class="divide-y divide-line" data-drafts>
+          {% for article in drafts %}
+            <li class="flex items-center justify-between gap-3 py-3">
+              <div class="min-w-0">
+                <p class="truncate text-ui font-medium text-ink">{{ article.title }}</p>
+                <p class="text-meta text-ink-3">Última edição {{ article.updated_at|naturaltime }}</p>
+              </div>
+              <a href="{% url 'publications:edit' article.pk %}"
+                 class="btn-secondary shrink-0">Abrir</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% url 'publications:create' as create_url %}
+        {% include "components/empty_state.html" with compact=True title="Nenhum rascunho aberto" text="Comece por um rascunho. Ele fica só com você até publicar." action_url=create_url action_label="Nova publicação" %}
+      {% endif %}
+    </section>
+    <section aria-labelledby="sec-publicadas">
+      <div class="flex items-baseline justify-between gap-2 border-b border-line pb-2">
+        <h2 id="sec-publicadas" class="font-serif text-h3 font-semibold">Suas últimas publicadas</h2>
+        {% if published %}
+          <a href="{% url 'dashboard:my_articles' %}?estado=publicados"
+             class="text-meta text-ink-2 hover:text-accent">Todas</a>
+        {% endif %}
+      </div>
+      {% if published %}
+        <ul class="divide-y divide-line" data-published>
+          {% for article in published %}
+            <li class="flex items-center justify-between gap-3 py-3">
+              <div class="min-w-0">
+                <a href="{{ article.get_absolute_url }}"
+                   class="block truncate text-ui font-medium text-ink hover:text-accent">{{ article.title }}</a>
+                <p class="text-meta text-ink-3">
+                  {% if article.type %}{{ article.type.name }} ·{% endif %}
+                  publicada em {{ article.published_at|date:"j \d\e F" }}
+                </p>
+              </div>
+              <a href="{{ article.get_absolute_url }}" class="btn-ghost shrink-0">Ver no jornal</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="py-6 text-ui text-ink-3">Quando você publicar, os textos aparecem aqui.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock content %}

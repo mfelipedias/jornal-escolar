@@ -1,0 +1,88 @@
+{% extends "layouts/dashboard.html" %}
+{% load humanize %}
+{% comment %}
+  Minhas publicações (docs/15): chips de estado, tabela no desktop e lista no celular.
+  Em revisão, Alterações sugeridas e a aba "Revisando" chegam na Fase 2; leituras,
+  comentários pendentes e "fechar comentários" na Fase 3.
+{% endcomment %}
+{% block title %}Minhas publicações · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <h1 class="font-serif text-h1 font-semibold">Minhas publicações</h1>
+    <a href="{% url 'publications:create' %}" class="btn-primary">Nova publicação</a>
+  </div>
+  {% if total %}
+    <nav class="mt-6" aria-label="Filtrar por estado">
+      <ul class="flex flex-wrap gap-2">
+        {% for chip in chips %}
+          <li>
+            <a href="{% url 'dashboard:my_articles' %}{% if chip.key %}?estado={{ chip.key }}{% endif %}"
+               class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-ui
+                      {% if chip.active %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+               {% if chip.active %}aria-current="true"{% endif %}>
+              {{ chip.label }}
+              <span class="text-meta
+                           {% if chip.active %}text-accent-2{% else %}text-ink-3{% endif %}">{{ chip.count }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+  {% endif %}
+  {% if rows %}
+    <div class="mt-6 hidden rounded-card border border-line bg-white md:block">
+      <table class="w-full text-left text-ui">
+        <caption class="sr-only">
+          Minhas publicações: {{ current_label|lower }}
+        </caption>
+        <thead class="border-b border-line text-meta text-ink-3">
+          <tr>
+            <th scope="col" class="px-4 py-2.5 font-medium">Título</th>
+            <th scope="col" class="px-4 py-2.5 font-medium">Tipo</th>
+            <th scope="col" class="px-4 py-2.5 font-medium">Estado</th>
+            <th scope="col" class="px-4 py-2.5 font-medium">Meu papel</th>
+            <th scope="col" class="px-4 py-2.5 font-medium">Atualizada</th>
+            <th scope="col" class="px-4 py-2.5 font-medium">
+              <span class="sr-only">Ações</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line">
+          {% for row in rows %}
+            <tr data-article="{{ row.article.pk }}">
+              <td class="max-w-72 px-4 py-3 font-medium text-ink">
+                <span class="line-clamp-2">{{ row.article.title }}</span>
+              </td>
+              <td class="px-4 py-3 text-ink-2">{{ row.article.type.name|default:"—" }}</td>
+              <td class="px-4 py-3">{% include "components/status_badge.html" with status=row.article.status %}</td>
+              <td class="px-4 py-3 text-ink-2">{{ row.my_roles }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-ink-3">{{ row.article.updated_at|naturaltime }}</td>
+              <td class="px-4 py-3">{% include "dashboard/partials/row_actions.html" %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <ul class="mt-6 divide-y divide-line rounded-card border border-line bg-white md:hidden">
+      {% for row in rows %}
+        <li class="space-y-2 px-4 py-3">
+          <p class="font-medium text-ink">{{ row.article.title }}</p>
+          <p class="flex flex-wrap items-center gap-2 text-meta text-ink-3">
+            {% include "components/status_badge.html" with status=row.article.status %}
+            {% if row.article.type %}<span>{{ row.article.type.name }}</span>{% endif %}
+            <span>{{ row.my_roles }}</span>
+            <span>{{ row.article.updated_at|naturaltime }}</span>
+          </p>
+          {% include "dashboard/partials/row_actions.html" %}
+        </li>
+      {% endfor %}
+    </ul>
+    {% include "components/pagination.html" %}
+  {% elif total %}
+    {% url 'dashboard:my_articles' as all_url %}
+    {% include "components/empty_state.html" with title="Nada por aqui" text="Nenhuma publicação sua neste estado." action_url=all_url action_label="Ver todas" %}
+  {% else %}
+    {% url 'publications:create' as create_url %}
+    {% include "components/empty_state.html" with title="Você ainda não escreveu nada" text="Comece por um rascunho. Ele fica só com você até publicar." action_url=create_url action_label="Nova publicação" %}
+  {% endif %}
+{% endblock content %}

@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.accounts.models import User
@@ -349,9 +350,12 @@ def search_users(request: HttpRequest) -> HttpResponse:
 @require_POST
 @login_required
 def transition(request: HttpRequest, pk: int, action: str) -> HttpResponse:
-    """POST /x/articles/<id>/transition/<action>/: publish | archive | restore."""
+    """POST /x/articles/<id>/transition/<action>/: publish | archive | restore.
+
+    Volta ao editor ou, com next= (ex.: "Minhas publicações"), ao endereço interno indicado.
+    """
     article = get_object_or_404(Article, pk=pk)
-    edit_url = reverse("publications:edit", args=[article.pk])
+    edit_url = _next_url(request, reverse("publications:edit", args=[article.pk]))
     try:
         if action == "publish":
             services.publish(request.user, article)
@@ -376,3 +380,27 @@ def transition(request: HttpRequest, pk: int, action: str) -> HttpResponse:
         response["HX-Redirect"] = edit_url
         return response
     return redirect(edit_url)
+
+
+@require_POST
+@login_required
+def duplicate(request: HttpRequest, pk: int) -> HttpResponse:
+    """POST /x/articles/<id>/duplicate/: cria um rascunho igual e abre o editor (docs/15)."""
+    article = get_object_or_404(Article, pk=pk)
+    try:
+        copy = services.duplicate_article(request.user, article)
+    except media.MediaError as exc:
+        messages.error(request, exc.message)
+        return redirect("dashboard:my_articles")
+    messages.success(request, "Cópia criada como rascunho.")
+    return redirect("publications:edit", pk=copy.pk)
+
+
+def _next_url(request: HttpRequest, default: str) -> str:
+    """next= só vale para endereços deste site; qualquer outro volta ao padrão."""
+    target = request.POST.get("next", "")
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return target
+    return default

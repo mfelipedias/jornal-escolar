@@ -29,6 +29,7 @@ urlpatterns = [
         editor_views.transition,
         name="transition",
     ),
+    path("x/articles/<int:pk>/duplicate/", editor_views.duplicate, name="duplicate"),
     path("x/users/search/", editor_views.search_users, name="search_users"),
     # Imagens
     path("x/media/", views.media_upload, name="media_upload"),

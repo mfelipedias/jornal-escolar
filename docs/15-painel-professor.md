@@ -80,3 +80,10 @@ Modelo `Notification`. Sino com contador de não lidas; lista das últimas 20 co
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: reescrito: sem convite nem painel de aluno, comentários, revisões sem fila geral, notificações no painel desde a Fase 1.
+- 2026-09-14 (E24): implementado o que é da Fase 1. Detalhes decididos na implementação:
+  - Pendências da Fase 1 são as notificações não lidas (até 5, com link para todas; abrir uma a marca como lida) e "Complete seu perfil". O bloco some quando não há nada.
+  - "Suas últimas publicadas" mostra tipo e data; leituras, reações e comentários entram com a Fase 3, assim como os números "leituras em 30 dias" e "comentários aprovados". Na Fase 1 os números são publicadas e rascunhos.
+  - "Minhas publicações" lista os textos em que a pessoa é autora ou coautora (qualquer estado) e os publicados em que aparece como colaboração ou edição. Chips da Fase 1: Todos, Rascunhos, Publicados, Arquivados. Colunas de leituras e comentários pendentes, "fechar/abrir comentários" e a aba "Revisando" ficam para as fases deles.
+  - Ações por linha: Abrir, Ver no jornal e, no menu "mais", Duplicar como rascunho, Arquivar (só quando não pede motivo; editor arquivando texto alheio usa o editor) e Restaurar como rascunho.
+  - Duplicar copia texto, capa, tipo, disciplinas, tópicos, evento, fontes e créditos (sem revisão e edição); quem duplica vira autor. As imagens viram cópias novas, porque cada imagem pertence a uma publicação só.
+  - O menu mostra só os itens da Fase 1. Perfil, Conta, Notificações e Nova publicação passaram a usar o layout do painel; o editor volta para "Minhas publicações".

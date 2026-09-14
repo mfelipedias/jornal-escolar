@@ -1,14 +1,11 @@
-{% extends "layouts/public.html" %}
+{% extends "layouts/dashboard.html" %}
 {% comment %}
   Configuração de perfil (docs/14): uma página com seções e um botão salvar, sem abas.
   Cargo e papel aparecem só para leitura; quem muda é o administrador.
 {% endcomment %}
 {% block title %}Meu perfil · {{ jornal.name }}{% endblock title %}
-{% block head %}
-  <meta name="robots" content="noindex">
-{% endblock head %}
 {% block content %}
-  <div class="site-container py-10 sm:py-14">
+  <div>
     <div class="mx-auto max-w-2xl">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>

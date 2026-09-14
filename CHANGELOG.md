@@ -8,6 +8,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Painel da equipe (E24): layout com menu lateral (aberto no computador, só ícones no tablet, gaveta no celular), sino de notificações no cabeçalho e versão no rodapé do menu. Mostra só os itens da Fase 1; "Administração" só para admin. Perfil, Conta, Notificações e Nova publicação passaram a usar esse layout, e o cabeçalho do jornal ganhou o link "Painel".
+- Início do painel `/painel/`: pendências (notificações não lidas e "Complete seu perfil"), continuar escrevendo (3 rascunhos), suas últimas publicadas e números de publicadas e rascunhos.
+- "Minhas publicações" `/painel/publicacoes/`: tabela no computador e lista no celular com título, tipo, estado, meu papel e última atualização; filtro por estado (Todos, Rascunhos, Publicados, Arquivados); ações Abrir, Ver no jornal, Duplicar como rascunho (com cópia das imagens), Arquivar e Restaurar.
 - Assistente de primeiro acesso em três passos puláveis (E23): quem é você (foto, nome de exibição, apresentação), o que você ensina ou faz (disciplinas por área ou, para outros cargos, áreas) e o que interessa a você (tópicos, com os ligados às disciplinas primeiro, e "Sobre mim"). Aparece depois do link de primeiro acesso e no primeiro login.
 - Tela "Meu perfil" `/painel/perfil/`: apresentação, foto com recorte quadrado, atuação, interesses com busca e sugestão de tópico (vai para aprovação do admin), formação, links, preferências, troca de endereço com aviso e opção de atualizar o nome nos créditos anteriores. Aviso "Complete seu perfil" enquanto faltarem foto, disciplinas/áreas ou bio.
 - Tela "Conta" `/painel/conta/`: forma de entrar, alteração de senha e "Sair de todas as outras sessões".

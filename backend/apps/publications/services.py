@@ -4,6 +4,7 @@ Toda função que muda estado confere a permissão em apps/editorial/permissions
 PermissionDenied quando o usuário não pode agir.
 """
 
+import copy as copy_module
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -20,6 +21,7 @@ from apps.taxonomy.models import ArticleType, Discipline, Topic
 
 from . import rendering
 from .credits import student_name_error
+from .media import copy_asset
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
 
 TITLE_MAX = 120
@@ -76,6 +78,94 @@ def create_article(user: User, **fields: Any) -> Article:
         role=ArticleContributor.Role.AUTHOR,
     )
     return article
+
+
+COPIED_FIELDS = (
+    "subtitle",
+    "type",
+    "cover_caption",
+    "event_at",
+    "event_location",
+    "sources",
+    "comments_enabled",
+)
+COPY_SUFFIX = " (cópia)"
+
+
+@transaction.atomic
+def duplicate_article(user: User, article: Article) -> Article:
+    """Duplicar como rascunho (docs/15, "Minhas publicações").
+
+    Copia texto, capa, tipo, disciplinas, tópicos, evento e fontes. As imagens viram cópias
+    novas, porque cada imagem pertence a uma publicação só. Quem duplica vira autor; os outros
+    créditos (coautores, alunos, convidados) vêm junto, sem revisão e edição.
+    Pode levantar media.MediaError se a cópia das imagens passar da cota.
+    """
+    if not permissions.can_create_article(user) or not permissions.can_edit(user, article):
+        raise PermissionDenied
+    title = article.title[: TITLE_MAX - len(COPY_SUFFIX)].rstrip() + COPY_SUFFIX
+    duplicate = Article.objects.create(
+        title=title,
+        created_by=user,
+        last_edited_by=user,
+        **{name: getattr(article, name) for name in COPIED_FIELDS},
+    )
+    duplicate.disciplines.set(article.disciplines.all())
+    duplicate.topics.set(article.topics.all())
+
+    wanted = rendering.collect_asset_ids(rendering.normalize(article.body_json))
+    if article.cover_id:
+        wanted.add(article.cover_id)
+    mapping = {
+        asset.pk: copy_asset(asset, user, duplicate).pk
+        for asset in MediaAsset.objects.filter(pk__in=wanted)
+    }
+    body = copy_module.deepcopy(article.body_json or {})
+    _remap_figures(body, mapping)
+    result = rendering.render(body, set(mapping.values()))
+    duplicate.body_json = result.document
+    duplicate.body_html = result.html
+    duplicate.body_text = result.text
+    duplicate.reading_minutes = result.reading_minutes
+    duplicate.cover_id = mapping.get(article.cover_id)
+    if duplicate.cover_id is None:
+        duplicate.cover_caption = ""
+    duplicate.save()
+
+    ArticleContributor.objects.create(
+        article=duplicate,
+        user=user,
+        display_name=user.public_name,
+        role=ArticleContributor.Role.AUTHOR,
+    )
+    skipped_roles = (ArticleContributor.Role.REVIEWER, ArticleContributor.Role.EDITOR)
+    for credit in article.contributors.exclude(role__in=skipped_roles).order_by("order", "pk"):
+        if credit.user_id == user.pk:
+            continue
+        ArticleContributor.objects.create(
+            article=duplicate,
+            user_id=credit.user_id,
+            display_name=credit.display_name,
+            role=credit.role,
+            is_student=credit.is_student,
+            class_group=credit.class_group,
+            consent_ok=credit.consent_ok,
+            contribution_note=credit.contribution_note,
+            show_in_credits=credit.show_in_credits,
+            order=credit.order + 1,
+        )
+    return duplicate
+
+
+def _remap_figures(node: dict, mapping: dict[int, int]) -> None:
+    """Troca os ids das imagens do documento pelos das cópias (sem cópia, a figura some)."""
+    if not isinstance(node, dict):
+        return
+    attrs = node.get("attrs")
+    if node.get("type") == "figure" and isinstance(attrs, dict):
+        attrs["assetId"] = mapping.get(attrs.get("assetId"), 0)
+    for child in node.get("content", []) or []:
+        _remap_figures(child, mapping)
 
 
 def _locked(article: Article) -> Article:

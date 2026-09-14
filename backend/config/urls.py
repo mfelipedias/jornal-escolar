@@ -11,6 +11,7 @@ urlpatterns = [
     path("", include("apps.publications.urls")),
     path("", include("apps.taxonomy.urls")),
     path("", include("apps.editorial.urls")),
+    path("", include("apps.dashboard.urls")),
     *allauth_overrides,
     path("admin/", admin.site.urls),
     # Login Microsoft: /entrar/microsoft/login/ e /entrar/microsoft/login/callback/

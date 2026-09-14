@@ -1,0 +1,66 @@
+{% comment %}
+  Ações de uma publicação em "Minhas publicações": Abrir, Ver no jornal e o menu "mais".
+  Parâmetros: row (apps.dashboard.views.Row), next_url.
+{% endcomment %}
+{% with article=row.article %}
+  <div class="flex flex-wrap items-center gap-1">
+    {% if row.can_edit %}
+      <a href="{% url 'publications:edit' article.pk %}"
+         class="btn-secondary"
+         aria-label="Abrir “{{ article.title }}”">Abrir</a>
+    {% endif %}
+    {% if article.is_published %}
+      <a href="{{ article.get_absolute_url }}"
+         class="btn-ghost"
+         aria-label="Ver “{{ article.title }}” no jornal">Ver no jornal</a>
+    {% endif %}
+    {% if row.has_more %}
+      <div class="relative"
+           x-data="{ open: false }"
+           @keydown.escape="open = false"
+           @click.outside="open = false">
+        <button type="button"
+                class="btn-ghost"
+                :aria-expanded="open"
+                @click="open = !open"
+                aria-label="Mais ações para “{{ article.title }}”">
+          <span aria-hidden="true">•••</span>
+        </button>
+        <div x-show="open"
+             x-cloak
+             class="absolute right-0 z-20 mt-1 w-56 rounded-card border border-line bg-white py-1 shadow-popover">
+          {% if row.can_duplicate %}
+            <form method="post" action="{% url 'publications:duplicate' article.pk %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="block w-full px-4 py-2 text-left text-ui text-ink hover:bg-paper-2">
+                Duplicar como rascunho
+              </button>
+            </form>
+          {% endif %}
+          {% if row.can_archive %}
+            <form method="post"
+                  action="{% url 'publications:transition' article.pk 'archive' %}"
+                  @submit="if (!confirm('Arquivar esta publicação? Ela deixa de aparecer no site.')) $event.preventDefault()">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <button type="submit"
+                      class="block w-full px-4 py-2 text-left text-ui text-danger hover:bg-paper-2">Arquivar</button>
+            </form>
+          {% endif %}
+          {% if row.can_restore %}
+            <form method="post"
+                  action="{% url 'publications:transition' article.pk 'restore' %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <button type="submit"
+                      class="block w-full px-4 py-2 text-left text-ui text-ink hover:bg-paper-2">
+                Restaurar como rascunho
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endwith %}

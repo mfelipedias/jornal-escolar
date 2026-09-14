@@ -1,14 +1,11 @@
-{% extends "layouts/public.html" %}
+{% extends "layouts/dashboard.html" %}
 {% comment %}
   Conta (docs/14, "Conta"): como a pessoa entra, senha e sessões abertas.
   Baixar meus dados e pedir exclusão chegam na Fase 2.
 {% endcomment %}
 {% block title %}Conta · {{ jornal.name }}{% endblock title %}
-{% block head %}
-  <meta name="robots" content="noindex">
-{% endblock head %}
 {% block content %}
-  <div class="site-container py-10 sm:py-14">
+  <div>
     <div class="mx-auto max-w-2xl space-y-12">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>

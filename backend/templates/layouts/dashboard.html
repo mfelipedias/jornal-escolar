@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load dashboard %}
+{% comment %}
+  Painel da equipe (docs/15, docs/09 "Painel"). Menu lateral aberto no desktop, só ícones no
+  tablet e gaveta no celular (Alpine). Sino no cabeçalho e versão no rodapé do menu.
+  Páginas filhas preenchem {% block content %}.
+{% endcomment %}
+{% block head %}
+  <meta name="robots" content="noindex">
+{% endblock head %}
+{% block body %}
+  {% dashboard_menu as menu %}
+  <div class="min-h-screen md:flex"
+       x-data="{ menuOpen: false }"
+       @keydown.escape.window="menuOpen = false">
+    <div x-show="menuOpen"
+         x-cloak
+         class="fixed inset-0 z-40 bg-ink/40 md:hidden"
+         @click="menuOpen = false"
+         aria-hidden="true"></div>
+    <aside id="painel-menu"
+           class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-line bg-paper-2 transition-transform md:sticky md:top-0 md:h-screen md:w-16 md:shrink-0 md:translate-x-0 lg:w-60"
+           :class="menuOpen ? 'translate-x-0!' : ''">
+      <a href="{% url 'dashboard:home' %}"
+         class="flex h-14 items-center gap-2.5 border-b border-line px-4 text-ink md:justify-center md:px-0 lg:justify-start lg:px-5"
+         aria-label="{{ jornal.name }}, início do painel">
+        {% include "components/glyph.html" with class="size-7 shrink-0 text-accent" %}
+        <span class="font-serif text-xl leading-none font-semibold tracking-tight md:hidden lg:inline">
+          {% if jornal.wordmark_head %}{{ jornal.wordmark_head }}{% endif %}
+          <span class="text-accent">{{ jornal.wordmark_accent }}</span>
+        </span>
+      </a>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 md:px-2 lg:px-3"
+           aria-label="Menu do painel">
+        <ul class="space-y-1">
+          {% for item in menu %}
+            {% if not item.external %}
+              {% include "dashboard/partials/menu_item.html" %}
+            {% endif %}
+          {% endfor %}
+        </ul>
+        <ul class="mt-3 space-y-1 border-t border-line pt-3">
+          {% for item in menu %}
+            {% if item.external %}
+              {% include "dashboard/partials/menu_item.html" %}
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </nav>
+      <p class="border-t border-line px-4 py-3 text-meta text-ink-3 md:px-0 md:text-center lg:px-5 lg:text-left">
+        v{{ app_version }}
+      </p>
+    </aside>
+    <div class="flex min-w-0 flex-1 flex-col">
+      <header class="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
+        <div class="flex h-14 items-center gap-3 px-4 sm:px-6 lg:px-10">
+          <button type="button"
+                  class="btn-ghost -ml-2 md:hidden"
+                  aria-controls="painel-menu"
+                  :aria-expanded="menuOpen"
+                  @click="menuOpen = !menuOpen">
+            {% include "dashboard/partials/icon.html" with name="menu" %}
+            <span>Menu</span>
+          </button>
+          <p class="hidden text-ui text-ink-3 md:block">Painel</p>
+          <div class="ml-auto flex items-center gap-2 text-meta sm:gap-4">
+            <a href="{% url 'publications:create' %}"
+               class="btn-primary hidden sm:inline-flex">Escrever</a>
+            {% include "components/notification_bell.html" %}
+            <a href="{% url 'accounts:profile_edit' %}"
+               class="hidden max-w-48 truncate text-ink-2 hover:text-accent sm:inline"
+               title="Meu perfil">{{ user.public_name }}</a>
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="text-ink-2 hover:text-accent">Sair</button>
+            </form>
+          </div>
+        </div>
+      </header>
+      <main id="conteudo" class="flex-1" tabindex="-1">
+        <div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+          {% block content %}
+          {% endblock content %}
+        </div>
+      </main>
+    </div>
+  </div>
+{% endblock body %}

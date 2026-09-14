@@ -80,7 +80,8 @@ Prefixo `/x/` para deixar explícito que são internos. Todos exigem CSRF; os de
 | POST | `/x/articles/<id>/meta/` | fragmento | Atualiza tipo, disciplinas, tópicos, capa, fontes, evento | 1 |
 | POST | `/x/articles/<id>/contributors/` | fragmento | Adiciona contribuição | 1 |
 | DELETE | `/x/articles/<id>/contributors/<cid>/` | fragmento | Remove | 1 |
-| POST | `/x/articles/<id>/transition/<action>/` | fragmento ou redirect | `publish`, `archive`, `restore`, `reopen` (Fase 1); `request_review`, `cancel_review`, `request_changes`, `approve`, `approve_publish`, `decline_review` (Fase 2) | 1 e 2 |
+| POST | `/x/articles/<id>/transition/<action>/` | fragmento ou redirect | `publish`, `archive`, `restore`, `reopen` (Fase 1; campo opcional `next` com endereço interno para onde voltar); `request_review`, `cancel_review`, `request_changes`, `approve`, `approve_publish`, `decline_review` (Fase 2) | 1 e 2 |
+| POST | `/x/articles/<id>/duplicate/` | redirect | Duplicar como rascunho (cópia das imagens incluída) e abrir o editor | 1 |
 | POST | `/x/articles/<id>/comments-toggle/` | fragmento | Abre/fecha comentários | 3 |
 | POST | `/x/articles/<id>/feature/` | fragmento | Marca/desmarca destaque (editor+) | 1 |
 | POST | `/x/media/` | JSON `{id, url, variants, width, height}` | Upload de imagem (multipart) | 1 |
@@ -150,3 +151,4 @@ Sem endpoints de escrita. Sem dados de alunos além do nome de exibição já p�
 - 2026-09-12: versão inicial.
 - 2026-09-12: login Microsoft e links de acesso no lugar de convites; notificações; comentários públicos; transições revisadas; IA congelada.
 - 2026-09-14: E23: rotas do assistente de primeiro acesso.
+- 2026-09-14: E24: `/x/articles/<id>/duplicate/` e `next` nas transições.

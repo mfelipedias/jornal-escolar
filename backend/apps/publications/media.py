@@ -170,6 +170,52 @@ def process_upload(
     return asset
 
 
+@transaction.atomic
+def copy_asset(asset: MediaAsset, user: User, article: Article) -> MediaAsset:
+    """Cópia independente de uma imagem (arquivos e dados) para outra publicação.
+
+    Usada em "Duplicar como rascunho": cada imagem pertence a uma publicação só, e apagar
+    uma não pode apagar os arquivos da outra. A cópia conta na cota de quem duplicou.
+    """
+    _check_quota(user, asset.size_bytes)
+    folder = timezone.now().strftime("media/%Y/%m")
+    name = uuid.uuid4().hex
+    saved: list[str] = []
+
+    def _copy(path: str, new_name: str) -> str:
+        with default_storage.open(path, "rb") as source:
+            copied = default_storage.save(f"{folder}/{new_name}", ContentFile(source.read()))
+        saved.append(copied)
+        return copied
+
+    try:
+        extension = asset.file.name.rsplit(".", 1)[-1]
+        copy = MediaAsset(
+            variants={
+                key: _copy(path, f"{name}-{key}.webp") for key, path in asset.variants.items()
+            },
+            width=asset.width,
+            height=asset.height,
+            size_bytes=asset.size_bytes,
+            mime=asset.mime,
+            alt_text=asset.alt_text,
+            is_decorative=asset.is_decorative,
+            credit=asset.credit,
+            license=asset.license,
+            has_people=asset.has_people,
+            consent_ok=asset.consent_ok,
+            uploaded_by=user,
+            article=article,
+        )
+        copy.file.name = _copy(asset.file.name, f"{name}.{extension}")
+        copy.save()
+    except Exception:
+        for path in saved:
+            default_storage.delete(path)
+        raise
+    return copy
+
+
 def serialize(asset: MediaAsset) -> dict:
     return {
         "id": asset.pk,

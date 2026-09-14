@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.taxonomy",
     "apps.publications",
     "apps.editorial",
+    "apps.dashboard",
 ]
 
 MIDDLEWARE = [
