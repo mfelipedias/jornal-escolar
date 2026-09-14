@@ -1,0 +1,52 @@
+# Caddy: a "portaria" interna do Jornal Escolar em produção (docs/24).
+#
+# Caminho de uma visita:  navegador -> Cloudflare (HTTPS) -> cloudflared -> Caddy -> Django
+#
+# O Caddy entrega sozinho os arquivos prontos (CSS, JS, imagens do site e fotos enviadas),
+# sem ocupar o Django, e repassa todo o resto para o container "web".
+# O HTTPS fica na Cloudflare; aqui dentro da rede do Docker o tráfego é HTTP comum.
+
+{
+	# Sem certificados locais: quem fala com a internet é a Cloudflare.
+	auto_https off
+	admin off
+
+	servers {
+		# O cloudflared está na mesma rede privada do Docker. Confiar nele faz o Caddy repassar
+		# ao Django o esquema original (X-Forwarded-Proto: https) e o IP de quem visita.
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	encode zstd gzip
+
+	# Arquivos gerados pelo Vite têm um código no nome que muda a cada versão:
+	# podem ficar guardados no navegador por um ano.
+	@vite path /static/dist/*
+	header @vite Cache-Control "public, max-age=31536000, immutable"
+
+	# Demais arquivos estáticos (logo, imagem de compartilhamento, admin): um dia.
+	handle /static/* {
+		header ?Cache-Control "public, max-age=86400"
+		root * /srv
+		file_server
+	}
+
+	# Fotos enviadas pela equipe. Os nomes são aleatórios e nunca reaproveitados.
+	handle /media/* {
+		header {
+			Cache-Control "public, max-age=2592000"
+			X-Content-Type-Options nosniff
+			# Um arquivo de mídia nunca deve rodar script, mesmo se alguém enviar algo estranho.
+			Content-Security-Policy "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox"
+		}
+		root * /srv
+		file_server
+	}
+
+	# Todo o resto (páginas, painel, admin, /healthz/) vai para o Django.
+	handle {
+		reverse_proxy web:8000
+	}
+}

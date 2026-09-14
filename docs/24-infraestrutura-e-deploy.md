@@ -18,21 +18,26 @@ Decisão: o **banco vive em um só lugar**. Não há replicação entre os dois 
 | Serviço | Imagem | Fase | Função |
 |---|---|---|---|
 | `cloudflared` | `cloudflare/cloudflared` | 1 | Túnel para a Cloudflare; encaminha para `caddy:80` |
-| `caddy` | `caddy:2` | 1 | Proxy interno: `/media/` do volume com cache, cabeçalhos, `trusted_proxies`, o resto para `web` |
-| `web` | imagem própria (Python 3.13 slim) | 1 | Gunicorn + Django; WhiteNoise serve `/static/` |
+| `caddy` | `caddy:2` | 1 | Proxy interno: `/static/` e `/media/` dos volumes com cache, cabeçalhos, `trusted_proxies`, o resto para `web` |
+| `web` | imagem própria (Python 3.13 slim) | 1 | Gunicorn + Django |
 | `db` | `postgres:17` (Fase 5: `pgvector/pgvector:pg17`) | 1 | Banco |
-| `backup` | `alpine` + `postgresql-client` + `rclone` + `supercronic` | 1 | Backup diário |
+| `backup` | imagem própria (`python:3.13-alpine` + `postgresql17-client` + `rclone` + `supercronic`) | 1 | Backup diário |
 | `worker` | mesma imagem de `web`, `procrastinate worker` | 4 | Tarefas em segundo plano (coleta RSS, limpezas) |
 | `ollama` | `ollama/ollama:rocm` | 5 (congelada) | Modelos locais |
 
-Volumes: `pgdata`, `media`, `caddy_data`. Perfis: `default`, `worker`, `ai`.
+Volumes: `pgdata`, `media`, `static`, `caddy_data`. Perfis: `tunel` (liga o `cloudflared`), `worker`, `ai`.
+
+Arquivos (E27): `infra/docker-compose.yml`, `infra/Dockerfile`, `infra/caddy/Caddyfile`, `infra/scripts/{entrypoint.sh,healthcheck.py}`, `infra/backup/` (Dockerfile, `backup.py`, `restore.py`, `comum.py`, `crontab`) e `infra/env/.env.producao.example`. Guia para o dono em [34](34-guia-deploy.md).
+
+Cada serviço recebe só as variáveis de que precisa (lista `environment` no Compose, sem `env_file`): o `web` não conhece as chaves do R2 nem o token do túnel. O Compose lê os valores de `infra/env/.env` com `--env-file` (atalhos `make deploy`, `make backup` etc.).
 
 Por que manter o Caddy atrás do túnel: servir `/media/` com cache e cabeçalhos corretos sem passar pelo Django, e permitir rodar sem Cloudflare (ex.: rede interna da escola) trocando só o perfil.
 
 ## Dockerfile (multi-stage)
 
-1. `node:22-alpine`: instala `frontend/`, roda `vite build`, gera `backend/static/dist/`.
-2. `python:3.13-slim`: dependências com `uv` (lock), código, `dist/`, `collectstatic`, usuário não root, `entrypoint.sh` (migrate + gunicorn). Imagem final sem Node. Build multi-arch.
+1. `node:24-slim` (mesma versão do Compose de dev), na arquitetura de quem constrói (`--platform=$BUILDPLATFORM`): `npm ci`, `vite build`, gera `backend/static/dist/`.
+2. `python:3.13-slim` com `uv`: dependências do `uv.lock` sem as de desenvolvimento, em `/opt/venv`.
+3. `python:3.13-slim` final: venv, código, `dist/`, `collectstatic` em `/app/staticfiles`, usuário `jornal` (uid 1000), `HEALTHCHECK` com `healthcheck.py`. O `entrypoint.sh` copia os estáticos para o volume `static`, roda `migrate` e liga o Gunicorn. Imagem final sem Node nem uv (cerca de 370 MB). Build multi-arch; o servidor constrói a própria imagem no `make deploy`, sem registry.
 
 ## Configuração
 
@@ -56,20 +61,21 @@ Variáveis de ambiente (`django-environ`), documentadas em `infra/env/.env.examp
 
 ## Backups
 
-Diário às 3h no container `backup`:
+Diário às 3h no container `backup` (`infra/backup/backup.py`, disparado pelo `supercronic`):
 
-1. `pg_dump -Fc`.
-2. `tar` do volume `media` (incremental por data).
-3. Criptografa com `age`.
-4. `rclone` para **Cloudflare R2** (10 GB grátis, na mesma conta Cloudflare já usada para DNS e túnel). Decidido; guia passo a passo em [31](31-guia-backup.md).
-5. Retém 7 diários, 4 semanais, 6 mensais.
-6. Verifica o dump com `pg_restore --list`.
+1. `pg_dump -Fc` e verificação com `pg_restore --list`.
+2. Envio para `banco/jornal-AAAA-MM-DD_HHMMSS.dump` no destino.
+3. `rclone sync` do volume `media` para `midia/`; arquivos apagados ou trocados vão para `midia-removida/<data>/` (`--backup-dir`). Só fotos novas trafegam, sem cadeia de backups incrementais.
+4. Criptografia pelo remoto `crypt` do rclone com `BACKUP_PASSPHRASE` (nomes legíveis, conteúdo cifrado).
+5. Destino **Cloudflare R2** (10 GB grátis, na mesma conta Cloudflare já usada para DNS e túnel), ou uma pasta local com `BACKUP_DESTINO=local`. Guia em [31](31-guia-backup.md).
+6. Retenção: todos os backups dos 7 últimos dias com backup, o mais recente de cada uma das 4 últimas semanas e de cada um dos 6 últimos meses; pastas de mídia removida com mais de 6 meses são apagadas.
 
-`restore.sh` documenta a restauração em servidor limpo (inclusive de x86 para ARM). Teste trimestral.
+`infra/backup/restore.py` (`make restore FILE=`) restaura em servidor limpo ou em uso (inclusive de x86 para ARM): recria o schema `public`, `pg_restore --no-owner`, `rclone sync` da mídia e devolve as fotos removidas depois da data escolhida. Teste trimestral.
 
 ## Monitoramento mínimo
 
-- `/healthz/` (banco acessível, migrações aplicadas, versão do sistema) usado pelo `healthcheck` do Compose e por um monitor externo gratuito (UptimeRobot) com alerta.
+- `/healthz/` (banco acessível, migrações aplicadas, versão do sistema; aceita GET e HEAD) usado pelo `healthcheck` do Compose e por um monitor externo gratuito (UptimeRobot, monitor de palavra-chave) com alerta.
+- `manage.py check --deploy` (`make prod-check`) avisa quando `SITE_URL` aponta para localhost, não usa https ou tem caminho (`core.W001` a `W003`).
 - Logs JSON para stdout, rotação pelo Docker.
 - Erros de aplicação: e-mail não existe, então erros vão para log estruturado e para uma página `/admin/` de últimos erros (tabela `ErrorLog` simples, retenção 30 dias). GlitchTip auto-hospedado é Evolução.
 - Analytics da Cloudflare (gratuito, sem cookie) cobre tráfego básico.
@@ -95,16 +101,17 @@ Detalhes definidos na E02:
 | `make migrate`, `make shell`, `make superuser` | Atalhos |
 | `make seed` | Taxonomia inicial e dados de exemplo |
 | `make test`, `make lint` | |
-| `make build` | Imagem de produção multi-arch |
-| `make deploy` | No servidor: `git pull`, `docker compose up -d --build`, `migrate` |
+| `make build` | Confere o build das imagens para amd64 e arm64 |
+| `make deploy` | No servidor: `git pull`, `docker compose up -d --build --wait` (o `migrate` roda no entrypoint) |
+| `make prod-check`, `make prod-logs`, `make prod-down`, `make prod-superuser` | Atalhos de produção |
 | `make release VERSION=x.y.z` | Atualiza `VERSION`, `CHANGELOG.md`, cria tag ([30](30-versionamento.md)) |
-| `make backup`, `make restore FILE=` | |
+| `make backup`, `make backups`, `make restore FILE=` | Backup agora, lista de backups, restauração |
 
 Dados de exemplo: 5 membros da equipe (professores, um monitor, uma coordenadora), 30 publicações em vários estados, alunos creditados, comentários em vários estados, imagens placeholder.
 
 ## CI
 
-GitHub Actions: `ruff`, `djlint`, `pytest` com PostgreSQL, build da imagem. Deploy manual (`make deploy`) no MVP.
+GitHub Actions: `ruff`, `djlint`, `pytest` com PostgreSQL, build do frontend e build das imagens do site e do backup para amd64 e arm64 (sem push). Deploy manual (`make deploy`) no MVP.
 
 ## Atualizações
 
@@ -114,3 +121,4 @@ GitHub Actions: `ruff`, `djlint`, `pytest` com PostgreSQL, build da imagem. Depl
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: domínio `jornal.projetosrosa.com.br`, Cloudflare Tunnel decidido, Oracle Free Tier como alvo alternativo (ARM), sem e-mail, variáveis de Microsoft e clima, versão no healthz.
+- 2026-09-14: E27. `/static/` passa a ser entregue pelo Caddy a partir de um volume preenchido pelo entrypoint, em vez do WhiteNoise: uma dependência a menos e o mesmo caminho da mídia. Backup criptografado com o `crypt` do rclone em vez do `age`, porque o `age` só aceita senha digitada no terminal e o backup roda sozinho; mídia espelhada com `rclone sync --backup-dir` em vez de `tar` incremental (restauração sem cadeia de arquivos, e fotos apagadas somem de vez após 6 meses). Scripts de backup em Python, não shell. Node 24 no build, igual ao dev. `cloudflared` no perfil `tunel`. A retenção diária guarda todos os backups dos 7 últimos dias, para que um backup manual não substitua o das 3h.

@@ -1,13 +1,15 @@
 # Jornal Escolar — atalhos de desenvolvimento.
 # Os comandos são simples de propósito: funcionam no terminal do Windows e no Linux.
-# Novos alvos entram conforme as etapas do docs/26 (build, deploy, backup).
+# Os alvos "prod-*", deploy, backup e restore rodam NO SERVIDOR de produção (docs/34).
 
 UV = uv run --directory backend
 MANAGE = $(UV) python manage.py
 COMPOSE = docker compose
+PROD = docker compose -f infra/docker-compose.yml --env-file infra/env/.env
 
 .DEFAULT_GOAL := help
 .PHONY: help install assets-install assets-dev assets hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser release
+.PHONY: build deploy prod-check prod-logs prod-down prod-superuser backup backups restore
 
 help:
 	@echo Jornal Escolar - comandos disponiveis:
@@ -31,6 +33,16 @@ help:
 	@echo   make shell            abre o shell do Django
 	@echo   make superuser        cria um usuario administrador
 	@echo   make release VERSION=x.y.z   cria a versao: VERSION, CHANGELOG, commit e tag (docs/30)
+	@echo Producao (docs/34, rodar no servidor):
+	@echo   make build            confere que as imagens compilam para x86 e ARM
+	@echo   make deploy           baixa o codigo novo do GitHub e sobe/atualiza o site
+	@echo   make prod-check       verificacoes de seguranca e do SITE_URL
+	@echo   make prod-logs        mostra os logs do site em producao
+	@echo   make prod-down        desliga o site (os dados ficam guardados)
+	@echo   make prod-superuser   cria o primeiro administrador em producao
+	@echo   make backup           faz um backup agora (banco e fotos, docs/31)
+	@echo   make backups          lista os backups disponiveis
+	@echo   make restore FILE=mais-recente   restaura um backup (APAGA o banco atual)
 
 install: assets-install
 	uv sync --directory backend
@@ -99,3 +111,36 @@ superuser:
 
 release:
 	$(UV) python ../scripts/release.py $(VERSION)
+
+# --- Produção (docs/24 e docs/34) ---
+
+# Só confere a compilação nas duas arquiteturas; o servidor constrói a própria imagem no deploy.
+build:
+	docker buildx build --platform linux/amd64,linux/arm64 -f infra/Dockerfile .
+	docker buildx build --platform linux/amd64,linux/arm64 infra/backup
+
+deploy:
+	git pull --ff-only
+	$(PROD) up -d --build --wait --remove-orphans
+
+prod-check:
+	$(PROD) exec web python manage.py check --deploy
+
+prod-logs:
+	$(PROD) logs -f --tail 200
+
+prod-down:
+	$(PROD) down
+
+prod-superuser:
+	$(PROD) exec web python manage.py createsuperuser
+
+backup:
+	$(PROD) exec backup python backup.py
+
+backups:
+	$(PROD) exec backup python restore.py
+
+restore:
+	$(PROD) exec backup python restore.py $(FILE)
+	$(PROD) restart web

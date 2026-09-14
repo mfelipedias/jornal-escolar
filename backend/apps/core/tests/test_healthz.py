@@ -52,3 +52,9 @@ def test_post_not_allowed(client):
     response = client.post(URL)
 
     assert response.status_code == 405
+
+
+def test_head_allowed_for_external_monitors(client):
+    response = client.head(URL)
+
+    assert response.status_code == 200

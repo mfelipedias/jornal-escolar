@@ -8,6 +8,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Produção (E27): imagem Docker própria em `infra/Dockerfile` (build do Vite, dependências com uv, usuário sem privilégios, `collectstatic`, healthcheck) para x86 e ARM; Compose de produção em `infra/docker-compose.yml` com banco, site (Gunicorn), Caddy entregando `/static/` e `/media/` com cache, `cloudflared` no perfil `tunel` e container de backup. Modelo `infra/env/.env.producao.example`.
+- Backup diário às 3h (`infra/backup/`): `pg_dump` conferido com `pg_restore --list`, fotos espelhadas com as apagadas guardadas por 6 meses, tudo criptografado pelo rclone e enviado ao Cloudflare R2 (ou a uma pasta local); retenção de 7 dias, 4 semanas e 6 meses. Restauração com `make restore FILE=mais-recente`, inclusive em servidor novo.
+- Atalhos `make build`, `deploy`, `prod-check`, `prod-logs`, `prod-down`, `prod-superuser`, `backup`, `backups` e `restore`.
+- Guia `docs/34-guia-deploy.md`: servidor, túnel, primeiro administrador, backup, teste de restauração, UptimeRobot e problemas comuns, em linguagem simples.
+- `manage.py check --deploy` avisa quando `SITE_URL` aponta para localhost, não usa https ou tem caminho.
+- CI monta as imagens do site e do backup para amd64 e arm64 (sem publicar).
 - SEO do site (E26): título, descrição, endereço canônico, Open Graph e Twitter Card nas páginas públicas; JSON-LD `NewsArticle`/`Article` nas publicações (autores da equipe com link do perfil, alunos só com o nome), `Person` no perfil público e `WebSite` na home, sempre com o nome do jornal como quem publica. Imagem padrão de compartilhamento e logo com o glifo.
 - `/sitemap.xml` só com páginas públicas e `/robots.txt` fechando painel, login, admin e pré-visualizações; telas de login com `noindex`.
 - Configuração "Descrição para buscadores" (`site.description`) para a página inicial.
@@ -40,6 +46,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- `/healthz/` aceita também HEAD, usado por monitores externos.
+- Em produção, erros e avisos do Django vão para o log do container.
+- `/static/` em produção é entregue pelo Caddy, não pelo WhiteNoise; backup criptografado pelo rclone em vez do `age` (docs/24, Histórico).
 - Cor `ink-3` escurecida (`#6B6875`) para atingir contraste AA em textos pequenos.
 - Cor de área âmbar escurecida (`#8F5A00`) para atingir contraste AA nas etiquetas.
 - "Leia também" e o cabeçalho da publicação usam os novos componentes.

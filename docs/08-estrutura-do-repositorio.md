@@ -58,16 +58,17 @@ jornal_escolar/
 │   ├── vite.config.js            # Entrada: backend/static/src; saída: backend/static/dist
 │   └── tailwind.config.js        # Se necessário (Tailwind 4 usa CSS-first)
 ├── infra/
-│   ├── docker-compose.yml        # cloudflared, caddy, web, db, backup (+ worker e ollama por profile)
+│   ├── docker-compose.yml        # Produção: cloudflared (perfil tunel), caddy, web, db, backup
 │   ├── (dev)                     # O Compose de desenvolvimento é o compose.yaml da raiz
 │   ├── Dockerfile                # Multi-stage, multi-arch: build de assets (node) + runtime (python)
-│   ├── caddy/Caddyfile
+│   ├── caddy/Caddyfile           # /static/ e /media/ dos volumes; o resto para o web
+│   ├── backup/                   # Imagem do backup: Dockerfile, backup.py, restore.py, comum.py, crontab
 │   ├── scripts/
-│   │   ├── backup.sh             # pg_dump + tar do volume de mídia + envio para destino externo
-│   │   ├── restore.sh
-│   │   └── entrypoint.sh         # migrate, collectstatic, gunicorn
+│   │   ├── entrypoint.sh         # estáticos para o volume, migrate, gunicorn
+│   │   └── healthcheck.py        # HEALTHCHECK do container web
 │   └── env/
-│       └── .env.example
+│       ├── .env.example          # Desenvolvimento
+│       └── .env.producao.example # Servidor (docs/34)
 ├── .github/workflows/ci.yml      # ruff, djlint, pytest
 ├── .pre-commit-config.yaml
 ├── .editorconfig
@@ -113,7 +114,7 @@ jornal_escolar/
 3. `frontend/src/js/editor.js` (E14) importa TipTap e extensões; expõe `window.initEditor(el, options)`.
 4. Vite gera `backend/static/dist/` com hash nos nomes e `manifest.json` (`make assets`).
 5. `django-vite` lê o manifest e injeta as tags nos templates (`{% vite_asset 'src/js/app.js' %}`). Em desenvolvimento, com `make assets-dev` aberto, as tags apontam para o servidor do Vite (porta 5173) e a página recarrega sozinha ao editar CSS.
-6. Em produção, o Dockerfile roda o build do Vite na etapa Node e copia `dist/` para a imagem Python; `collectstatic` + WhiteNoise servem com cache longo.
+6. Em produção, o Dockerfile roda o build do Vite na etapa Node e copia `dist/` para a imagem Python; `collectstatic` junta os arquivos e o Caddy os entrega com cache longo (E27).
 
 ## Ambiente de desenvolvimento no Windows
 
@@ -136,3 +137,4 @@ Na prática (E01), o desenvolvimento começou no modo **nativo**:
 - 2026-09-12: `VERSION` e `CHANGELOG.md`; sem `emails/`; apps ajustadas às decisões.
 - 2026-09-12: E01 executada; notas sobre make no Windows e Python 3.13.
 - 2026-09-12: E04: fontes de CSS/JS em `frontend/src/`; fontes tipográficas via Fontsource no build.
+- 2026-09-14: E27: `infra/backup/` com scripts em Python no lugar de `backup.sh`/`restore.sh`; `healthcheck.py`; `.env.producao.example`; estáticos entregues pelo Caddy.

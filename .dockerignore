@@ -1,0 +1,30 @@
+# Arquivos que NÃO entram no build da imagem de produção (infra/Dockerfile).
+# Menos arquivos = build mais rápido e nenhum segredo dentro da imagem.
+.git
+.github
+.vscode
+.idea
+.playwright-cli
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/node_modules
+backend/.venv
+backend/media
+backend/staticfiles
+backend/static/dist
+backups
+docs
+test-results
+playwright-report
+
+# Segredos: o .env fica só no servidor e é lido pelo Compose, nunca copiado para a imagem.
+**/.env
+**/.env.*
+!**/.env*.example
+
+# Testes não rodam em produção.
+backend/conftest.py
+backend/tests
+backend/apps/*/tests

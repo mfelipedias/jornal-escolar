@@ -81,3 +81,34 @@ jobs:
 
       - name: Manifest gerado
         run: test -f backend/static/dist/manifest.json
+
+  imagem:
+    name: Imagens de produção (x86 e ARM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # QEMU permite montar a imagem ARM (Oracle) numa máquina x86 do GitHub.
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build do site (infra/Dockerfile)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Build do backup (infra/backup)
+        uses: docker/build-push-action@v6
+        with:
+          context: infra/backup
+          platforms: linux/amd64,linux/arm64
+          push: false
+          cache-from: type=gha,scope=backup
+          cache-to: type=gha,mode=max,scope=backup

@@ -79,12 +79,16 @@ Lista completa de atalhos com `make`:
 
 Verificação rápida: http://localhost:8000/healthz/ deve responder `{"status": "ok", "version": "..."}`.
 
+## Colocar no ar
+
+O passo a passo para o servidor (túnel da Cloudflare, backup no R2, aviso de queda) está em [docs/34-guia-deploy.md](docs/34-guia-deploy.md). No servidor, atualizar o site é `make deploy`; o backup e a restauração estão em [docs/31-guia-backup.md](docs/31-guia-backup.md).
+
 ## Estrutura
 
 ```
 backend/    Django (config/, apps/, templates/, static/)
 frontend/   Vite e Tailwind (src/css, src/js)
-infra/      Docker Compose e variáveis de ambiente
+infra/      Produção: Dockerfile, Compose, Caddy, backup e modelos de .env
 docs/       Planejamento e decisões
 ```
 

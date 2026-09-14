@@ -1,0 +1,132 @@
+# Ambiente de PRODUÇÃO do Jornal Escolar (docs/24; passo a passo em docs/34).
+#
+# No servidor, sempre pela raiz do repositório e com o arquivo de configuração do servidor:
+#   make deploy        (atualiza o código e sobe tudo)
+# que equivale a:
+#   docker compose -f infra/docker-compose.yml --env-file infra/env/.env up -d --build
+#
+# Serviços:
+#   db          PostgreSQL 17 (os dados ficam no volume "pgdata")
+#   web         Django + Gunicorn, imagem própria (infra/Dockerfile)
+#   caddy       entrega /static/ e /media/ e repassa o resto para o web
+#   cloudflared túnel da Cloudflare: publica o site sem abrir portas (perfil "tunel")
+#   backup      cópia diária do banco e das fotos para o Cloudflare R2 (infra/backup)
+#
+# Os valores vêm de infra/env/.env (modelo em infra/env/.env.producao.example).
+# Cada serviço recebe só as variáveis de que precisa: o site, por exemplo, não conhece as
+# chaves do backup nem o token do túnel.
+name: jornal_escolar
+
+# Logs de cada container limitados a 5 arquivos de 10 MB, para não encher o disco.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jornal}
+      POSTGRES_USER: ${POSTGRES_USER:-jornal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD em infra/env/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    image: jornal-escolar:latest
+    restart: unless-stopped
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      SECRET_KEY: ${SECRET_KEY:?Defina SECRET_KEY em infra/env/.env}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:?Defina ALLOWED_HOSTS em infra/env/.env}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:?Defina CSRF_TRUSTED_ORIGINS em infra/env/.env}
+      SITE_URL: ${SITE_URL:?Defina SITE_URL em infra/env/.env}
+      DATABASE_URL: postgres://${POSTGRES_USER:-jornal}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-jornal}
+      MEDIA_ROOT: /data/media
+      MEDIA_URL: /media/
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-True}
+      SECURE_HSTS_SECONDS: ${SECURE_HSTS_SECONDS:-2592000}
+      TRUSTED_CLIENT_IP_HEADER: ${TRUSTED_CLIENT_IP_HEADER:-}
+      MS_CLIENT_ID: ${MS_CLIENT_ID:-}
+      MS_CLIENT_SECRET: ${MS_CLIENT_SECRET:-}
+      AUTH_ALLOWED_DOMAINS: ${AUTH_ALLOWED_DOMAINS:-professor.educacao.sp.gov.br,educacao.sp.gov.br}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
+    volumes:
+      - media:/data/media
+      - static:/data/static
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    # Porta só no próprio servidor (127.0.0.1): útil para testar com o navegador do servidor.
+    # Quem vem da internet entra pelo túnel, sem nenhuma porta aberta no roteador.
+    ports:
+      - "${CADDY_BIND:-127.0.0.1}:${CADDY_PORT:-8080}:80"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - static:/srv/static:ro
+      - media:/srv/media:ro
+      - caddy_data:/data
+    depends_on:
+      - web
+    logging: *logging
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.1
+    restart: unless-stopped
+    # Só sobe com o perfil "tunel" (COMPOSE_PROFILES=tunel no .env do servidor).
+    # Sem ele, o site roda só na rede local, por exemplo para testes.
+    profiles: ["tunel"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - caddy
+    logging: *logging
+
+  backup:
+    build:
+      context: backup
+    image: jornal-escolar-backup:latest
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGDATABASE: ${POSTGRES_DB:-jornal}
+      PGUSER: ${POSTGRES_USER:-jornal}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_DESTINO: ${BACKUP_DESTINO:-r2}
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET: ${R2_BUCKET:-jornal-backup}
+    volumes:
+      - media:/data/media
+      # Destino "local" (BACKUP_DESTINO=local): uma pasta do servidor, por exemplo um HD externo.
+      - ${BACKUP_PASTA_LOCAL:-../backups}:/backup-local
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  pgdata:
+  media:
+  static:
+  caddy_data:

@@ -3,7 +3,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_safe
 
 from apps.publications import home as home_blocks
 
@@ -49,7 +49,7 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
 
 
 @never_cache
-@require_GET
+@require_safe  # GET e HEAD: alguns monitores externos testam com HEAD
 def healthz(request: HttpRequest) -> JsonResponse:
     """Verificação de saúde para o Compose e o monitor externo (docs/24).
 

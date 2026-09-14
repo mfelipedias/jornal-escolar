@@ -1,0 +1,3 @@
+# Horário do backup automático (hora de São Paulo, variável TZ do container).
+# minuto hora dia mês dia-da-semana  comando
+0 3 * * * python /app/backup.py

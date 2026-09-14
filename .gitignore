@@ -21,6 +21,7 @@ backend/static/dist/
 .env
 .env.*
 !.env.example
+!.env.*.example
 
 # Backups locais
 *.dump
