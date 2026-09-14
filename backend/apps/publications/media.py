@@ -98,22 +98,38 @@ def _resize(image: Image.Image, width: int) -> Image.Image:
     return image.resize((width, height), Image.Resampling.LANCZOS)
 
 
+def _square(image: Image.Image) -> Image.Image:
+    """Recorte quadrado central (foto de perfil), caso o navegador não tenha recortado."""
+    side = min(image.width, image.height)
+    left = (image.width - side) // 2
+    top = (image.height - side) // 2
+    return image.crop((left, top, left + side, top + side))
+
+
 @transaction.atomic
 def process_upload(
-    uploaded: UploadedFile, user: User, article: Article | None = None
+    uploaded: UploadedFile,
+    user: User,
+    article: Article | None = None,
+    *,
+    max_bytes: int | None = None,
+    square: bool = False,
 ) -> MediaAsset:
-    if uploaded.size is None or uploaded.size > settings.MEDIA_MAX_UPLOAD_BYTES:
-        max_mb = settings.MEDIA_MAX_UPLOAD_BYTES // (1024 * 1024)
+    max_bytes = max_bytes or settings.MEDIA_MAX_UPLOAD_BYTES
+    if uploaded.size is None or uploaded.size > max_bytes:
+        max_mb = max_bytes // (1024 * 1024)
         raise MediaError("file_too_large", f"A imagem pode ter no máximo {max_mb} MB.", 413)
 
-    raw = uploaded.read(settings.MEDIA_MAX_UPLOAD_BYTES + 1)
-    if len(raw) > settings.MEDIA_MAX_UPLOAD_BYTES:
+    raw = uploaded.read(max_bytes + 1)
+    if len(raw) > max_bytes:
         raise MediaError("file_too_large", "Arquivo grande demais.", 413)
 
     source = _open_image(raw)
     image_format = source.format or ""
     extension, mime = ALLOWED_FORMATS[image_format]
     image = _normalize(source)
+    if square:
+        image = _square(image)
 
     original_bytes = _encode(image, image_format)
     variants_bytes = {

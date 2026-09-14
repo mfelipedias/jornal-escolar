@@ -21,6 +21,8 @@ Ver [23](23-seguranca-e-lgpd.md) para detalhes de autenticação.
 
 ## Assistente de primeiro acesso
 
+Rota: `/painel/primeiro-acesso/<passo>/`. Aparece no primeiro login (senha, Microsoft ou link de primeiro acesso) enquanto `TeacherProfile.onboarded_at` estiver vazio; um `?next=` explícito tem prioridade. "Fazer isso depois" ou pular até o fim também conclui o assistente.
+
 Três passos, puláveis:
 
 1. **Quem é você**: foto, nome de exibição, cargo (pré-preenchido pelo admin), headline.
@@ -64,7 +66,7 @@ Uma página com seções, um botão salvar. Sem abas.
 | Campo | Tipo | Validação |
 |---|---|---|
 | Formação | lista de (título, instituição, ano), até 6 | opcional |
-| Links | lista de (rótulo, URL), até 4 | `https` |
+| Links | lista de (rótulo, URL), até 4 | `http` ou `https` (a mesma regra da página pública) |
 
 ### Preferências
 
@@ -83,9 +85,13 @@ Uma página com seções, um botão salvar. Sem abas.
 - Upload de foto passa por `MediaAsset` como qualquer imagem.
 - Mudança de nome de exibição não altera créditos congelados de publicações já publicadas, salvo se o usuário marcar "atualizar créditos anteriores" (gera evento editorial).
 - Novo tópico sugerido entra como `is_active = false` até o admin aprovar.
-- Cargo e papel são editados só pelo admin; o usuário vê, não altera.
+- Cargo e papel são editados só pelo admin; o usuário vê, não altera. No passo 1 do assistente o cargo aparece só para leitura.
+- O endereço do perfil (`slug`) pode ser mudado na tela, com aviso de que links antigos deixam de funcionar.
+- A foto é recortada em quadrado no navegador e de novo no servidor (caso chegue sem recorte). A foto antiga é apagada ao trocar.
+- "Sair de todas as outras sessões" apaga as sessões da pessoa guardadas no banco, menos a atual. Trocar a senha também encerra as outras.
 
 ## Histórico
 
 - 2026-09-12: versão inicial (com perfil de aluno e convite por e-mail).
 - 2026-09-12: reescrito. Sem contas de aluno; contas criadas pelo admin; login Microsoft; link de primeiro acesso manual; campo cargo.
+- 2026-09-14: E23. Rota e regra de exibição do assistente (`onboarded_at`); cargo só para leitura no passo 1; links aceitam `http` e `https`, como a página pública já fazia; troca de endereço com aviso; detalhes de foto e sessões. "Atualizar créditos anteriores" já atualiza os créditos; o registro em `EditorialEvent` fica para a E29, quando o modelo existir.

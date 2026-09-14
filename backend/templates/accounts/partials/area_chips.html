@@ -1,0 +1,22 @@
+{% comment %}
+  Áreas de atuação como chips marcáveis (docs/14).
+  Parâmetros: areas, selected_areas (conjunto de ids).
+{% endcomment %}
+<div class="flex flex-wrap gap-1.5">
+  {% for area in areas %}
+    <label class="chip">
+      <input type="checkbox"
+             name="areas"
+             value="{{ area.pk }}"
+             class="peer sr-only"
+             {% if area.pk in selected_areas %}checked{% endif %}>
+      <span class="chip-label inline-flex items-center gap-1.5">
+        <span class="size-2 rounded-full {{ area.color_classes.solid_bg }}"
+              aria-hidden="true"></span>
+        {{ area.name }}
+      </span>
+    </label>
+  {% empty %}
+    <p class="text-meta text-ink-3">Nenhuma área cadastrada. Peça ao administrador.</p>
+  {% endfor %}
+</div>

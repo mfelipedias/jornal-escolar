@@ -204,6 +204,12 @@ class TeacherProfile(TimeStampedModel):
         "revisores podem publicar por mim (padrão)", default=False
     )
     show_reads = models.BooleanField("mostrar leituras nas minhas publicações", default=True)
+    onboarded_at = models.DateTimeField(
+        "assistente de primeiro acesso concluído em",
+        null=True,
+        blank=True,
+        help_text="Vazio: o próximo login leva ao assistente de primeiro acesso.",
+    )
 
     class Meta:
         verbose_name = "perfil"

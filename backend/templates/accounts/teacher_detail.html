@@ -32,8 +32,8 @@
       <div class="min-w-0">
         <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <h1 class="font-serif text-h1 font-semibold text-balance sm:text-display">{{ name }}</h1>
-          {% if can_edit %}
-            <a href="{% url 'admin:accounts_user_change' person.pk %}"
+          {% if edit_url %}
+            <a href="{{ edit_url }}"
                class="text-meta text-ink-3 underline-offset-2 hover:text-accent hover:underline">Editar perfil</a>
           {% endif %}
         </div>

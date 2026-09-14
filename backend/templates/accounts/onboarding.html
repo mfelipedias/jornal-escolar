@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% comment %}
+  Assistente de primeiro acesso (docs/14): três passos, todos podem ser pulados.
+  Parâmetros: step, steps, title, form, person, profile, is_teacher e os dados de cada passo.
+{% endcomment %}
+{% block title %}{{ title }} · Primeiro acesso · {{ jornal.name }}{% endblock title %}
+{% block head %}
+  <meta name="robots" content="noindex">
+{% endblock head %}
+{% block body %}
+  <div class="flex min-h-screen flex-col">
+    <header class="border-b border-line">
+      <div class="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-4">
+        <a href="{% url 'core:home' %}"
+           class="flex items-center gap-2 text-ink"
+           aria-label="{{ jornal.name }}, página inicial">
+          {% include "components/glyph.html" with class="size-6 shrink-0 text-accent" %}
+          <span class="font-serif text-xl leading-none font-semibold tracking-tight">
+            {% if jornal.wordmark_head %}{{ jornal.wordmark_head }}{% endif %}
+            <span class="text-accent">{{ jornal.wordmark_accent }}</span>
+          </span>
+        </a>
+        <a href="{% url 'accounts:onboarding_done' %}"
+           class="text-meta text-ink-3 hover:text-accent">Fazer isso depois</a>
+      </div>
+    </header>
+    <main id="conteudo"
+          class="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:py-14"
+          tabindex="-1">
+      <ol class="flex gap-2" aria-label="Passos">
+        {% for item in steps %}
+          <li class="flex-1">
+            <span class="block h-1 rounded-full
+                         {% if item.number <= step %}bg-accent{% else %}bg-line{% endif %}"
+                  aria-hidden="true"></span>
+            <span class="mt-2 block text-meta
+                         {% if item.number == step %}font-medium text-ink{% else %}text-ink-3{% endif %}"
+                  {% if item.number == step %}aria-current="step"{% endif %}>
+              <span class="sr-only">Passo</span> {{ item.number }}. {{ item.title }}
+            </span>
+          </li>
+        {% endfor %}
+      </ol>
+      <p class="mt-10 text-meta tracking-wide text-ink-3 uppercase">Passo {{ step }} de {{ steps|length }}</p>
+      <h1 class="mt-1 font-serif text-h1 font-semibold">{{ title }}</h1>
+      {% if step == 1 %}
+        <p class="mt-2 font-serif text-lead text-ink-2">
+          Olá, {{ person.public_name }}! Em poucos minutos seu perfil fica pronto. Tudo pode ser mudado depois.
+        </p>
+      {% elif step == 2 %}
+        <p class="mt-2 font-serif text-lead text-ink-2">
+          {% if is_teacher %}
+            Marque as disciplinas que você dá aula.
+          {% else %}
+            Marque as áreas em que você atua.
+          {% endif %}
+        </p>
+      {% else %}
+        <p class="mt-2 font-serif text-lead text-ink-2">Os assuntos que interessam a você ajudam a sugerir pautas.</p>
+      {% endif %}
+      {% if form.non_field_errors %}
+        <div class="mt-6 rounded-field border border-danger/30 bg-danger/5 px-3 py-2 text-meta text-danger"
+             role="alert">{{ form.non_field_errors|join:" " }}</div>
+      {% endif %}
+      <form method="post"
+            enctype="multipart/form-data"
+            class="mt-8 space-y-6"
+            novalidate>
+        {% csrf_token %}
+        {% if step == 1 %}
+          {% include "accounts/partials/photo_field.html" with field=form.photo %}
+          {% include "components/form_field.html" with field=form.display_name autocomplete="name" help="Como seu nome aparece no jornal." %}
+          <div>
+            <p class="text-ui font-medium text-ink">Cargo</p>
+            <p class="mt-1.5 text-ui text-ink-2">
+              {{ person.get_staff_kind_display }}
+              <span class="text-meta text-ink-3">· definido pelo administrador</span>
+            </p>
+          </div>
+          {% include "components/form_field.html" with field=form.headline help='Ex.: "Professora de Biologia e Ciências", "Monitor escolar".' %}
+        {% elif step == 2 %}
+          <fieldset>
+            <legend class="sr-only">
+              {% if is_teacher %}
+                Disciplinas
+              {% else %}
+                Áreas de atuação
+              {% endif %}
+            </legend>
+            {% if is_teacher %}
+              {% include "accounts/partials/discipline_chips.html" %}
+            {% else %}
+              {% include "accounts/partials/area_chips.html" %}
+            {% endif %}
+          </fieldset>
+        {% else %}
+          <fieldset>
+            <legend class="text-ui font-medium text-ink">Tópicos</legend>
+            <div class="mt-2">{% include "accounts/partials/topic_chips.html" with new_topic_field=form.new_topic %}</div>
+          </fieldset>
+          <div x-data="{ count: {{ form.bio.value|default:''|length }} }">
+            <label for="{{ form.bio.id_for_label }}"
+                   class="block text-ui font-medium text-ink">
+              Sobre mim <span class="font-normal text-ink-3">(opcional)</span>
+            </label>
+            <textarea id="{{ form.bio.id_for_label }}"
+                      name="{{ form.bio.html_name }}"
+                      rows="5"
+                      maxlength="800"
+                      class="field mt-1.5"
+                      @input="count = $event.target.value.length">{{ form.bio.value|default:'' }}</textarea>
+            <p class="mt-1 text-right text-meta text-ink-3">
+              <span x-text="count">{{ form.bio.value|default:''|length }}</span>/800
+            </p>
+            {% if form.bio.errors %}<p class="text-meta text-danger">{{ form.bio.errors|join:" " }}</p>{% endif %}
+          </div>
+        {% endif %}
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
+          <div>
+            {% if step > 1 %}
+              <a href="{% url 'accounts:onboarding' step=step|add:-1 %}"
+                 class="btn-ghost">← Voltar</a>
+            {% endif %}
+          </div>
+          {# O botão principal vem primeiro no HTML: é ele que o Enter aciona. #}
+          <div class="flex flex-row-reverse items-center gap-2">
+            <button type="submit" name="action" value="save" class="btn-primary">
+              {% if step == steps|length %}
+                Concluir
+              {% else %}
+                Continuar
+              {% endif %}
+            </button>
+            <button type="submit" name="action" value="skip" class="btn-ghost">Pular</button>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+{% endblock body %}

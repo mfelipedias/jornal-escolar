@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 
+from apps.accounts.services import complete_onboarding
 from apps.core.models import SiteSetting
 from tests.factories import DEFAULT_PASSWORD, UserFactory
 
@@ -59,6 +60,7 @@ def test_microsoft_button_can_be_turned_off(client, microsoft_configured):
 
 def test_password_login_success(client):
     user = UserFactory(email="ana@escola.sp.gov.br")
+    complete_onboarding(user)  # o primeiro login vai ao assistente (test_onboarding.py)
 
     response = client.post(
         LOGIN_URL, {"login": "ANA@Escola.sp.gov.br", "password": DEFAULT_PASSWORD}

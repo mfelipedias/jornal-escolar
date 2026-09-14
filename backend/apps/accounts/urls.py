@@ -1,7 +1,7 @@
 from allauth.account.views import logout
 from django.urls import path, re_path
 
-from . import public_views, views
+from . import panel_views, public_views, views
 
 app_name = "accounts"
 
@@ -11,6 +11,14 @@ urlpatterns = [
     path("entrar/", views.login, name="login"),
     path("sair/", logout, name="logout"),
     path("acesso/<uuid:token>/", views.access_link, name="access_link"),
+    path("painel/perfil/", panel_views.profile_edit, name="profile_edit"),
+    path("painel/conta/", panel_views.account_settings, name="account_settings"),
+    path("painel/primeiro-acesso/<int:step>/", panel_views.onboarding, name="onboarding"),
+    path(
+        "painel/primeiro-acesso/concluir/",
+        panel_views.onboarding_done,
+        name="onboarding_done",
+    ),
 ]
 
 # Rotas que precisam vir antes de include("allauth.urls") em config/urls.py.

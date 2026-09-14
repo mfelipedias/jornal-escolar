@@ -56,6 +56,8 @@ def access_link(request: HttpRequest, token: UUID) -> HttpResponse:
         user = services.use_access_link(link, form.cleaned_data["new_password1"])
         auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(request, "Senha criada. Você já está dentro do jornal.")
+        if services.needs_onboarding(user):
+            return redirect("accounts:onboarding", step=1)
         return redirect("/")
 
     response = render(request, "accounts/access_link.html", {"form": form, "link": link})

@@ -97,3 +97,38 @@ def team(*, area: KnowledgeArea | None = None, kind: str = "", alphabetical: boo
     if alphabetical:
         people = people.order_by("full_name")
     return people
+
+
+# --- Configuração de perfil (E23, docs/14) ---
+
+
+def missing_profile_items(user: User) -> list[str]:
+    """O que falta para o aviso "Complete seu perfil": foto, disciplinas ou áreas, bio."""
+    profile = user.profile
+    missing = []
+    if not user.avatar_id:
+        missing.append("foto")
+    if user.staff_kind == User.StaffKind.TEACHER:
+        if not profile.disciplines.exists():
+            missing.append("disciplinas")
+    elif not profile.areas.exists():
+        missing.append("áreas de atuação")
+    if not profile.bio.strip():
+        missing.append("sobre mim")
+    return missing
+
+
+def areas_with_disciplines() -> QuerySet[KnowledgeArea]:
+    return KnowledgeArea.objects.filter(is_active=True).prefetch_related(
+        Prefetch("disciplines", queryset=Discipline.objects.filter(is_active=True))
+    )
+
+
+def topics_for_profile(discipline_ids) -> list[Topic]:
+    """Tópicos ativos, primeiro os ligados às disciplinas escolhidas (docs/14, passo 3)."""
+    ids = list(discipline_ids)
+    linked = set(
+        Topic.objects.filter(is_active=True, disciplines__in=ids).values_list("pk", flat=True)
+    )
+    topics = list(Topic.objects.filter(is_active=True))
+    return sorted(topics, key=lambda t: (t.pk not in linked, t.name.lower()))

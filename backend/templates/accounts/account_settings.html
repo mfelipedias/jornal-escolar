@@ -1,0 +1,89 @@
+{% extends "layouts/public.html" %}
+{% comment %}
+  Conta (docs/14, "Conta"): como a pessoa entra, senha e sessões abertas.
+  Baixar meus dados e pedir exclusão chegam na Fase 2.
+{% endcomment %}
+{% block title %}Conta · {{ jornal.name }}{% endblock title %}
+{% block head %}
+  <meta name="robots" content="noindex">
+{% endblock head %}
+{% block content %}
+  <div class="site-container py-10 sm:py-14">
+    <div class="mx-auto max-w-2xl space-y-12">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 class="font-serif text-h1 font-semibold">Conta</h1>
+          <p class="mt-1 text-ui text-ink-2">{{ person.email }}</p>
+        </div>
+        <a href="{{ profile_edit_url }}"
+           class="text-ui text-ink-2 hover:text-accent">Meu perfil</a>
+      </div>
+      <section aria-labelledby="sec-entrada" class="space-y-3">
+        <h2 id="sec-entrada"
+            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Como você entra</h2>
+        <ul class="space-y-1 text-ui text-ink-2">
+          {% if uses_microsoft %}<li>Conta da escola (Microsoft)</li>{% endif %}
+          {% if has_password %}<li>E-mail e senha</li>{% endif %}
+          {% if not uses_microsoft and not has_password %}
+            <li>Ainda sem forma de entrar definida.</li>
+          {% endif %}
+        </ul>
+      </section>
+      <section aria-labelledby="sec-senha" class="space-y-4">
+        <h2 id="sec-senha"
+            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Senha</h2>
+        {% if has_password %}
+          <form method="post" class="max-w-sm space-y-5" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="password">
+            <input type="email"
+                   name="username"
+                   value="{{ person.email }}"
+                   autocomplete="username"
+                   hidden
+                   readonly>
+            {% include "components/form_field.html" with field=password_form.old_password type="password" autocomplete="current-password" %}
+            {% include "components/form_field.html" with field=password_form.new_password1 type="password" autocomplete="new-password" help=password_form.new_password1.help_text %}
+            {% include "components/form_field.html" with field=password_form.new_password2 type="password" autocomplete="new-password" %}
+            <button type="submit" class="btn-primary">Alterar senha</button>
+          </form>
+        {% else %}
+          <p class="text-ui text-ink-2">
+            Sua conta entra pela conta da escola e não tem senha. Se precisar de uma senha,
+            peça ao administrador um link de acesso.
+          </p>
+        {% endif %}
+      </section>
+      <section aria-labelledby="sec-sessoes" class="space-y-4">
+        <h2 id="sec-sessoes"
+            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Sessões abertas</h2>
+        <p class="text-ui text-ink-2">
+          Cada navegador ou celular em que você entrou. A sessão acaba sozinha depois de 14 dias sem uso.
+        </p>
+        <ul class="divide-y divide-line rounded-card border border-line bg-white">
+          {% for session in sessions %}
+            <li class="flex items-center justify-between gap-3 px-4 py-3 text-ui">
+              <span>
+                {% if session.is_current %}
+                  Este navegador
+                {% else %}
+                  Outro navegador ou celular
+                {% endif %}
+              </span>
+              <span class="text-meta text-ink-3">expira em {{ session.expire_date|date:"j/m/Y H:i" }}</span>
+            </li>
+          {% empty %}
+            <li class="px-4 py-3 text-ui text-ink-3">Nenhuma sessão encontrada.</li>
+          {% endfor %}
+        </ul>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="end_sessions">
+          <button type="submit"
+                  class="btn-secondary"
+                  {% if not other_sessions %}disabled{% endif %}>Sair de todas as outras sessões</button>
+        </form>
+      </section>
+    </div>
+  </div>
+{% endblock content %}

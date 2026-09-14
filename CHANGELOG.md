@@ -8,6 +8,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Assistente de primeiro acesso em três passos puláveis (E23): quem é você (foto, nome de exibição, apresentação), o que você ensina ou faz (disciplinas por área ou, para outros cargos, áreas) e o que interessa a você (tópicos, com os ligados às disciplinas primeiro, e "Sobre mim"). Aparece depois do link de primeiro acesso e no primeiro login.
+- Tela "Meu perfil" `/painel/perfil/`: apresentação, foto com recorte quadrado, atuação, interesses com busca e sugestão de tópico (vai para aprovação do admin), formação, links, preferências, troca de endereço com aviso e opção de atualizar o nome nos créditos anteriores. Aviso "Complete seu perfil" enquanto faltarem foto, disciplinas/áreas ou bio.
+- Tela "Conta" `/painel/conta/`: forma de entrar, alteração de senha e "Sair de todas as outras sessões".
+- "Editar perfil" no perfil público também para o próprio dono; nome no cabeçalho leva a "Meu perfil".
 - Perfil público de cada membro da equipe em `/professores/<endereço>/` (E22): foto ou iniciais na cor da área, apresentação com cargo, áreas e disciplinas, sobre, formação, interesses, links e publicações em abas (Todas, Como autor(a), Colaborações) com "Carregar mais". Perfil oculto só aparece para o próprio dono; conta desativada mantém só o crédito histórico.
 - Página "Quem escreve" `/professores/` com toda a equipe de perfil público, filtros por área e cargo, ordem por publicação mais recente ou por nome, e "Quem escreve" no cabeçalho.
 - Nomes da equipe na home, nas páginas de área e disciplina e em "Quem fez" levam ao perfil.

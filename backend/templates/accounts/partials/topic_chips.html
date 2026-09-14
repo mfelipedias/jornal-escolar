@@ -1,0 +1,40 @@
+{% comment %}
+  Tópicos de interesse: busca por texto, chips e sugestão de tópico novo (docs/14, "Interesses").
+  Parâmetros: topics (já ordenados), selected_topics (conjunto de ids), new_topic_field.
+{% endcomment %}
+<div x-data="chipFilter">
+  {% if topics %}
+    <label for="topic-search" class="sr-only">Buscar tópico</label>
+    <input id="topic-search"
+           type="search"
+           x-model="query"
+           placeholder="Buscar tópico…"
+           autocomplete="off"
+           class="field max-w-xs">
+    <div class="mt-3 flex max-h-64 flex-wrap gap-1.5 overflow-y-auto">
+      {% for topic in topics %}
+        <label class="chip"
+               data-name="{{ topic.name }}"
+               x-show="matches($el.dataset.name)">
+          <input type="checkbox"
+                 name="topics"
+                 value="{{ topic.pk }}"
+                 class="peer sr-only"
+                 {% if topic.pk in selected_topics %}checked{% endif %}>
+          <span class="chip-label">{{ topic.name }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <div class="mt-4">
+    <label for="{{ new_topic_field.id_for_label }}"
+           class="block text-meta font-medium text-ink-2">Não achou? Sugira um tópico</label>
+    <input id="{{ new_topic_field.id_for_label }}"
+           name="{{ new_topic_field.html_name }}"
+           type="text"
+           maxlength="80"
+           value="{{ new_topic_field.value|default:'' }}"
+           class="field mt-1 max-w-xs">
+    <p class="mt-1 text-meta text-ink-3">O administrador aprova antes de o tópico aparecer.</p>
+  </div>
+</div>

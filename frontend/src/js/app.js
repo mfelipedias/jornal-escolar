@@ -35,4 +35,68 @@ Alpine.data("toast", () => ({
   },
 }));
 
+// Foto de perfil (docs/14): recorte quadrado central no navegador antes de enviar.
+// O servidor recorta de novo se a imagem chegar sem recorte (JavaScript desligado).
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const AVATAR_SIDE = 1024;
+
+Alpine.data("avatarPicker", (initialUrl = "") => ({
+  preview: initialUrl,
+  error: "",
+  async pick(event) {
+    const input = event.target;
+    const file = input.files?.[0];
+    this.error = "";
+    if (!file) return;
+    if (file.size > AVATAR_MAX_BYTES) {
+      this.error = "A foto pode ter no máximo 5 MB.";
+      input.value = "";
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      const side = Math.min(bitmap.width, bitmap.height);
+      const out = Math.min(side, AVATAR_SIDE);
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = out;
+      canvas
+        .getContext("2d")
+        .drawImage(
+          bitmap,
+          (bitmap.width - side) / 2,
+          (bitmap.height - side) / 2,
+          side,
+          side,
+          0,
+          0,
+          out,
+          out,
+        );
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+      if (!blob) throw new Error("sem blob");
+      const cropped = new File([blob], "foto.jpg", { type: "image/jpeg" });
+      const transfer = new DataTransfer();
+      transfer.items.add(cropped);
+      input.files = transfer.files;
+      this.preview = URL.createObjectURL(cropped);
+    } catch {
+      // Navegador sem suporte: envia o arquivo original e o servidor recorta.
+      this.preview = URL.createObjectURL(file);
+    }
+  },
+}));
+
+// Filtro de chips por texto (tópicos no perfil e no assistente).
+Alpine.data("chipFilter", () => ({
+  query: "",
+  matches(name) {
+    const plain = (text) =>
+      text
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase();
+    return !this.query || plain(name).includes(plain(this.query.trim()));
+  },
+}));
+
 Alpine.start();

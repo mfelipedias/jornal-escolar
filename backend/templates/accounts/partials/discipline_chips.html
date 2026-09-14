@@ -1,0 +1,31 @@
+{% comment %}
+  Disciplinas agrupadas por área, como chips marcáveis (docs/14, "Atuação").
+  Parâmetros: areas (com disciplines prefetch), selected_disciplines (conjunto de ids).
+{% endcomment %}
+<div class="space-y-4">
+  {% for area in areas %}
+    {% if area.disciplines.all %}
+      <div>
+        <p class="flex items-center gap-1.5 text-meta font-medium text-ink-2">
+          <span class="size-2 rounded-full {{ area.color_classes.solid_bg }}"
+                aria-hidden="true"></span>
+          {{ area.name }}
+        </p>
+        <div class="mt-1.5 flex flex-wrap gap-1.5">
+          {% for discipline in area.disciplines.all %}
+            <label class="chip">
+              <input type="checkbox"
+                     name="disciplines"
+                     value="{{ discipline.pk }}"
+                     class="peer sr-only"
+                     {% if discipline.pk in selected_disciplines %}checked{% endif %}>
+              <span class="chip-label">{{ discipline.name }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% empty %}
+    <p class="text-meta text-ink-3">Nenhuma disciplina cadastrada. Peça ao administrador.</p>
+  {% endfor %}
+</div>

@@ -1,0 +1,57 @@
+{% comment %}
+  Foto de perfil com prévia e recorte quadrado no navegador (docs/14).
+  Parâmetros: field (FileField), avatar_url, initials, photo_accept, remove_field (opcional).
+{% endcomment %}
+<div class="flex items-center gap-5"
+     x-data="avatarPicker('{{ avatar_url|escapejs }}')">
+  <div class="relative size-24 shrink-0 overflow-hidden rounded-full bg-paper-2">
+    <img x-show="preview"
+         :src="preview"
+         {% if avatar_url %}src="{{ avatar_url }}"{% else %}x-cloak{% endif %}
+         alt=""
+         width="96"
+         height="96"
+         class="size-full object-cover">
+    <span x-show="!preview"
+          {% if avatar_url %}x-cloak{% endif %}
+          class="flex size-full items-center justify-center font-serif text-h2 font-semibold text-ink-2"
+          aria-hidden="true">{{ initials }}</span>
+  </div>
+  <div class="min-w-0">
+    <label for="{{ field.id_for_label }}"
+           class="btn-secondary cursor-pointer focus-within:ring-2 focus-within:ring-accent/40">
+      {% if avatar_url %}
+        Trocar foto
+      {% else %}
+        Escolher foto
+      {% endif %}
+      <input id="{{ field.id_for_label }}"
+             name="{{ field.html_name }}"
+             type="file"
+             accept="{{ photo_accept }}"
+             class="sr-only"
+             @change="pick($event)"
+             {% if field.errors %}aria-invalid="true" aria-describedby="{{ field.id_for_label }}-erro"{% else %}aria-describedby="{{ field.id_for_label }}-ajuda"{% endif %}>
+    </label>
+    {% if remove_field and avatar_url %}
+      <label class="mt-2 flex items-center gap-2 text-meta text-ink-2">
+        <input type="checkbox"
+               name="{{ remove_field.html_name }}"
+               class="accent-accent">
+        Remover foto
+      </label>
+    {% endif %}
+    <p x-show="error"
+       x-text="error"
+       x-cloak
+       class="mt-1.5 text-meta text-danger"
+       role="alert"></p>
+    {% if field.errors %}
+      <p id="{{ field.id_for_label }}-erro"
+         class="mt-1.5 text-meta text-danger">{{ field.errors|join:" " }}</p>
+    {% else %}
+      <p id="{{ field.id_for_label }}-ajuda"
+         class="mt-1.5 text-meta text-ink-3">{{ field.help_text }}</p>
+    {% endif %}
+  </div>
+</div>

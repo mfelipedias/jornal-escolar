@@ -7,6 +7,7 @@ from urllib.parse import urlencode, urlsplit
 from django.core.paginator import Paginator
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.decorators.http import require_GET
 
 from apps.publications import presentation
@@ -93,6 +94,15 @@ def main_area(profile: TeacherProfile) -> KnowledgeArea | None:
     return discipline.area if discipline else None
 
 
+def _edit_url(request: HttpRequest, person: User, is_owner: bool) -> str:
+    """O próprio dono edita na tela de perfil; o administrador, no Django Admin."""
+    if is_owner:
+        return reverse("accounts:profile_edit")
+    if request.user.is_authenticated and request.user.is_staff:
+        return reverse("admin:accounts_user_change", args=[person.pk])
+    return ""
+
+
 @require_GET
 def teacher_detail(request: HttpRequest, slug: str) -> HttpResponse:
     """/professores/<slug>/: página de autor, para todos os cargos (docs/13)."""
@@ -133,7 +143,7 @@ def teacher_detail(request: HttpRequest, slug: str) -> HttpResponse:
             "education": education_lines(profile.education),
             "links": safe_links(profile.links),
             "is_owner": is_owner,
-            "can_edit": request.user.is_authenticated and request.user.is_staff,
+            "edit_url": _edit_url(request, person, is_owner),
             "tab": tab,
             "tabs": [
                 {

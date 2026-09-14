@@ -128,3 +128,172 @@ def reactivate_user(user: User) -> None:
     user.is_active = True
     user.deactivated_at = None
     user.save(update_fields=["is_active", "deactivated_at"])
+
+
+# --- Configuração de perfil e assistente de primeiro acesso (E23) ---
+
+AVATAR_MAX_BYTES = 5 * 1024 * 1024
+LINKS_LIMIT = 4
+EDUCATION_LIMIT = 6
+
+
+def needs_onboarding(user: User) -> bool:
+    """O assistente aparece até a pessoa concluí-lo ou pulá-lo até o fim."""
+    return ensure_profile(user).onboarded_at is None
+
+
+def complete_onboarding(user: User) -> None:
+    profile = ensure_profile(user)
+    if profile.onboarded_at is None:
+        profile.onboarded_at = timezone.now()
+        profile.save(update_fields=["onboarded_at", "updated_at"])
+
+
+def set_avatar(user: User, uploaded: Any) -> None:
+    """Troca a foto: passa pelo mesmo tratamento das imagens do editor, recortada em quadrado.
+
+    Levanta publications.media.MediaError com a mensagem para mostrar.
+    """
+    from apps.publications import media
+
+    asset = media.process_upload(uploaded, user, max_bytes=AVATAR_MAX_BYTES, square=True)
+    asset.alt_text = f"Foto de {user.full_name}"[:250]
+    asset.has_people = True
+    asset.consent_ok = True  # a própria pessoa envia a própria foto
+    asset.save(update_fields=["alt_text", "has_people", "consent_ok"])
+    previous = user.avatar
+    user.avatar = asset
+    user.save(update_fields=["avatar"])
+    _discard_avatar(user, previous)
+
+
+def remove_avatar(user: User) -> None:
+    previous = user.avatar
+    if previous is None:
+        return
+    user.avatar = None
+    user.save(update_fields=["avatar"])
+    _discard_avatar(user, previous)
+
+
+def _discard_avatar(user: User, asset: Any) -> None:
+    """Apaga a foto antiga se foi enviada como foto de perfil e não é usada em outro lugar."""
+    if asset is None or asset.uploaded_by_id != user.pk or asset.article_id:
+        return
+    from apps.publications.models import Article
+
+    if Article.objects.filter(cover=asset).exists():
+        return
+    if User.objects.filter(avatar=asset).exists():
+        return
+    asset.delete()
+
+
+def suggest_topic(name: str) -> Any:
+    """Tópico sugerido pela equipe. Novo entra inativo até o admin aprovar (docs/14).
+
+    Devolve o tópico ativo que já existia (para marcar na hora) ou None.
+    """
+    from apps.taxonomy.models import Topic
+
+    name = " ".join(name.split())[:80]
+    slug = slugify(name)
+    if not slug:
+        return None
+    existing = Topic.objects.filter(name__iexact=name).first() or (
+        Topic.objects.filter(slug=slug).first()
+    )
+    if existing:
+        return existing if existing.is_active else None
+    Topic.objects.create(name=name, slug=slug, is_active=False)
+    return None
+
+
+@transaction.atomic
+def update_past_credits(user: User) -> int:
+    """Leva o nome de exibição novo aos créditos já existentes.
+
+    Por padrão o crédito guarda o nome do momento em que foi dado (docs/14, "Regras").
+    O registro em EditorialEvent entra quando o modelo existir (E29).
+    """
+    from apps.publications.models import ArticleContributor
+
+    credits = ArticleContributor.objects.filter(user=user, is_student=False).exclude(
+        display_name=user.public_name
+    )
+    changed = 0
+    for credit in credits:
+        credit.display_name = user.public_name
+        credit.save(update_fields=["display_name"])  # o sinal renova o cache público
+        changed += 1
+    return changed
+
+
+@transaction.atomic
+def save_profile(
+    user: User,
+    *,
+    user_fields: dict[str, Any] | None = None,
+    profile_fields: dict[str, Any] | None = None,
+    disciplines: Any = None,
+    areas: Any = None,
+    topics: Any = None,
+    update_credits: bool = False,
+) -> TeacherProfile:
+    """Grava o que a própria pessoa pode mudar. Cargo, papel e e-mail ficam com o admin.
+
+    None em disciplines/areas/topics significa "não mexer". Áreas vazias com disciplinas
+    marcadas são derivadas das disciplinas (docs/14, "Atuação").
+    """
+    profile = ensure_profile(user)
+    allowed_user = {"display_name"}
+    user_fields = {k: v for k, v in (user_fields or {}).items() if k in allowed_user}
+    if user_fields:
+        for key, value in user_fields.items():
+            setattr(user, key, value)
+        user.save(update_fields=list(user_fields))
+
+    protected = {"id", "user", "user_id", "created_at", "updated_at", "onboarded_at"}
+    for key, value in (profile_fields or {}).items():
+        if key in protected:
+            continue
+        setattr(profile, key, value)
+    profile.full_clean(exclude=["user"])
+    profile.save()
+
+    if disciplines is not None:
+        profile.disciplines.set(disciplines)
+    if areas is not None:
+        chosen = list(areas)
+        if not chosen and disciplines:
+            chosen = sorted({d.area_id for d in disciplines})
+        profile.areas.set(chosen)
+    if topics is not None:
+        profile.topics.set(topics)
+    if update_credits:
+        update_past_credits(user)
+    return profile
+
+
+# --- Sessões (docs/23, "Sessões") ---
+
+
+def user_sessions(user: User) -> list[Any]:
+    """Sessões ainda válidas desta pessoa. Poucas contas: decodificar todas é barato."""
+    from django.contrib.sessions.models import Session
+
+    sessions = []
+    for session in Session.objects.filter(expire_date__gt=timezone.now()).order_by("-expire_date"):
+        if str(session.get_decoded().get("_auth_user_id")) == str(user.pk):
+            sessions.append(session)
+    return sessions
+
+
+def end_other_sessions(user: User, keep_session_key: str | None) -> int:
+    """Sair de todas as outras sessões": apaga as sessões da pessoa, menos a atual."""
+    ended = 0
+    for session in user_sessions(user):
+        if session.session_key != keep_session_key:
+            session.delete()
+            ended += 1
+    return ended

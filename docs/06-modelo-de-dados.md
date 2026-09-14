@@ -71,6 +71,7 @@ Nome mantido por tradição; vale para todos os cargos.
 | show_reviewer_credit | bool | |
 | reviewers_may_publish | bool | Padrão ao pedir revisão |
 | show_reads | bool | Mostrar leituras nas próprias publicações |
+| onboarded_at | timestamp nullable | Assistente de primeiro acesso concluído ou pulado; vazio leva ao assistente no login |
 
 ### accounts.AccessLink
 
@@ -326,3 +327,4 @@ erDiagram
 - 2026-09-12: versão inicial.
 - 2026-09-12: reescrito: sem `StudentProfile` e `Invitation`; `AccessLink`, `staff_kind`, campos de aluno em `ArticleContributor`, `Comment`, `Notification` no MVP, `ErrorLog`, novas chaves de configuração.
 - 2026-09-12: E21: `KnowledgeArea.short_name` para o menu do cabeçalho; os nomes completos das áreas ("Ciências da Natureza e suas Tecnologias") não cabem numa linha. A migração preenche as seis áreas do seed.
+- 2026-09-14: E23: `TeacherProfile.onboarded_at`. Quem já tinha entrado alguma vez é marcado como concluído pela migração.

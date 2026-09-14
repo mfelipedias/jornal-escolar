@@ -11,6 +11,7 @@ from allauth.socialaccount.models import SocialLogin
 from django.contrib import messages
 from django.http import HttpRequest
 from django.shortcuts import redirect
+from django.urls import reverse
 
 from . import services
 
@@ -23,6 +24,13 @@ MSG_DISABLED = "O login com a conta Microsoft está desligado. Entre com e-mail 
 class AccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest) -> bool:
         return False
+
+    def get_login_redirect_url(self, request: HttpRequest) -> str:
+        """Sem ?next=, o primeiro login (senha ou Microsoft) leva ao assistente (docs/14)."""
+        user = request.user
+        if user.is_authenticated and services.needs_onboarding(user):
+            return reverse("accounts:onboarding", kwargs={"step": 1})
+        return super().get_login_redirect_url(request)
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):

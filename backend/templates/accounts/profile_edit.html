@@ -1,0 +1,276 @@
+{% extends "layouts/public.html" %}
+{% comment %}
+  Configuração de perfil (docs/14): uma página com seções e um botão salvar, sem abas.
+  Cargo e papel aparecem só para leitura; quem muda é o administrador.
+{% endcomment %}
+{% block title %}Meu perfil · {{ jornal.name }}{% endblock title %}
+{% block head %}
+  <meta name="robots" content="noindex">
+{% endblock head %}
+{% block content %}
+  <div class="site-container py-10 sm:py-14">
+    <div class="mx-auto max-w-2xl">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 class="font-serif text-h1 font-semibold">Meu perfil</h1>
+          <p class="mt-1 text-ui text-ink-2">Como você aparece no jornal.</p>
+        </div>
+        <p class="flex gap-4 text-ui">
+          <a href="{{ profile_url }}" class="text-ink-2 hover:text-accent">Ver perfil público</a>
+          <a href="{% url 'accounts:account_settings' %}"
+             class="text-ink-2 hover:text-accent">Conta e senha</a>
+        </p>
+      </div>
+      {% if missing %}
+        <div class="mt-6 rounded-card border border-line bg-paper-2 px-4 py-3 text-ui text-ink-2">
+          <strong class="text-ink">Complete seu perfil:</strong> falta {{ missing|join:", " }}.
+        </div>
+      {% endif %}
+      {% if form.non_field_errors %}
+        <div class="mt-6 space-y-1 rounded-field border border-danger/30 bg-danger/5 px-3 py-2 text-meta text-danger"
+             role="alert">
+          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% elif form.errors %}
+        <div class="mt-6 rounded-field border border-danger/30 bg-danger/5 px-3 py-2 text-meta text-danger"
+             role="alert">Revise os campos marcados.</div>
+      {% endif %}
+      <form method="post"
+            enctype="multipart/form-data"
+            class="mt-8 space-y-12"
+            novalidate>
+        {% csrf_token %}
+        <section aria-labelledby="sec-apresentacao" class="space-y-6">
+          <h2 id="sec-apresentacao"
+              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Apresentação</h2>
+          {% include "accounts/partials/photo_field.html" with field=form.photo remove_field=form.remove_photo %}
+          <div x-data="{ original: '{{ person.public_name|escapejs }}', name: '{{ form.display_name.value|default:''|escapejs }}' }"
+               @input="name = $event.target.value.trim()">
+            {% include "components/form_field.html" with field=form.display_name autocomplete="name" help="Como seu nome aparece no jornal." %}
+            <label x-show="name && name !== original"
+                   x-cloak
+                   class="mt-2 flex items-start gap-2 text-meta text-ink-2">
+              <input type="checkbox"
+                     name="{{ form.update_credits.html_name }}"
+                     class="mt-0.5 accent-accent"
+                     {% if form.update_credits.value %}checked{% endif %}>
+              <span>Atualizar também os créditos das publicações anteriores. Sem marcar, elas continuam com o nome antigo.</span>
+            </label>
+          </div>
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div>
+              <p class="text-ui font-medium text-ink">Cargo</p>
+              <p class="mt-1.5 text-ui text-ink-2">{{ person.get_staff_kind_display }}</p>
+              <p class="mt-1 text-meta text-ink-3">Para mudar, fale com o administrador.</p>
+            </div>
+            <div>
+              <p class="text-ui font-medium text-ink">Papel no sistema</p>
+              <p class="mt-1.5 text-ui text-ink-2">{{ person.get_role_display }}</p>
+            </div>
+          </div>
+          {% include "components/form_field.html" with field=form.headline help='Ex.: "Professora de Biologia e Ciências", "Monitor escolar".' %}
+          <div x-data="{ count: {{ form.bio.value|default:''|length }} }">
+            <label for="{{ form.bio.id_for_label }}"
+                   class="block text-ui font-medium text-ink">
+              Sobre mim <span class="font-normal text-ink-3">(opcional)</span>
+            </label>
+            <textarea id="{{ form.bio.id_for_label }}"
+                      name="{{ form.bio.html_name }}"
+                      rows="5"
+                      maxlength="800"
+                      class="field mt-1.5"
+                      @input="count = $event.target.value.length">{{ form.bio.value|default:'' }}</textarea>
+            <p class="mt-1 text-right text-meta text-ink-3">
+              <span x-text="count">{{ form.bio.value|default:''|length }}</span>/800
+            </p>
+            {% if form.bio.errors %}<p class="text-meta text-danger">{{ form.bio.errors|join:" " }}</p>{% endif %}
+          </div>
+          <div class="max-w-40">
+            <label for="{{ form.since_year.id_for_label }}"
+                   class="block text-ui font-medium text-ink">
+              Na escola desde <span class="font-normal text-ink-3">(opcional)</span>
+            </label>
+            <input id="{{ form.since_year.id_for_label }}"
+                   name="{{ form.since_year.html_name }}"
+                   type="number"
+                   inputmode="numeric"
+                   min="1950"
+                   max="{{ current_year }}"
+                   value="{{ form.since_year.value|default_if_none:'' }}"
+                   class="field mt-1.5">
+            {% if form.since_year.errors %}
+              <p class="mt-1.5 text-meta text-danger">{{ form.since_year.errors|join:" " }}</p>
+            {% endif %}
+          </div>
+          <label class="flex items-start gap-3">
+            <input type="checkbox"
+                   name="{{ form.is_public.html_name }}"
+                   class="mt-1 accent-accent"
+                   {% if form.is_public.value %}checked{% endif %}>
+            <span>
+              <span class="block text-ui font-medium text-ink">Perfil público</span>
+              <span class="block text-meta text-ink-3">Desligado, seu perfil não aparece na lista nem em buscas.</span>
+            </span>
+          </label>
+          <div x-data="{ original: '{{ profile.slug|escapejs }}', slug: '{{ form.slug.value|default:''|escapejs }}' }">
+            <label for="{{ form.slug.id_for_label }}"
+                   class="block text-ui font-medium text-ink">Endereço do perfil</label>
+            <div class="mt-1.5 flex items-center gap-1 text-ui text-ink-3">
+              <span class="shrink-0">/professores/</span>
+              <input id="{{ form.slug.id_for_label }}"
+                     name="{{ form.slug.html_name }}"
+                     type="text"
+                     maxlength="90"
+                     value="{{ form.slug.value|default:'' }}"
+                     x-model="slug"
+                     class="field"
+                     {% if form.slug.errors %}aria-invalid="true"{% endif %}>
+            </div>
+            {% if form.slug.errors %}
+              <p class="mt-1.5 text-meta text-danger">{{ form.slug.errors|join:" " }}</p>
+            {% endif %}
+            <p x-show="slug.trim() !== original"
+               x-cloak
+               class="mt-1.5 text-meta text-warn"
+               role="status">Atenção: mudar o endereço quebra links antigos que já foram compartilhados.</p>
+          </div>
+        </section>
+        <section aria-labelledby="sec-atuacao" class="space-y-6">
+          <h2 id="sec-atuacao"
+              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Atuação</h2>
+          <fieldset>
+            <legend class="text-ui font-medium text-ink">
+              Disciplinas
+              {% if not is_teacher %}<span class="font-normal text-ink-3">(opcional)</span>{% endif %}
+            </legend>
+            {% if form.disciplines.errors %}
+              <p class="mt-1 text-meta text-danger">{{ form.disciplines.errors|join:" " }}</p>
+            {% endif %}
+            <div class="mt-3">{% include "accounts/partials/discipline_chips.html" %}</div>
+          </fieldset>
+          <fieldset>
+            <legend class="text-ui font-medium text-ink">Áreas de atuação</legend>
+            <p class="mt-1 text-meta text-ink-3">
+              {% if is_teacher %}
+                Se ficar em branco, usamos as áreas das disciplinas marcadas.
+              {% else %}
+                Marque ao menos uma.
+              {% endif %}
+            </p>
+            {% if form.areas.errors %}<p class="mt-1 text-meta text-danger">{{ form.areas.errors|join:" " }}</p>{% endif %}
+            <div class="mt-3">{% include "accounts/partials/area_chips.html" %}</div>
+          </fieldset>
+        </section>
+        <section aria-labelledby="sec-interesses" class="space-y-6">
+          <h2 id="sec-interesses"
+              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Interesses</h2>
+          <fieldset>
+            <legend class="text-ui font-medium text-ink">Tópicos</legend>
+            <p class="mt-1 text-meta text-ink-3">Usados para sugerir pautas para você.</p>
+            <div class="mt-3">{% include "accounts/partials/topic_chips.html" with new_topic_field=form.new_topic %}</div>
+          </fieldset>
+          <label class="flex items-start gap-3">
+            <input type="checkbox"
+                   name="{{ form.accepts_english.html_name }}"
+                   class="mt-1 accent-accent"
+                   {% if form.accepts_english.value %}checked{% endif %}>
+            <span class="text-ui text-ink">Aceito sugestões de pauta em inglês</span>
+          </label>
+        </section>
+        <section aria-labelledby="sec-formacao" class="space-y-6">
+          <h2 id="sec-formacao"
+              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Formação e links</h2>
+          <fieldset>
+            <legend class="text-ui font-medium text-ink">
+              Formação <span class="font-normal text-ink-3">(opcional, até 6)</span>
+            </legend>
+            <div class="mt-3 space-y-3">
+              {% for row in form.education_rows %}
+                <div class="grid gap-2 sm:grid-cols-[2fr_2fr_6rem]">
+                  <label class="sr-only" for="edu-degree-{{ row.index }}">Título {{ forloop.counter }}</label>
+                  <input id="edu-degree-{{ row.index }}"
+                         name="edu_degree_{{ row.index }}"
+                         value="{{ row.degree }}"
+                         maxlength="120"
+                         placeholder="Licenciatura em Biologia"
+                         class="field">
+                  <label class="sr-only" for="edu-institution-{{ row.index }}">Instituição {{ forloop.counter }}</label>
+                  <input id="edu-institution-{{ row.index }}"
+                         name="edu_institution_{{ row.index }}"
+                         value="{{ row.institution }}"
+                         maxlength="120"
+                         placeholder="Instituição"
+                         class="field">
+                  <label class="sr-only" for="edu-year-{{ row.index }}">Ano {{ forloop.counter }}</label>
+                  <input id="edu-year-{{ row.index }}"
+                         name="edu_year_{{ row.index }}"
+                         value="{{ row.year }}"
+                         inputmode="numeric"
+                         maxlength="4"
+                         placeholder="Ano"
+                         class="field">
+                </div>
+              {% endfor %}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend class="text-ui font-medium text-ink">
+              Links <span class="font-normal text-ink-3">(opcional, até 4)</span>
+            </legend>
+            <p class="mt-1 text-meta text-ink-3">Endereços que começam com https://, como um currículo Lattes ou um blog.</p>
+            <div class="mt-3 space-y-3">
+              {% for row in form.link_rows %}
+                <div class="grid gap-2 sm:grid-cols-[1fr_2fr]">
+                  <label class="sr-only" for="link-label-{{ row.index }}">Nome do link {{ forloop.counter }}</label>
+                  <input id="link-label-{{ row.index }}"
+                         name="link_label_{{ row.index }}"
+                         value="{{ row.label }}"
+                         maxlength="40"
+                         placeholder="Nome (ex.: Lattes)"
+                         class="field">
+                  <label class="sr-only" for="link-url-{{ row.index }}">Endereço do link {{ forloop.counter }}</label>
+                  <input id="link-url-{{ row.index }}"
+                         name="link_url_{{ row.index }}"
+                         value="{{ row.url }}"
+                         type="url"
+                         inputmode="url"
+                         maxlength="300"
+                         placeholder="https://"
+                         class="field">
+                </div>
+              {% endfor %}
+            </div>
+          </fieldset>
+        </section>
+        <section aria-labelledby="sec-preferencias" class="space-y-4">
+          <h2 id="sec-preferencias"
+              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Preferências</h2>
+          <label class="flex items-start gap-3">
+            <input type="checkbox"
+                   name="{{ form.show_reviewer_credit.html_name }}"
+                   class="mt-1 accent-accent"
+                   {% if form.show_reviewer_credit.value %}checked{% endif %}>
+            <span class="text-ui text-ink">Mostrar meu nome como revisor nas publicações que revisei</span>
+          </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox"
+                   name="{{ form.reviewers_may_publish.html_name }}"
+                   class="mt-1 accent-accent"
+                   {% if form.reviewers_may_publish.value %}checked{% endif %}>
+            <span class="text-ui text-ink">Permitir que revisores publiquem por mim (padrão ao pedir revisão)</span>
+          </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox"
+                   name="{{ form.show_reads.html_name }}"
+                   class="mt-1 accent-accent"
+                   {% if form.show_reads.value %}checked{% endif %}>
+            <span class="text-ui text-ink">Mostrar contagem de leituras nas minhas publicações</span>
+          </label>
+        </section>
+        <div class="sticky bottom-0 -mx-4 flex justify-end border-t border-line bg-paper/95 px-4 py-4 backdrop-blur">
+          <button type="submit" class="btn-primary px-6 py-2.5">Salvar perfil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

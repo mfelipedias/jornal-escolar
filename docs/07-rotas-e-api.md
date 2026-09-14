@@ -56,6 +56,8 @@ Convenção de nomes de URL no Django: `app:nome`, por exemplo `publications:det
 | GET | `/painel/pautas/` | `curation:story_ideas` | todos | 4 |
 | GET/POST | `/painel/perfil/` | `accounts:profile_edit` | todos | 1 |
 | GET/POST | `/painel/conta/` | `accounts:account_settings` | todos (senha, sessões) | 1 |
+| GET/POST | `/painel/primeiro-acesso/<passo>/` | `accounts:onboarding` | todos (assistente, passos 1 a 3) | 1 |
+| GET | `/painel/primeiro-acesso/concluir/` | `accounts:onboarding_done` | todos (fim do assistente ou "fazer isso depois") | 1 |
 | GET | `/painel/editorial/` | `editorial:overview` | editor+ (tudo por estado, destaques, comentários) | 2 |
 
 ### Administração
@@ -147,3 +149,4 @@ Sem endpoints de escrita. Sem dados de alunos além do nome de exibição já p�
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: login Microsoft e links de acesso no lugar de convites; notificações; comentários públicos; transições revisadas; IA congelada.
+- 2026-09-14: E23: rotas do assistente de primeiro acesso.
