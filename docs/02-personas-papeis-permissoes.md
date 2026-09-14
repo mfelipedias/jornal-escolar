@@ -85,6 +85,13 @@ Legenda: ✅ sim · 🔒 apenas nas próprias publicações · 🟡 se designado
 | Gerenciar fontes de notícia (Fase 4) | ❌ | ❌ | ❌ | ✅ |
 | Configurações, auditoria, anonimização | ❌ | ❌ | ❌ | ✅ |
 
+Notas da matriz:
+
+- Ninguém revisa o próprio texto ([04](04-fluxo-editorial.md)): em "Aprovar / solicitar alterações", o ✅ de editor e admin vale para textos de outras pessoas.
+- 🟡 em "Editar rascunho" vale enquanto o texto está em revisão com a pessoa. O revisor não mexe nos créditos nem duplica o texto; se achar erro, comenta.
+- Contas, papéis, taxonomia e configurações ficam no Django Admin, liberado só para o papel `admin`.
+- A matriz é testada célula a célula em `backend/apps/editorial/tests/test_matrix.py`, que copia esta tabela e falha se as duas divergirem. Linhas de recursos futuros (reações, comentários públicos, busca, pautas, fontes) aparecem lá como fora do escopo até a etapa delas.
+
 ## Política editorial
 
 Configuração `editorial.self_publish`:
@@ -99,7 +106,8 @@ Em qualquer valor: **alunos não têm conta e nunca publicam**; o professor resp
 ## Como isso vira código
 
 - Campo `role` em `User` com choices `staff | editor | admin`; campo `staff_kind` para exibição.
-- Funções puras em `apps/editorial/permissions.py`: `can_edit(user, article)`, `can_publish(user, article)`, `can_moderate_comment(user, comment)` etc. Uma implementação, usada por views, templates e testes.
+- Funções puras em `apps/editorial/permissions.py`: `can_edit(user, article)`, `can_publish(user, article)`, `can_moderate_comment(user, comment)` etc. Uma implementação, usada por views, services, templates e testes.
+- Nos templates, a tag `{% load permissions %}{% can "publish" article as pode_publicar %}` chama `can_publish`; ações sem objeto dispensam o segundo argumento (`{% can "access_admin" as mostra_admin %}`). Nenhum template ou view testa `role` ou `is_staff` diretamente.
 - Regras que dependem de revisão consultam `ArticleContributor` com `role = reviewer`.
 - Sem sistema genérico de permissões por objeto.
 
@@ -107,3 +115,4 @@ Em qualquer valor: **alunos não têm conta e nunca publicam**; o professor resp
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: alunos sem conta; papéis reduzidos a equipe, editor e admin; cargo para exibição; autopublicação como padrão; comentários públicos moderados. Conforme respostas em [27](27-decisoes-pendentes-e-perguntas.md).
+- 2026-09-14: E30: notas da matriz (ninguém revisa o próprio texto, alcance do revisor, Django Admin), tag `{% can %}` e teste célula a célula.

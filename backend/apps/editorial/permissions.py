@@ -1,15 +1,20 @@
-"""Única fonte das regras de permissão editorial (docs/02 "Matriz de permissões", docs/04).
+"""Única fonte das regras de permissão (docs/02 "Matriz de permissões", docs/04).
 
-Views, templates e testes usam estas funções; nenhuma regra é repetida em outro lugar.
-Todas recebem o usuário (pode ser anônimo) e devolvem bool.
+Views, services, templates e testes usam estas funções; nenhuma regra é repetida em outro
+lugar. Todas recebem o usuário (pode ser anônimo) e devolvem bool. Nos templates, use a tag
+{% can "acao" objeto as variavel %} (apps/editorial/templatetags/permissions.py), que chama
+a função can_<acao> daqui.
 
 A E12 cobriu rascunho, publicado e arquivado; a E29 acrescentou a revisão por colega
-(em revisão, alterações sugeridas). A matriz completa com testes célula a célula é da E30.
+(em revisão, alterações sugeridas); a E30 fechou a matriz (perfil, entrada, administração,
+comentário interno da revisão) e a testa célula a célula em editorial/tests/test_matrix.py.
+Linhas da matriz que dependem de recursos futuros (reações, comentários públicos, busca,
+pautas, fontes) ganham função quando a etapa delas chegar.
 """
 
 from django.contrib.auth.models import AnonymousUser
 
-from apps.accounts.models import User
+from apps.accounts.models import TeacherProfile, User
 from apps.core.site_settings import get_setting
 from apps.publications.models import Article, ArticleContributor, MediaAsset
 
@@ -19,6 +24,37 @@ AnyUser = User | AnonymousUser
 def is_staff_member(user: AnyUser) -> bool:
     """Tem conta ativa na equipe (qualquer papel)."""
     return bool(user.is_authenticated and user.is_active)
+
+
+# --- conta, perfil e administração ---
+
+
+def can_log_in(user: AnyUser) -> bool:
+    """Entrar (Microsoft ou senha): só contas da equipe ativas. Visitante não tem conta."""
+    return bool(isinstance(user, User) and user.pk and user.is_active)
+
+
+def can_view_profile(user: AnyUser, profile: TeacherProfile) -> bool:
+    """Perfil público: todo mundo. Perfil oculto: só o próprio dono."""
+    if profile.is_public:
+        return True
+    return is_staff_member(user) and user.pk == profile.user_id
+
+
+def can_edit_profile(user: AnyUser, person: User) -> bool:
+    """Cada um edita o próprio perfil; o administrador edita qualquer um (no Django Admin)."""
+    if not is_staff_member(user):
+        return False
+    return user.pk == person.pk or is_admin(user)
+
+
+def can_access_admin(user: AnyUser) -> bool:
+    """Django Admin: contas, papéis, taxonomia, configurações e auditoria (docs/02).
+
+    Espelha User.is_staff, que o save() deriva do papel; aqui a regra fica legível e
+    também recusa conta desativada.
+    """
+    return is_admin(user)
 
 
 def is_editor(user: AnyUser) -> bool:
@@ -56,6 +92,14 @@ def is_designated_reviewer(user: AnyUser, article: Article) -> bool:
 
 def can_create_article(user: AnyUser) -> bool:
     return is_staff_member(user)
+
+
+def can_duplicate(user: AnyUser, article: Article) -> bool:
+    """Duplicar como rascunho: autores e editores. O revisor edita o texto durante a revisão,
+    mas não leva uma cópia (com os créditos dos alunos) para uma publicação dele."""
+    if not can_create_article(user):
+        return False
+    return is_editor(user) or is_author(user, article)
 
 
 def can_view(user: AnyUser, article: Article) -> bool:
@@ -124,6 +168,11 @@ def can_approve_and_publish(user: AnyUser, article: Article) -> bool:
     return article.contributors.filter(
         user=user, role=ArticleContributor.Role.REVIEWER, can_publish=True
     ).exists()
+
+
+def can_comment_on_review(user: AnyUser, article: Article) -> bool:
+    """Comentário interno da revisão (E32): autores, revisor designado e editores."""
+    return is_editor(user) or is_author(user, article) or is_designated_reviewer(user, article)
 
 
 def can_decline_review(user: AnyUser, article: Article) -> bool:

@@ -105,7 +105,7 @@ def duplicate_article(user: User, article: Article) -> Article:
     créditos (coautores, alunos, convidados) vêm junto, sem revisão e edição.
     Pode levantar media.MediaError se a cópia das imagens passar da cota.
     """
-    if not permissions.can_create_article(user) or not permissions.can_edit(user, article):
+    if not permissions.can_duplicate(user, article):
         raise PermissionDenied
     title = article.title[: TITLE_MAX - len(COPY_SUFFIX)].rstrip() + COPY_SUFFIX
     duplicate = Article.objects.create(

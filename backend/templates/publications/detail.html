@@ -1,4 +1,5 @@
 {% extends "layouts/public.html" %}
+{% load permissions %}
 {% block title %}{{ article.title }} · {{ jornal.name }}{% endblock title %}
 {% block content %}
   {% if preview %}
@@ -18,6 +19,7 @@
         {% if article.type %}
           {% include "components/tag.html" with kind="type" label=article.type.name area=None url=article.type.get_absolute_url %}
         {% endif %}
+        {% can "edit" article as can_edit %}
         {% if can_edit %}
           <a href="{% url 'publications:edit' article.pk %}"
              class="ml-auto text-meta text-ink-3 underline-offset-2 hover:text-accent hover:underline">Editar</a>

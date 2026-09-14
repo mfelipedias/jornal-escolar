@@ -15,6 +15,7 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 
+from apps.editorial import permissions
 from apps.publications.presentation import ArticleCard, CardImage, Credit
 from apps.taxonomy.models import AreaColor, KnowledgeArea
 
@@ -38,8 +39,7 @@ AREA_NAMES = {
 
 
 def _can_see(request: HttpRequest) -> bool:
-    user = request.user
-    return settings.DEBUG or (user.is_authenticated and user.role == user.Role.ADMIN)
+    return settings.DEBUG or permissions.can_access_admin(request.user)
 
 
 def _sample_cards() -> list[ArticleCard]:

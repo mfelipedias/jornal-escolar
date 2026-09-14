@@ -13,12 +13,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Histórico editorial (`EditorialEvent`): toda mudança de estado registra quem, quando, de qual estado para qual e a nota (inclusive o motivo de arquivar); também revisor designado ou removido, aprovação, créditos alterados (sem nome de aluno), edição depois de publicar e edição por terceiro. "Atualizar créditos anteriores" no perfil passa a gravar evento. No admin, só leitura.
 - "Minhas publicações" mostra os chips "Em revisão" e "Alterações sugeridas".
 - `seed_demo` cria uma publicação em revisão e uma com alterações sugeridas.
+- Matriz de permissões completa (E30): `permissions.py` ganha entrar, ver e editar perfil, acesso ao Django Admin, duplicar e comentário interno da revisão. Teste parametrizado célula a célula a partir de uma cópia da tabela de `docs/02`, que falha se a tabela do documento mudar sem o teste; linhas de recursos futuros ficam marcadas como fora do escopo.
+- Tag de template `{% can "acao" objeto as variavel %}` (`{% load permissions %}`), usada no cabeçalho e no link "Editar" da página da publicação.
 
 ### Alterado
 
 - O revisor designado edita o texto enquanto a revisão está com ele, mas não altera créditos. O crédito de revisão só entra e sai pelo fluxo de revisão.
 - No celular, "Pedir revisão" e "Arquivar" ficam na folha "Detalhes" do editor.
 - O selo de estado usa "Alterações sugeridas" (antes "Alterações pedidas").
+- O revisor designado não duplica mais o texto que revisa: duplicar fica com autores e editores.
+- Cabeçalho, página de perfil, login Microsoft, menu do painel e telas de dev consultam só `permissions.py`, sem testar `role` ou `is_staff` direto.
 
 ## [1.0.0] - 2026-09-14
 

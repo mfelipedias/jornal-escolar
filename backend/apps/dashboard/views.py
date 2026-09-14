@@ -60,7 +60,7 @@ def _row(user, article: Article) -> Row:
         article=article,
         my_roles=", ".join(c.get_role_display() for c in article.my_credits),
         can_edit=can_edit,
-        can_duplicate=can_edit and permissions.can_create_article(user),
+        can_duplicate=permissions.can_duplicate(user, article),
         # Arquivar texto alheio pede motivo: isso fica no editor, não na lista.
         can_archive=permissions.can_archive(user, article)
         and not permissions.archive_requires_note(user, article),

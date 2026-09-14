@@ -51,7 +51,7 @@ def menu_items(user: User, view_name: str = "") -> list[MenuItem]:
         ("profile", "Perfil", reverse("accounts:profile_edit"), "user", False),
         ("account", "Conta", reverse("accounts:account_settings"), "key", False),
     ]
-    if permissions.is_admin(user):
+    if permissions.can_access_admin(user):
         rows.append(("admin", "Administração", reverse("admin:index"), "settings", True))
     rows.append(("site", "Ver o jornal", reverse("core:home"), "newspaper", True))
     return [

@@ -12,6 +12,7 @@ from django.views.decorators.http import require_GET
 
 from apps.core import seo
 from apps.core.site_settings import get_setting
+from apps.editorial import permissions
 from apps.publications import presentation
 from apps.publications import selectors as publication_selectors
 from apps.taxonomy.models import KnowledgeArea
@@ -101,7 +102,7 @@ def _edit_url(request: HttpRequest, person: User, is_owner: bool) -> str:
     """O próprio dono edita na tela de perfil; o administrador, no Django Admin."""
     if is_owner:
         return reverse("accounts:profile_edit")
-    if request.user.is_authenticated and request.user.is_staff:
+    if permissions.can_edit_profile(request.user, person):
         return reverse("admin:accounts_user_change", args=[person.pk])
     return ""
 
@@ -114,7 +115,7 @@ def teacher_detail(request: HttpRequest, slug: str) -> HttpResponse:
         raise Http404
     person = profile.user
     is_owner = request.user.is_authenticated and request.user.pk == person.pk
-    if not profile.is_public and not is_owner:
+    if not permissions.can_view_profile(request.user, profile):
         raise Http404
 
     counts = selectors.profile_tab_counts(profile)

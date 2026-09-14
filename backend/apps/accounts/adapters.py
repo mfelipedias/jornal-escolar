@@ -13,6 +13,8 @@ from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from apps.editorial import permissions
+
 from . import services
 
 MSG_NOT_REGISTERED = "Peça ao administrador para cadastrar você."
@@ -48,7 +50,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         user = services.find_staff_account(email)
         if user is None:
             self._reject(request, MSG_NOT_REGISTERED)
-        if not user.is_active:
+        if not permissions.can_log_in(user):
             self._reject(request, MSG_INACTIVE)
 
         if sociallogin.is_existing:

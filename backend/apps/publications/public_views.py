@@ -28,7 +28,6 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
             if not preview
             else []
         ),
-        "can_edit": permissions.can_edit(request.user, article),
         "share_url": seo.absolute_url(article.get_absolute_url()),
         "seo": article_seo.page_meta(article, preview=preview),
         "was_updated": bool(
