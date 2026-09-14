@@ -522,14 +522,12 @@ def test_request_review_without_reviewer_shows_error(client, article, author):
     assert messages == ["Escolha o colega que vai revisar."]
 
 
-def test_reviewer_decides_in_editor_and_goes_back_to_panel(client, article, author, reviewer):
+def test_reviewer_decision_without_next_goes_back_to_panel(client, article, author, reviewer):
     in_review(article, author, reviewer, can_publish=True)
     client.force_login(reviewer)
 
     page = client.get(edit_url(article)).content.decode()
-    assert "Revisar" in page
-    assert "Aprovar e publicar" in page
-    assert "Não posso revisar" in page
+    assert reverse("editorial:review", args=[article.pk]) in page  # decisão na tela de revisão
     assert "Pedir revisão" not in page
 
     response = client.post(transition_url(article, "approve"), {"note": ""}, **HTMX)

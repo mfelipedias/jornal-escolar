@@ -95,8 +95,6 @@ def review_context(request: HttpRequest, article: Article) -> dict[str, Any]:
         "can_request_review": can_request,
         "can_cancel_review": permissions.can_cancel_review(user, article),
         "can_review": permissions.can_review(user, article),
-        "can_approve_and_publish": permissions.can_approve_and_publish(user, article),
-        "can_decline_review": permissions.can_decline_review(user, article),
         "can_resume": permissions.can_resume(user, article),
         "reviewer_candidates": (
             editorial_selectors.reviewer_candidates(article, user) if can_request else []

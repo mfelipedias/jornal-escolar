@@ -1,8 +1,9 @@
 {% comment %}
   Botões de estado na barra do editor (docs/16, "Publicar e pedir revisão").
   Parâmetros: article, can_publish, can_archive, can_restore, blocking, oob e os da revisão
-  (review, can_request_review, can_cancel_review, can_review, can_approve_and_publish,
-  can_decline_review, reviewer_candidates, current_reviewer_id, default_can_publish).
+  (review, can_request_review, can_cancel_review, can_review, reviewer_candidates,
+  current_reviewer_id, default_can_publish). Sugerir alterações, aprovar e recusar ficam
+  na tela de revisão (editorial:review, E31).
 {% endcomment %}
 <div id="editor-actions"
      {% if oob %}hx-swap-oob="true"{% endif %}
@@ -117,57 +118,9 @@
       {% endif %}
     </form>
   {% endif %}
-  {# Revisor designado, editor ou admin decidindo #}
+  {# Revisor designado, editor ou admin: a decisão fica na tela de revisão (docs/17) #}
   {% if can_review %}
-    <button type="button"
-            class="btn-primary"
-            @click="open = open === 'review' ? '' : 'review'"
-            :aria-expanded="open === 'review'">Revisar</button>
-    <form x-show="open === 'review'"
-          x-cloak
-          @click.outside="open = ''"
-          class="editor-popover">
-      <p class="text-ui font-medium">Sua revisão</p>
-      {% if review.request_note %}
-        <p class="mt-1 text-meta text-ink-2">
-          Nota{% if review.requested_by %} de {{ review.requested_by.public_name }}{% endif %}: “{{ review.request_note }}”
-        </p>
-      {% endif %}
-      <label for="review-decision-note" class="mt-3 block text-meta font-medium">Comentário para os autores</label>
-      <textarea id="review-decision-note"
-                name="note"
-                rows="3"
-                maxlength="1000"
-                placeholder="Obrigatório para sugerir alterações"
-                class="field mt-1"></textarea>
-      <div class="mt-3 flex flex-col gap-2">
-        <button type="submit"
-                class="btn-secondary"
-                hx-post="{% url 'publications:transition' article.pk 'request_changes' %}"
-                data-flush-before>Sugerir alterações</button>
-        <button type="submit"
-                class="btn-secondary"
-                hx-post="{% url 'publications:transition' article.pk 'approve' %}"
-                data-flush-before>Aprovar e devolver aos autores</button>
-        {% if can_approve_and_publish %}
-          <button type="submit"
-                  class="btn-primary"
-                  hx-post="{% url 'publications:transition' article.pk 'approve_publish' %}"
-                  data-flush-before
-                  {% if blocking %}disabled title="Complete os itens obrigatórios em “Antes de publicar”"{% endif %}>
-            Aprovar e publicar
-          </button>
-        {% endif %}
-        {% if can_decline_review %}
-          <button type="submit"
-                  class="btn-ghost"
-                  hx-post="{% url 'publications:transition' article.pk 'decline_review' %}"
-                  hx-confirm="Recusar esta revisão? Os autores serão avisados para escolher outro colega.">
-            Não posso revisar
-          </button>
-        {% endif %}
-      </div>
-    </form>
+    <a href="{% url 'editorial:review' article.pk %}" class="btn-primary">Revisar</a>
   {% endif %}
   {% if can_publish and not can_review %}
     <form hx-post="{% url 'publications:transition' article.pk 'publish' %}"

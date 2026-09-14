@@ -7,9 +7,8 @@ from apps.dashboard.menu import menu_items
 
 pytestmark = pytest.mark.django_db
 
-PHASE_1_KEYS = ["home", "my_articles", "create", "profile", "account", "site"]
+BASE_KEYS = ["home", "my_articles", "create", "reviews", "profile", "account", "site"]
 LATER_PHASES = (
-    "/painel/revisao/",
     "/painel/comentarios/",
     "/painel/sugestoes/",
     "/painel/pautas/",
@@ -17,10 +16,10 @@ LATER_PHASES = (
 )
 
 
-def test_menu_for_staff_has_only_phase_1_items(staff_user):
+def test_menu_for_staff_has_only_current_items(staff_user):
     items = menu_items(staff_user, "dashboard:home")
 
-    assert [item.key for item in items] == PHASE_1_KEYS
+    assert [item.key for item in items] == BASE_KEYS
     assert [item.key for item in items if item.active] == ["home"]
 
 
@@ -38,6 +37,7 @@ def test_only_admin_sees_administration(admin_user, editor_user):
         ("accounts:profile_edit", "Perfil"),
         ("accounts:account_settings", "Conta"),
         ("editorial:notifications", "Início"),
+        ("editorial:queue", "Revisões"),
     ],
 )
 def test_panel_pages_use_dashboard_layout(client, staff_user, url_name, active):

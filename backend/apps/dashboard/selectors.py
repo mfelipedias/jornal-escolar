@@ -3,7 +3,7 @@
 "Minhas" são as publicações em que a pessoa aparece nos créditos: como autora ou coautora
 em qualquer estado; em outros papéis (colaboração, edição) só depois de publicadas, porque
 rascunhos e arquivados não são visíveis para quem não edita (apps/editorial/permissions.py).
-Os textos em que a pessoa só revisa ficam na aba "Revisões pedidas a mim" (E31).
+Os textos em que a pessoa só revisa ficam em "Revisões" (editorial:queue, E31).
 """
 
 from dataclasses import dataclass

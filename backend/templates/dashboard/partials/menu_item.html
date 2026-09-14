@@ -2,10 +2,15 @@
 <li>
   <a href="{{ item.url }}"
      title="{{ item.label }}"
-     class="flex items-center gap-3 rounded-field px-3 py-2 text-ui md:justify-center md:px-0 lg:justify-start lg:px-3
+     class="relative flex items-center gap-3 rounded-field px-3 py-2 text-ui md:justify-center md:px-0 lg:justify-start lg:px-3
             {% if item.active %}bg-accent-soft font-medium text-accent-2{% else %}text-ink-2 hover:bg-paper hover:text-ink{% endif %}"
      {% if item.active %}aria-current="page"{% endif %}>
     {% include "dashboard/partials/icon.html" with name=item.icon %}
     <span class="md:sr-only lg:not-sr-only">{{ item.label }}</span>
+    {% if item.count %}
+      <span class="ml-auto rounded-full bg-accent px-1.5 text-meta leading-5 font-semibold text-white md:absolute md:top-0.5 md:right-0.5 md:ml-0 md:text-[0.6875rem] md:leading-4 lg:static lg:ml-auto lg:text-meta lg:leading-5">
+        {{ item.count }}<span class="sr-only"> pendentes</span>
+      </span>
+    {% endif %}
   </a>
 </li>

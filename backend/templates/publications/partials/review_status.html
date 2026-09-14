@@ -1,7 +1,7 @@
 {% comment %}
   Estado da revisão por colega no painel lateral do editor (docs/04, docs/16).
   Parâmetros: article, review (editorial.selectors.ReviewSummary), can_resume.
-  A tela completa de revisão, com comentários e histórico, é da E31.
+  Também aparece na tela de revisão (editorial/review.html).
 {% endcomment %}
 {% load humanize %}
 {% if article.status == "in_review" or article.status == "changes_requested" or review.approved_by %}

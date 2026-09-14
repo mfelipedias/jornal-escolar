@@ -2,15 +2,18 @@ from urllib.parse import urlsplit
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.core.templatetags.ui import PAGE_PARAM
 from apps.publications import presentation, selectors, services
 from apps.publications.models import Article
 
 from . import notifications, permissions
+from . import selectors as editorial_selectors
 from .models import Notification
 
 
@@ -132,3 +135,79 @@ def feature(request: HttpRequest, pk: int) -> HttpResponse:
     return render(
         request, "editorial/partials/featured_board.html", _featured_context(request, error)
     )
+
+
+# --- revisão por colega (docs/15 "Revisões", docs/17) ---
+
+QUEUE_PAGE_SIZE = 20
+
+
+@never_cache
+@require_GET
+@login_required
+def review_queue(request: HttpRequest) -> HttpResponse:
+    """/painel/revisao/: abas "Pedidas a mim", "Que eu pedi" e, para editores, "Todas"."""
+    user = request.user
+    tabs = editorial_selectors.queue_tabs(user)
+    current = request.GET.get("aba", "")
+    if current not in tabs:
+        current = editorial_selectors.DEFAULT_TAB
+    page = Paginator(editorial_selectors.review_queue(user, current), QUEUE_PAGE_SIZE).get_page(
+        request.GET.get(PAGE_PARAM)
+    )
+    context = {
+        "tabs": [
+            {
+                "key": key,
+                "label": editorial_selectors.QUEUE_TABS[key],
+                "count": editorial_selectors.review_queue(user, key).count(),
+                "active": key == current,
+            }
+            for key in tabs
+        ],
+        "current": current,
+        "page_obj": page,
+        "items": [
+            {
+                "article": article,
+                "authors": presentation.byline(article),
+                "review": editorial_selectors.review_summary(article),
+            }
+            for article in page.object_list
+        ],
+    }
+    return render(request, "editorial/review_queue.html", context)
+
+
+@never_cache
+@require_GET
+@login_required
+def review(request: HttpRequest, pk: int) -> HttpResponse:
+    """/painel/publicacoes/<id>/revisar/: ler como ficará publicado, decidir e ver o histórico.
+
+    Revisor designado, editores e admin decidem; autores veem a mesma tela sem os botões de
+    decisão. As decisões são enviadas para publications:transition com next= desta tela.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related("type", "cover").prefetch_related("contributors"), pk=pk
+    )
+    user = request.user
+    if not permissions.can_comment_on_review(user, article):
+        raise PermissionDenied
+    checklist = services.checklist(article)
+    context = {
+        "article": article,
+        "review": editorial_selectors.review_summary(article),
+        "authors": presentation.byline(article),
+        "checklist": checklist,
+        "blocking": [item for item in checklist if item.blocking],
+        "history": editorial_selectors.history_entries(article),
+        # "Ver versões" (ArticleRevision) é de editor+ (docs/17, "Histórico da publicação").
+        "revisions": (
+            article.revisions.select_related("created_by")[:20]
+            if permissions.is_editor(user)
+            else None
+        ),
+        "archive_requires_note": permissions.archive_requires_note(user, article),
+    }
+    return render(request, "editorial/review.html", context)

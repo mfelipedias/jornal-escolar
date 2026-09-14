@@ -153,3 +153,4 @@ Módulo `apps/publications/rendering.py`:
 - 2026-09-12: versão inicial.
 - 2026-09-12: créditos de aluno sem conta com autorização; botão "Publicar" como padrão; revisão opcional.
 - 2026-09-14: E29: fluxo de revisão no editor (seção "Implementação (E29)").
+- 2026-09-14: E31: no editor, "Revisar" virou um link para a tela de revisão ([17](17-tela-de-revisao.md)); a caixa com as decisões saiu do editor.

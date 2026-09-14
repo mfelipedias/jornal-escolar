@@ -15,6 +15,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - `seed_demo` cria uma publicação em revisão e uma com alterações sugeridas.
 - Matriz de permissões completa (E30): `permissions.py` ganha entrar, ver e editar perfil, acesso ao Django Admin, duplicar e comentário interno da revisão. Teste parametrizado célula a célula a partir de uma cópia da tabela de `docs/02`, que falha se a tabela do documento mudar sem o teste; linhas de recursos futuros ficam marcadas como fora do escopo.
 - Tag de template `{% can "acao" objeto as variavel %}` (`{% load permissions %}`), usada no cabeçalho e no link "Editar" da página da publicação.
+- Tela de revisão (E31) em `/painel/publicacoes/<id>/revisar/`: o texto como ficará publicado, nota do pedido, autores, "Editar texto", "Sugerir alterações" (comentário obrigatório, bloqueado na tela e no serviço), "Aprovar" com "Aprovar e publicar" quando permitido, "Recusar revisão", "Arquivar" para editor com motivo, conferência e histórico legível dos eventos. Editores veem a lista de versões. Autores acompanham pela mesma tela, sem decisões.
+- "Revisões" no menu do painel, com contador: abas "Pedidas a mim", "Que eu pedi" e, para editores, "Todas em revisão".
 
 ### Alterado
 
@@ -23,6 +25,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - O selo de estado usa "Alterações sugeridas" (antes "Alterações pedidas").
 - O revisor designado não duplica mais o texto que revisa: duplicar fica com autores e editores.
 - Cabeçalho, página de perfil, login Microsoft, menu do painel e telas de dev consultam só `permissions.py`, sem testar `role` ou `is_staff` direto.
+- No editor, "Revisar" abre a tela de revisão. Avisos de pedido de revisão, edição durante a revisão e alterações sugeridas abrem a tela de revisão; pedido cancelado abre a lista de revisões.
 
 ## [1.0.0] - 2026-09-14
 

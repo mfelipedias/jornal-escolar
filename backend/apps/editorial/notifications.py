@@ -49,9 +49,15 @@ def article_team(article: Article, exclude: User | None = None) -> QuerySet[User
 
 
 def _notify_many(
-    users: Iterable[User], kind: str, message: str, article: Article, actor: User
+    users: Iterable[User],
+    kind: str,
+    message: str,
+    article: Article,
+    actor: User,
+    url: str = "",
 ) -> int:
-    url = reverse("publications:edit", args=[article.pk])
+    """Avisa cada pessoa. Sem url, o aviso abre o editor da publicação."""
+    url = url or reverse("publications:edit", args=[article.pk])
     count = 0
     for user in users:
         notify(user, kind, message, article=article, actor=actor, url=url)
@@ -94,6 +100,11 @@ def article_archived(article: Article, actor: User, note: str = "") -> int:
 # --- revisão por colega (docs/04, "Notificações") ---
 
 
+def _review_url(article: Article) -> str:
+    """Avisos sobre a leitura do texto abrem a tela de revisão (docs/17)."""
+    return reverse("editorial:review", args=[article.pk])
+
+
 def _with_note(message: str, note: str, label: str = "Nota") -> str:
     note = " ".join(note.split())
     return f"{message} {label}: {note}" if note else message
@@ -103,14 +114,24 @@ def review_requested(article: Article, actor: User, reviewer: User, note: str = 
     if reviewer.pk == actor.pk or not reviewer.is_active:
         return 0
     message = _with_note(f"{actor.public_name} pediu que você revise “{article.title}”.", note)
-    return _notify_many([reviewer], Notification.Kind.REVIEW_REQUESTED, message, article, actor)
+    return _notify_many(
+        [reviewer],
+        Notification.Kind.REVIEW_REQUESTED,
+        message,
+        article,
+        actor,
+        _review_url(article),
+    )
 
 
 def review_cancelled(article: Article, actor: User, reviewer: User) -> int:
     if reviewer.pk == actor.pk or not reviewer.is_active:
         return 0
     message = f"{actor.public_name} cancelou o pedido de revisão de “{article.title}”."
-    return _notify_many([reviewer], Notification.Kind.SYSTEM, message, article, actor)
+    # O colega sai da revisão e perde o acesso ao texto: o aviso abre a lista de revisões.
+    return _notify_many(
+        [reviewer], Notification.Kind.SYSTEM, message, article, actor, reverse("editorial:queue")
+    )
 
 
 def edited_during_review(article: Article, actor: User, reviewer: User) -> int:
@@ -118,7 +139,14 @@ def edited_during_review(article: Article, actor: User, reviewer: User) -> int:
     if reviewer.pk == actor.pk or not reviewer.is_active:
         return 0
     message = f"{actor.public_name} alterou “{article.title}” durante a revisão."
-    return _notify_many([reviewer], Notification.Kind.EDITED_BY_OTHER, message, article, actor)
+    return _notify_many(
+        [reviewer],
+        Notification.Kind.EDITED_BY_OTHER,
+        message,
+        article,
+        actor,
+        _review_url(article),
+    )
 
 
 def changes_requested(article: Article, actor: User, note: str) -> int:
@@ -129,6 +157,7 @@ def changes_requested(article: Article, actor: User, note: str) -> int:
         message,
         article,
         actor,
+        _review_url(article),
     )
 
 

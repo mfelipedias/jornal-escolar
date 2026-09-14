@@ -1,4 +1,4 @@
-"""Consultas da revisão por colega usadas pelo editor e pelo painel (docs/04, docs/16)."""
+"""Consultas da revisão por colega: editor, tela de revisão e aba "Revisões" (docs/04, 15-17)."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,7 +8,7 @@ from django.db.models import QuerySet
 from apps.accounts.models import User
 from apps.publications.models import Article, ArticleContributor
 
-from . import permissions
+from . import events, permissions
 from .models import EditorialEvent
 
 Kind = EditorialEvent.Kind
@@ -78,3 +78,109 @@ def reviewer_candidates(article: Article, user: User) -> QuerySet[User]:
         .exclude(pk__in=authors)
         .order_by("full_name")
     )
+
+
+# --- tela de revisão e aba "Revisões" (docs/15, docs/17) ---
+
+Status = Article.Status
+
+# ?aba= → rótulo. "todas" só aparece para editores (permissions.is_editor).
+QUEUE_TABS: dict[str, str] = {
+    "pedidas-a-mim": "Pedidas a mim",
+    "que-eu-pedi": "Que eu pedi",
+    "todas": "Todas em revisão",
+}
+DEFAULT_TAB = "pedidas-a-mim"
+
+
+def queue_tabs(user: User) -> list[str]:
+    tabs = ["pedidas-a-mim", "que-eu-pedi"]
+    if permissions.is_editor(user):
+        tabs.append("todas")
+    return tabs
+
+
+def review_queue(user: User, tab: str = DEFAULT_TAB) -> QuerySet[Article]:
+    """Publicações em revisão de uma aba, do pedido mais antigo para o mais recente.
+
+    Sem fila geral: "Pedidas a mim" são os textos em que a pessoa é o revisor designado;
+    "Que eu pedi", os textos em revisão que ela assina; "Todas", tudo em revisão (editores).
+    """
+    articles = Article.objects.filter(status=Status.IN_REVIEW)
+    if tab == "pedidas-a-mim":
+        articles = articles.filter(
+            contributors__user=user, contributors__role=ArticleContributor.Role.REVIEWER
+        )
+    elif tab == "que-eu-pedi":
+        articles = articles.filter(
+            contributors__user=user, contributors__role__in=ArticleContributor.EDITING_ROLES
+        )
+    elif tab != "todas" or not permissions.is_editor(user):
+        return Article.objects.none()
+    return (
+        articles.distinct()
+        .select_related("type")
+        .prefetch_related("contributors")
+        .order_by("submitted_at", "pk")
+    )
+
+
+def pending_review_count(user: User) -> int:
+    """Contador do menu: revisões esperando a decisão da pessoa."""
+    if not permissions.is_staff_member(user):
+        return 0
+    return review_queue(user, "pedidas-a-mim").count()
+
+
+@dataclass(frozen=True)
+class HistoryEntry:
+    """Uma linha do histórico da tela de revisão."""
+
+    when: datetime
+    actor: str
+    text: str
+    note: str
+
+
+# (estado anterior, estado novo) → o que aconteceu. None vale para qualquer estado anterior.
+STATUS_TEXTS: dict[tuple[str | None, str], str] = {
+    (Status.CHANGES_REQUESTED, Status.IN_REVIEW): "reenviou para revisão",
+    (None, Status.IN_REVIEW): "pediu revisão",
+    (None, Status.CHANGES_REQUESTED): "sugeriu alterações",
+    (None, Status.PUBLISHED): "publicou",
+    (None, Status.ARCHIVED): "arquivou",
+    (Status.ARCHIVED, Status.DRAFT): "restaurou como rascunho",
+    (None, Status.DRAFT): "voltou o texto a rascunho",
+}
+
+KIND_TEXTS: dict[str, str] = {
+    Kind.REVIEWER_ASSIGNED: "escolheu quem revisa",
+    Kind.REVIEWER_REMOVED: "tirou o revisor",
+    Kind.APPROVED: "aprovou a revisão",
+    Kind.CONTRIBUTOR_CHANGED: "alterou os créditos",
+    Kind.EDITED_AFTER_PUBLISH: "editou depois de publicar",
+    Kind.EDITED_BY_THIRD_PARTY: "editou o texto",
+    Kind.CREDIT_ANONYMIZED: "anonimizou um crédito",
+}
+
+
+def describe(event: EditorialEvent) -> str:
+    if event.kind != Kind.STATUS_CHANGE:
+        return KIND_TEXTS.get(event.kind, event.get_kind_display().lower())
+    text = STATUS_TEXTS.get((event.from_status, event.to_status)) or STATUS_TEXTS.get(
+        (None, event.to_status)
+    )
+    return text or f"mudou o estado para {Status(event.to_status).label.lower()}"
+
+
+def history_entries(article: Article) -> list[HistoryEntry]:
+    """Linha do tempo legível (events.history), da mais antiga para a mais recente."""
+    return [
+        HistoryEntry(
+            when=event.created_at,
+            actor=event.actor.public_name if event.actor else "Sistema",
+            text=describe(event),
+            note=event.note,
+        )
+        for event in events.history(article)
+    ]

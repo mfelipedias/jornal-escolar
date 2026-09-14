@@ -1,0 +1,80 @@
+{% extends "layouts/dashboard.html" %}
+{% load humanize %}
+{% comment %}
+  Revisões (docs/15, "Revisões"): sem fila geral. Abas "Pedidas a mim", "Que eu pedi" e, para
+  editores, "Todas em revisão". Cada item leva à tela de revisão (docs/17).
+{% endcomment %}
+{% block title %}Revisões · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <h1 class="font-serif text-h1 font-semibold">Revisões</h1>
+  <p class="mt-2 max-w-reading text-ui text-ink-2">
+    A revisão é opcional e entre colegas: aqui ficam os textos que pediram a sua leitura e os que você mandou para alguém ler.
+  </p>
+  <nav class="mt-6" aria-label="Abas de revisão">
+    <ul class="flex flex-wrap gap-2">
+      {% for tab in tabs %}
+        <li>
+          <a href="{% url 'editorial:queue' %}?aba={{ tab.key }}"
+             class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-ui
+                    {% if tab.active %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+             {% if tab.active %}aria-current="true"{% endif %}>
+            {{ tab.label }}
+            <span class="text-meta
+                         {% if tab.active %}text-accent-2{% else %}text-ink-3{% endif %}">{{ tab.count }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% if items %}
+    <ul class="mt-6 divide-y divide-line rounded-card border border-line bg-white">
+      {% for item in items %}
+        <li class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5"
+            data-article="{{ item.article.pk }}">
+          <div class="min-w-0 space-y-1">
+            <p class="font-medium text-ink">{{ item.article.title }}</p>
+            <p class="flex flex-wrap gap-x-2 text-meta text-ink-3">
+              {% if item.authors %}<span>{{ item.authors }}</span>{% endif %}
+              {% if item.review.requested_at %}
+                <span aria-hidden="true">·</span>
+                <span>enviado {{ item.review.requested_at|naturaltime }}</span>
+              {% endif %}
+              {% if current != "pedidas-a-mim" and item.review.reviewer %}
+                <span aria-hidden="true">·</span>
+                <span>com {{ item.review.reviewer.display_name }}</span>
+              {% endif %}
+            </p>
+            {% if item.review.request_note %}
+              <p class="border-l-2 border-line pl-2 text-meta text-ink-2">“{{ item.review.request_note }}”</p>
+            {% endif %}
+            {% if item.review.reviewer %}
+              <p class="text-meta text-ink-2">
+                {% if item.review.reviewer.can_publish %}
+                  Pode publicar pelos autores
+                {% else %}
+                  Só devolve aos autores
+                {% endif %}
+              </p>
+            {% endif %}
+          </div>
+          <a href="{% url 'editorial:review' item.article.pk %}"
+             class="{% if current == 'que-eu-pedi' %}btn-secondary{% else %}btn-primary{% endif %}
+                    shrink-0 self-start">
+            {% if current == "que-eu-pedi" %}
+              Acompanhar
+            {% else %}
+              Revisar
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+    {% include "components/pagination.html" %}
+  {% elif current == "pedidas-a-mim" %}
+    {% include "components/empty_state.html" with title="Nenhuma revisão pedida a você" text="Quando um colega pedir a sua leitura, o texto aparece aqui e no sino de avisos." %}
+  {% elif current == "que-eu-pedi" %}
+    {% include "components/empty_state.html" with title="Nenhum texto seu em revisão" text="No editor, use “Pedir revisão” para mandar um texto para a leitura de um colega." %}
+  {% else %}
+    {% include "components/empty_state.html" with title="Nada em revisão" text="Nenhuma publicação está esperando a leitura de um colega." %}
+  {% endif %}
+{% endblock content %}
