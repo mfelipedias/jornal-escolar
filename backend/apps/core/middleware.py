@@ -37,6 +37,35 @@ class HtmxMessagesMiddleware:
         return response
 
 
+class SecurityHeadersMiddleware:
+    """Content-Security-Policy e Permissions-Policy em todas as respostas (docs/23).
+
+    A política vem de settings.CONTENT_SECURITY_POLICY (dicionário diretiva -> valores);
+    None desliga, como no desenvolvimento com o servidor do Vite, que injeta estilos e usa
+    outra porta. O Django Admin ganha 'unsafe-inline' em estilos: os templates dele usam
+    atributos style. Scripts nunca aceitam 'unsafe-inline'.
+    """
+
+    ADMIN_PREFIX = "/admin/"
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        response = self.get_response(request)
+        policy = settings.CONTENT_SECURITY_POLICY
+        if policy and "Content-Security-Policy" not in response:
+            directives = {key: list(values) for key, values in policy.items()}
+            if request.path.startswith(self.ADMIN_PREFIX):
+                directives["style-src"] = [*directives.get("style-src", []), "'unsafe-inline'"]
+            response["Content-Security-Policy"] = "; ".join(
+                " ".join([name, *values]) for name, values in directives.items()
+            )
+        if settings.PERMISSIONS_POLICY and "Permissions-Policy" not in response:
+            response["Permissions-Policy"] = settings.PERMISSIONS_POLICY
+        return response
+
+
 class AppVersionHeaderMiddleware:
     """Adiciona X-App-Version a todas as respostas (docs/30)."""
 

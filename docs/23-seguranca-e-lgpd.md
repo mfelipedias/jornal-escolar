@@ -101,20 +101,31 @@ Ver [24](24-infraestrutura-e-deploy.md). `pg_dump` diário + volume de mídia, c
 
 ## Checklist antes de ir ao ar
 
-- [ ] HTTPS via Cloudflare com HSTS.
-- [ ] `DEBUG=False`, `SECRET_KEY` única, `ALLOWED_HOSTS` e `CSRF_TRUSTED_ORIGINS` corretos.
-- [ ] CSP sem `unsafe-inline` para scripts.
-- [ ] Rate limits testados.
-- [ ] Login Microsoft testado com conta real de professor; senha de reserva funcionando.
-- [ ] Página de privacidade publicada e revisada pela direção.
-- [ ] Termo de autorização de nome e imagem aprovado e processo de arquivamento combinado com a secretaria.
-- [ ] Backup executado e restaurado com sucesso.
-- [ ] Contas de teste removidas; admin com senha forte.
-- [ ] Logs de acesso com retenção de 14 dias.
-- [ ] `pip-audit` sem vulnerabilidade crítica.
+Revisada na E28. `[x]` = feito e verificado no código (teste automático quando possível); `[ ]` = depende do servidor real ou de uma pessoa, e fica com o dono do projeto. Os testes citados estão em `backend/`.
+
+- [x] **HTTPS com HSTS.** `prod.py`: `SECURE_SSL_REDIRECT`, HSTS de 30 dias, `SECURE_PROXY_SSL_HEADER` (teste `tests/test_security_checklist.py::test_producao_liga_cookies_seguros_hsts_e_desliga_debug`). HSTS para subdomínios e *preload* ficam desligados de propósito (valeriam para o domínio inteiro, que tem outros sites) e os avisos W005/W021 do `check --deploy` são silenciados.
+  - [ ] **Dono:** no servidor, conferir `curl -I https://<domínio>/` com `Strict-Transport-Security` e `make prod-check` sem avisos.
+- [x] **`DEBUG=False`, `SECRET_KEY` de ambiente, `ALLOWED_HOSTS` e `CSRF_TRUSTED_ORIGINS`.** `prod.py` fixa `DEBUG=False` mesmo com `DEBUG=True` no ambiente; o Compose exige as variáveis; `check --deploy --fail-level WARNING` passa com a configuração de produção (teste `test_check_deploy_sem_avisos_com_configuracao_de_producao`). Cookies de sessão e CSRF `Secure`, sessão `HttpOnly`, `SameSite=Lax`, 14 dias de inatividade.
+  - [ ] **Dono:** `SECRET_KEY` gerada no servidor e domínio real no `.env` (docs/34).
+- [x] **CSP sem `unsafe-inline` para scripts.** `SecurityHeadersMiddleware` (`apps/core/middleware.py`) com `default-src 'self'`, estilos só do site, `img-src 'self' data: blob:`, `object-src 'none'`, `frame-ancestors 'none'`, `form-action` só do site e da Microsoft. Além disso: `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` mínima (testes `test_cabecalhos_de_seguranca_nas_paginas` e `test_csp_do_admin_so_libera_estilos_inline`). Conferido no navegador com o build de produção: home, publicação, agenda, perfis, login, painel, menu, editor e admin sem nenhuma violação no console.
+  - Desvio: `script-src` tem `'unsafe-eval'`, exigido pelo Alpine padrão (avalia `x-data` e `@click`). Sem nonce: não há script inline para liberar. Para tirar a exceção, trocar pelo build `@alpinejs/csp` (Evolução). O Django Admin aceita `'unsafe-inline'` só em estilos.
+- [x] **CSRF em todos os POST.** Middleware do Django; HTMX e `fetch` mandam o token pelo cabeçalho (testes `test_login_exige_csrf` e `test_endpoints_htmx_exigem_csrf`).
+- [x] **Rate limits testados.** Login: 5 erros por e-mail e 30 por IP em 15 min (`accounts/tests/test_login.py`); envio de imagens: 60 por hora (`publications/tests/test_media_endpoints.py::test_upload_rate_limit`). Reações, leituras, comentários e busca ainda não existem (Fases 2 e 3).
+  - [ ] **Dono:** em produção, `TRUSTED_CLIENT_IP_HEADER=CF-Connecting-IP` para o limite usar o IP real.
+- [x] **Uploads.** Tipo pelo conteúdo, 10 MB, 6000 px, EXIF removido, nomes aleatórios, cota (`publications/tests/test_media.py`); Caddy entrega `/media/` com `nosniff` e CSP `sandbox`.
+- [x] **HTML sanitizado.** Documento limpo, HTML gerado no servidor e `nh3` (`publications/tests/test_rendering.py`, `test_html_de_publicacao_e_gerado_e_limpo_no_servidor`).
+- [x] **Cadastro fechado.** Telas de cadastro, senha por e-mail e gestão de e-mails do allauth respondem 404; `/admin/login/` passa pelo login com limite (testes `test_telas_de_cadastro_e_senha_por_email_nao_existem` e `test_admin_login_passa_pela_tela_com_limite_de_tentativas`). Argon2 e mínimo de 10 caracteres.
+- [ ] **Login Microsoft testado com conta real de professor; senha de reserva funcionando.** Senha de reserva e link de acesso cobertos por testes. **Dono:** registro Microsoft adiado (E06 parte 2, docs/32).
+- [ ] **Página de privacidade publicada e revisada pela direção.** Texto completo escrito na E28 (`apps/core/services.py`, `PRIVACY_BODY`), fora do ar. **Dono:** levar à direção, ajustar pelo painel em "Páginas" e pôr no ar.
+- [ ] **Termo de autorização de nome e imagem aprovado** e arquivamento combinado com a secretaria. Modelo pronto em [33](33-termo-de-autorizacao.md). **Dono:** aprovação da direção.
+- [ ] **Backup executado e restaurado com sucesso.** Testado localmente na E27 (destino pasta). **Dono:** repetir no servidor com o R2 (docs/31 e 34).
+- [ ] **Contas de teste removidas; admin com senha forte.** O banco de produção nasce vazio; `seed_demo` recusa rodar sem `DEBUG=True`. **Dono:** criar o admin com `make prod-superuser` e senha forte; nunca usar `admin@jornal.local` fora do dev.
+- [x] **Logs de acesso.** Ajuste da E28: em vez de guardar IP por 14 dias, os logs não guardam o IP de quem visita. O Caddy não grava log de acesso; o Gunicorn registra o IP interno do Caddy; os logs dos containers giram por tamanho (5 × 10 MB). O IP do visitante só passa pela Cloudflare. A página de privacidade diz isso.
+- [x] **`pip-audit` sem vulnerabilidade crítica.** Rodado em 2026-09-14 nas dependências de produção (`uv export --no-dev` + `uvx pip-audit`): nenhuma vulnerabilidade conhecida. `npm audit --omit=dev`: 0 vulnerabilidades. **Dono:** repetir antes de cada versão.
 
 ## Histórico
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: reescrito para alunos sem conta, login Microsoft, sem e-mail, comentários públicos, Cloudflare.
 - 2026-09-12: modelo do termo de autorização criado em [33](33-termo-de-autorizacao.md).
+- 2026-09-14: E28: checklist marcada; CSP com `'unsafe-eval'` por causa do Alpine e sem nonce (não há script inline); HSTS sem subdomínios nem preload; logs sem IP do visitante em vez de retenção de 14 dias; texto da página de privacidade escrito, aguardando a direção.

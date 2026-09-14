@@ -8,6 +8,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Seed de demonstração (E28): `manage.py seed_demo` cria 8 pessoas fictícias da equipe (sem senha), 19 publicações de 10 tipos e 6 áreas (com rascunhos, uma arquivada, créditos de alunos com autorização), capas e fotos de perfil desenhadas localmente, eventos na agenda e os 3 destaques da home. Idempotente, recusa rodar sem `DEBUG=True` e não troca destaques escolhidos de verdade. `seed_demo --apagar` remove tudo o que criou, inclusive os arquivos.
+- Cabeçalhos de segurança em todas as páginas: `Content-Security-Policy` (scripts e estilos só do próprio site, sem `unsafe-inline` para scripts, `frame-ancestors 'none'`) e `Permissions-Policy`. No desenvolvimento com o servidor do Vite a CSP fica desligada; com `VITE_DEV_MODE=False` ela liga como em produção.
+- Checklist de segurança antes de ir ao ar marcada em `docs/23`, com testes em `backend/tests/test_security_checklist.py` (cabeçalhos, CSRF, telas de cadastro fechadas, HTML limpo, configurações e `check --deploy` de produção).
+- Texto completo da página Privacidade (dados de leitores, alunos, equipe e comentários, onde ficam os dados e direitos pela LGPD). Continua fora do ar até a aprovação da direção; `seed_site` troca o rascunho antigo se ele nunca foi editado.
 - Produção (E27): imagem Docker própria em `infra/Dockerfile` (build do Vite, dependências com uv, usuário sem privilégios, `collectstatic`, healthcheck) para x86 e ARM; Compose de produção em `infra/docker-compose.yml` com banco, site (Gunicorn), Caddy entregando `/static/` e `/media/` com cache, `cloudflared` no perfil `tunel` e container de backup. Modelo `infra/env/.env.producao.example`.
 - Backup diário às 3h (`infra/backup/`): `pg_dump` conferido com `pg_restore --list`, fotos espelhadas com as apagadas guardadas por 6 meses, tudo criptografado pelo rclone e enviado ao Cloudflare R2 (ou a uma pasta local); retenção de 7 dias, 4 semanas e 6 meses. Restauração com `make restore FILE=mais-recente`, inclusive em servidor novo.
 - Atalhos `make build`, `deploy`, `prod-check`, `prod-logs`, `prod-down`, `prod-superuser`, `backup`, `backups` e `restore`.
@@ -46,12 +50,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- O TipTap e o HTMX não injetam mais `<style>` na página (bloqueado pela CSP): os estilos-base do editor foram para `app.css`.
+- `check --deploy` sem avisos em produção: os avisos de HSTS para subdomínios e "preload" foram silenciados de propósito, porque valeriam para o domínio inteiro.
+- `Referrer-Policy: strict-origin-when-cross-origin` em todos os ambientes.
 - `/healthz/` aceita também HEAD, usado por monitores externos.
 - Em produção, erros e avisos do Django vão para o log do container.
 - `/static/` em produção é entregue pelo Caddy, não pelo WhiteNoise; backup criptografado pelo rclone em vez do `age` (docs/24, Histórico).
 - Cor `ink-3` escurecida (`#6B6875`) para atingir contraste AA em textos pequenos.
 - Cor de área âmbar escurecida (`#8F5A00`) para atingir contraste AA nas etiquetas.
 - "Leia também" e o cabeçalho da publicação usam os novos componentes.
+
+### Corrigido
+
+- Celular: o início do painel e a barra do editor de publicação não passam mais da largura da tela.
 
 ## [0.3.0] - 2026-09-12
 

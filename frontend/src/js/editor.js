@@ -58,6 +58,9 @@ export function initEditor(root) {
 
   const editor = new Editor({
     element: root.querySelector("[data-editor-body]"),
+    // O TipTap injetaria um <style>, que a Content-Security-Policy bloqueia (docs/23).
+    // Os mesmos estilos estão em app.css, seção "Editor (TipTap)".
+    injectCSS: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },

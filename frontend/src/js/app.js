@@ -7,6 +7,10 @@ import htmx from "htmx.org";
 window.htmx = htmx;
 window.Alpine = Alpine;
 
+// O HTMX injetaria um <style> para os indicadores de carregamento, bloqueado pela
+// Content-Security-Policy (docs/23). O projeto não usa a classe htmx-indicator.
+htmx.config.includeIndicatorStyles = false;
+
 // Toast (docs/09): sucesso e informação somem em 4s; erro e aviso ficam até a pessoa fechar.
 // Passar o mouse ou o foco por cima pausa a contagem.
 const TOAST_MS = 4000;

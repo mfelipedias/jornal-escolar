@@ -6,3 +6,8 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
 # Por padrão usa o servidor do Vite (make assets-dev). Com VITE_DEV_MODE=False usa o build.
 DJANGO_VITE["default"]["dev_mode"] = env.bool("VITE_DEV_MODE", default=True)
+
+# O servidor do Vite injeta estilos e roda em outra porta, o que a CSP bloquearia. Com
+# VITE_DEV_MODE=False (arquivos do build, como em produção) a CSP fica ligada para testar.
+if DJANGO_VITE["default"]["dev_mode"]:
+    CONTENT_SECURITY_POLICY = None

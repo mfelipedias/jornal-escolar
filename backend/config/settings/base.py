@@ -65,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "apps.core.middleware.SecurityHeadersMiddleware",
     "apps.core.middleware.HtmxMessagesMiddleware",
     "apps.core.middleware.AppVersionHeaderMiddleware",
 ]
@@ -172,6 +173,30 @@ SOCIALACCOUNT_PROVIDERS = {
         ),
     }
 }
+
+# --- Cabeçalhos de segurança (docs/23, "Proteções web") ---
+# X-Frame-Options (DENY), X-Content-Type-Options e Cross-Origin-Opener-Policy já vêm dos
+# middlewares padrão do Django. HSTS e cookies "Secure" ficam em prod.py.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+# Content-Security-Policy montado por apps.core.middleware.SecurityHeadersMiddleware.
+# 'unsafe-eval' em scripts: o Alpine padrão avalia as expressões dos atributos (x-data,
+# @click) com new Function. Trocar pelo build @alpinejs/csp tiraria essa exceção (docs/23).
+CONTENT_SECURITY_POLICY: dict[str, list[str]] | None = {
+    "default-src": ["'self'"],
+    "script-src": ["'self'", "'unsafe-eval'"],
+    "style-src": ["'self'"],
+    "img-src": ["'self'", "data:", "blob:"],
+    "font-src": ["'self'"],
+    "connect-src": ["'self'"],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    # O login Microsoft começa com um POST para o próprio site que redireciona para a Microsoft.
+    "form-action": ["'self'", "https://login.microsoftonline.com"],
+    "frame-ancestors": ["'none'"],
+}
+PERMISSIONS_POLICY = (
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()"
+)
 
 LANGUAGE_CODE = "pt-br"
 LANGUAGES = [("pt-br", "Português (Brasil)")]

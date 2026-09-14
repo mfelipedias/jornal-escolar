@@ -12,10 +12,10 @@
           <a href="{% url 'dashboard:my_articles' %}"
              class="flex items-center gap-2 text-ui text-ink-2 hover:text-accent">
             <span aria-hidden="true">←</span>
-            <span>Minhas publicações</span>
+            <span class="sr-only sm:not-sr-only">Minhas publicações</span>
           </a>
         {% endblock editor_back %}
-        <span class="h-5 w-px bg-line" aria-hidden="true"></span>
+        <span class="hidden h-5 w-px bg-line sm:block" aria-hidden="true"></span>
         {% block editor_status %}
         {% endblock editor_status %}
         <div class="ml-auto flex items-center gap-2">
