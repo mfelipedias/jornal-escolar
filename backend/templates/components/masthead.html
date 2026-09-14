@@ -1,6 +1,6 @@
 {% comment %}
   Cabeçalho público (docs/09, "Masthead"). Linha 1: marca e conta; linha 2: áreas (nav_areas,
-  do context processor da taxonomia), Agenda e Sobre. "Quem escreve" entra na E22, busca na E36.
+  do context processor da taxonomia), Agenda, Quem escreve e Sobre. Busca entra na E36.
   No celular a linha 2 rola na horizontal.
 {% endcomment %}
 <header class="border-b border-line">
@@ -43,7 +43,8 @@
         {% url 'taxonomy:area' area.slug as area_url %}
         <li>
           <a href="{{ area_url }}"
-             class="inline-flex items-center gap-1.5 border-b-2 py-0.5 text-ink-2 hover:text-ink {% if request.path == area_url %}{{ area.color_classes.border }} text-ink{% else %}border-transparent{% endif %}"
+             class="inline-flex items-center gap-1.5 border-b-2 py-0.5 text-ink-2 hover:text-ink
+                    {% if request.path == area_url %}{{ area.color_classes.border }} text-ink{% else %}border-transparent{% endif %}"
              {% if request.path == area_url %}aria-current="page"{% endif %}>
             <span class="size-2 shrink-0 rounded-full {{ area.color_classes.solid_bg }}"
                   aria-hidden="true"></span>
@@ -54,15 +55,24 @@
       {% url 'publications:agenda' as agenda_url %}
       <li>
         <a href="{{ agenda_url }}"
-           class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink {% if request.path == agenda_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
+           class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink
+                  {% if request.path == agenda_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
            {% if request.path == agenda_url %}aria-current="page"{% endif %}>Agenda</a>
+      </li>
+      {% url 'accounts:teacher_list' as team_url %}
+      <li>
+        <a href="{{ team_url }}"
+           class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink
+                  {% if request.path == team_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
+           {% if request.path == team_url %}aria-current="page"{% endif %}>Quem escreve</a>
       </li>
       {% for item in jornal.footer_pages %}
         {% if item.slug == "sobre" %}
           {% url 'core:page' slug=item.slug as about_url %}
           <li>
             <a href="{{ about_url }}"
-               class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink {% if request.path == about_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
+               class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink
+                      {% if request.path == about_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
                {% if request.path == about_url %}aria-current="page"{% endif %}>Sobre</a>
           </li>
         {% endif %}

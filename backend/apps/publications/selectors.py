@@ -119,8 +119,16 @@ def agenda() -> tuple[QuerySet[Article], QuerySet[Article]]:
     )
 
 
-def writers_about(area: KnowledgeArea, discipline: Discipline | None = None, limit: int = 12):
+def writers_about(
+    area: KnowledgeArea, discipline: Discipline | None = None, limit: int | None = 12
+) -> QuerySet[User]:
     """Quem escreve sobre a área (ou disciplina): pelo perfil ou por já ter publicado nela."""
+    ids = writer_ids_about(area, discipline)
+    return writers(limit=limit, queryset=User.objects.filter(pk__in=ids))
+
+
+def writer_ids_about(area: KnowledgeArea, discipline: Discipline | None = None) -> QuerySet:
+    """Ids de quem marcou a área (ou disciplina) no perfil ou já publicou nela."""
     if discipline:
         by_profile = Q(profile__disciplines=discipline)
         by_articles = Q(contributions__article__disciplines=discipline)
@@ -131,8 +139,7 @@ def writers_about(area: KnowledgeArea, discipline: Discipline | None = None, lim
         contributions__role__in=ArticleContributor.EDITING_ROLES,
         contributions__article__status=Article.Status.PUBLISHED,
     )
-    ids = User.objects.filter(by_profile | published_by).values("pk")
-    return writers(limit=limit, queryset=User.objects.filter(pk__in=ids))
+    return User.objects.filter(by_profile | published_by).values("pk")
 
 
 def recent_for_area_strips(limit: int = 60) -> list[Article]:
@@ -140,10 +147,13 @@ def recent_for_area_strips(limit: int = 60) -> list[Article]:
     return list(for_cards(published())[:limit])
 
 
-def writers(limit: int = 8, queryset: QuerySet[User] | None = None) -> QuerySet[User]:
-    """Quem escreve: equipe com perfil público, quem publicou por último primeiro."""
+def writers(limit: int | None = 8, queryset: QuerySet[User] | None = None) -> QuerySet[User]:
+    """Quem escreve: equipe com perfil público, quem publicou por último primeiro.
+
+    Com limit=None devolve a consulta sem corte, para somar filtros e anotações.
+    """
     base = queryset if queryset is not None else User.objects.all()
-    return (
+    people = (
         base.filter(is_active=True, profile__is_public=True)
         .select_related("profile", "avatar")
         .annotate(
@@ -155,8 +165,9 @@ def writers(limit: int = 8, queryset: QuerySet[User] | None = None) -> QuerySet[
                 ),
             )
         )
-        .order_by(F("last_published").desc(nulls_last=True), "full_name")[:limit]
+        .order_by(F("last_published").desc(nulls_last=True), "full_name")
     )
+    return people if limit is None else people[:limit]
 
 
 def contributors(article: Article) -> QuerySet[ArticleContributor]:

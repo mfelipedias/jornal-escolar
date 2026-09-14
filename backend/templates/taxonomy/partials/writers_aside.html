@@ -1,13 +1,14 @@
-{% comment %}Bloco lateral "Quem escreve sobre X" (docs/12). Parâmetros: writers, title.{% endcomment %}
+{% comment %}
+  Bloco lateral "Quem escreve" (docs/10, docs/12). Parâmetros: writers (lista de Credit),
+  title e more_url (opcional: link "ver todos" para /professores/).
+{% endcomment %}
 {% if writers %}
   <aside aria-labelledby="writers-title">
     <h2 id="writers-title"
-        class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
-      {{ title }}
-    </h2>
+        class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">{{ title }}</h2>
     <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
       {% for person in writers %}
-        <li class="flex items-center gap-3">
+        <li class="group relative flex items-center gap-3">
           {% if person.avatar_url %}
             <img src="{{ person.avatar_url }}"
                  alt=""
@@ -17,14 +18,25 @@
                  class="size-10 shrink-0 rounded-full object-cover">
           {% else %}
             <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-paper-2 font-serif text-ui font-semibold text-ink-2"
-                  aria-hidden="true">{{ person.name|slice:":1" }}</span>
+                  aria-hidden="true">{{ person.initials }}</span>
           {% endif %}
           <span class="min-w-0">
-            <span class="block truncate text-ui font-medium text-ink">{{ person.name }}</span>
+            {% if person.url %}
+              <a href="{{ person.url }}"
+                 class="block truncate text-ui font-medium text-ink after:absolute after:inset-0 group-hover:text-accent">{{ person.name }}</a>
+            {% else %}
+              <span class="block truncate text-ui font-medium text-ink">{{ person.name }}</span>
+            {% endif %}
             {% if person.detail %}<span class="block truncate text-meta text-ink-3">{{ person.detail }}</span>{% endif %}
           </span>
         </li>
       {% endfor %}
     </ul>
+    {% if more_url %}
+      <p class="mt-4 text-meta">
+        <a href="{{ more_url }}"
+           class="font-medium text-accent hover:underline">Ver toda a equipe <span aria-hidden="true">→</span></a>
+      </p>
+    {% endif %}
   </aside>
 {% endif %}

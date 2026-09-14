@@ -212,6 +212,9 @@ class TeacherProfile(TimeStampedModel):
     def __str__(self) -> str:
         return self.user.public_name
 
+    def get_absolute_url(self) -> str:
+        return reverse("accounts:teacher_detail", args=[self.slug])
+
 
 class AccessLink(models.Model):
     """Link de uso único para criar ou redefinir a senha, gerado pelo admin (docs/14).

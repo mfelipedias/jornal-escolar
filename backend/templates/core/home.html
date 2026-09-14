@@ -65,7 +65,8 @@
             </section>
           {% endif %}
           {# Quem escreve #}
-          {% include "taxonomy/partials/writers_aside.html" with writers=blocks.writers title="Quem escreve" %}
+          {% url 'accounts:teacher_list' as team_url %}
+          {% include "taxonomy/partials/writers_aside.html" with writers=blocks.writers title="Quem escreve" more_url=team_url %}
         </div>
       </div>
       {# Por área #}

@@ -98,4 +98,9 @@ Rotas: `/sobre/`, `/privacidade/`, `/colaborar/` · Nome: `core:page`
   - "Carregar mais" usa a própria página (`?pagina=N` com HTMX), como a home; `/x/articles/` continua reservado para a E37.
   - Página de área: "Professores desta área" virou "Quem escreve sobre a área", com quem marcou a área ou uma disciplina dela no perfil ou já publicou nela; sem link até o perfil público existir (E22). O destaque `hero` só aparece sem filtros e com capa.
   - Agenda: próximos (todos) e "Já aconteceram" com 20 por página, numerada.
+- 2026-09-14: E22 implementada: `/professores/` ("Quem escreve"). Na prática:
+  - Filtros são links (chips) com `?area=`, `?cargo=` (`professores`, `monitores`, `coordenacao`, `outros`; sala de leitura entra em "Outros") e `?ordem=nome`. O filtro por área usa o mesmo critério da página de área: marcou a área ou uma disciplina dela no perfil, ou já publicou nela.
+  - Número de publicações conta toda publicação publicada com o nome nos créditos (respeitando "mostrar crédito como revisor"), como a aba "Todas" do perfil.
+  - Sem paginação: a equipe de uma escola cabe numa página.
+  - Nomes em "Quem escreve sobre a área", na home e em "Quem fez" da publicação levam ao perfil (se público); a home e a página de área ganharam "Ver toda a equipe". "Quem escreve" entrou no cabeçalho.
   - Cabeçalho ganhou a linha de áreas (nome curto, ponto na cor da área, sublinhado na área atual), Agenda e Sobre; no celular a linha rola na horizontal em vez de abrir menu.

@@ -5,6 +5,8 @@ from django.db import transaction
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 
+from apps.accounts.models import TeacherProfile, User
+
 from .cache import bump_public_version
 from .models import Article, ArticleContributor, MediaAsset
 
@@ -53,3 +55,18 @@ def credit_changed(
 ) -> None:
     if Article.objects.filter(pk=instance.article_id, published_at__isnull=False).exists():
         _bump()
+
+
+@receiver(post_save, sender=TeacherProfile, dispatch_uid="publications_profile_public_cache")
+def profile_changed(sender: type[TeacherProfile], instance: TeacherProfile, **kwargs) -> None:
+    """Headline, endereço e "perfil público" aparecem em "Quem escreve" da home."""
+    _bump()
+
+
+@receiver(post_save, sender=User, dispatch_uid="publications_user_public_cache")
+def user_changed(sender: type[User], instance: User, created: bool, **kwargs) -> None:
+    """Nome, foto, cargo e ativação aparecem em "Quem escreve"; login sozinho não muda nada."""
+    update_fields = kwargs.get("update_fields")
+    if created or (update_fields is not None and set(update_fields) <= {"last_login", "password"}):
+        return
+    _bump()

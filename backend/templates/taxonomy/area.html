@@ -34,5 +34,8 @@
   {% include "components/empty_state.html" with title="Ainda não há publicações nesta área" text="Professores da área podem ser os primeiros." %}
 {% endblock list_empty %}
 {% block list_aside %}
-  {% include "taxonomy/partials/writers_aside.html" with writers=writers title="Quem escreve sobre a área" %}
+  {% url 'accounts:teacher_list' as team_url %}
+  {% with more_url=team_url|add:"?area="|add:area.slug %}
+    {% include "taxonomy/partials/writers_aside.html" with writers=writers title="Quem escreve sobre a área" more_url=more_url %}
+  {% endwith %}
 {% endblock list_aside %}

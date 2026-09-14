@@ -28,6 +28,6 @@
 {% endblock list_empty %}
 {% block list_aside %}
   {% with title="Quem escreve sobre "|add:discipline.name %}
-    {% include "taxonomy/partials/writers_aside.html" with writers=writers title=title %}
+    {% include "taxonomy/partials/writers_aside.html" with writers=writers title=title more_url="" %}
   {% endwith %}
 {% endblock list_aside %}

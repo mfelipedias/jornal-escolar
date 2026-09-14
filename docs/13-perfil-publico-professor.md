@@ -85,3 +85,10 @@ Alunos não têm conta no sistema, por decisão da escola. Um perfil público de
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: vale para toda a equipe, com cargo.
+- 2026-09-14: E22 implementada (`accounts/public_views.py`, `accounts/selectors.py`, `templates/accounts/teacher_detail.html`). Na prática:
+  - Abas são links com `?aba=autor` e `?aba=colaboracoes` (sem JavaScript), cada uma com a contagem; "Carregar mais" com `?pagina=N` via HTMX, 10 por vez, cards `compact`. Só entram créditos com "mostrar nos créditos" ligado.
+  - O cargo aparece como etiqueta quando o headline não tem uma palavra dele ("professor", "coordena", "diret", "monitor", "bibliotec"...), sem acento e sem diferenciar maiúsculas. Cargo "Outro" nunca vira etiqueta.
+  - Links do perfil só com `http`/`https` (até 4); os demais são ignorados.
+  - Conta desativada: página no ar só se houver publicação creditada; sem "desde", bio, formação, interesses e links.
+  - "Editar perfil" leva ao Django Admin e aparece só para administradores até a tela de configuração (E23), que deve ligar o botão também para o próprio usuário.
+  - JSON-LD e Open Graph ficam para a E26 (SEO de todo o site). Participação editorial continua na Fase 6.

@@ -1,0 +1,101 @@
+{% extends "layouts/public.html" %}
+{% comment %}
+  "Quem escreve" (docs/12): toda a equipe com perfil público. Filtros por área e cargo são
+  links (funcionam sem JavaScript); ordem padrão é quem publicou por último.
+{% endcomment %}
+{% block title %}Quem escreve · {{ jornal.name }}{% endblock title %}
+{% block description %}Professores, monitores, coordenação e toda a equipe que escreve no {{ jornal.name }}.{% endblock description %}
+{% block content %}
+  <div class="site-container pt-10 pb-16 sm:pt-14">
+    <header class="max-w-reading">
+      <h1 class="font-serif text-h1 font-semibold">Quem escreve</h1>
+      <p class="mt-2 font-serif text-lead text-ink-2">A equipe da escola que publica no jornal.</p>
+    </header>
+    <div class="mt-8 space-y-4">
+      <nav aria-label="Filtrar por área">
+        <ul class="flex flex-wrap gap-2">
+          {% for chip in area_chips %}
+            <li>
+              <a href="{{ chip.url }}"
+                 class="inline-flex min-h-9 items-center rounded-full border px-3 py-1 text-ui
+                        {% if chip.selected %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+                 {% if chip.selected %}aria-current="page"{% endif %}>{{ chip.label }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+      <nav aria-label="Filtrar por cargo">
+        <ul class="flex flex-wrap gap-2">
+          {% for chip in kind_chips %}
+            <li>
+              <a href="{{ chip.url }}"
+                 class="inline-flex min-h-9 items-center rounded-full border px-3 py-1 text-ui
+                        {% if chip.selected %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+                 {% if chip.selected %}aria-current="page"{% endif %}>{{ chip.label }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+      <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-2">
+        <span>{{ cards|length }} pessoa{{ cards|length|pluralize }}</span>
+        <span aria-hidden="true">·</span>
+        <span>Ordem:</span>
+        {% if alphabetical %}
+          <a href="{{ order_recent_url }}"
+             class="hover:text-accent hover:underline">publicação mais recente</a>
+          <span class="font-medium text-ink" aria-current="true">nome</span>
+        {% else %}
+          <span class="font-medium text-ink" aria-current="true">publicação mais recente</span>
+          <a href="{{ order_name_url }}" class="hover:text-accent hover:underline">nome</a>
+        {% endif %}
+      </p>
+    </div>
+    {% if cards %}
+      <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for card in cards %}
+          <li>
+            <article class="group relative flex h-full gap-4 rounded-card border border-line bg-white p-5 hover:border-accent">
+              {% if card.person.avatar_url %}
+                <img src="{{ card.person.avatar_url }}"
+                     alt=""
+                     width="64"
+                     height="64"
+                     loading="lazy"
+                     class="size-16 shrink-0 rounded-full bg-paper-2 object-cover">
+              {% else %}
+                <span class="flex size-16 shrink-0 items-center justify-center rounded-full bg-paper-2 font-serif text-h3 font-semibold text-ink-2"
+                      aria-hidden="true">{{ card.person.initials }}</span>
+              {% endif %}
+              <div class="min-w-0">
+                <h2 class="font-serif text-h3 font-semibold text-ink">
+                  <a href="{{ card.person.url }}"
+                     class="after:absolute after:inset-0 group-hover:text-accent">{{ card.person.name }}</a>
+                </h2>
+                {% if card.kind %}<p class="text-meta font-medium tracking-wide text-ink-3 uppercase">{{ card.kind }}</p>{% endif %}
+                {% if card.headline %}<p class="mt-1 text-ui text-ink-2">{{ card.headline }}</p>{% endif %}
+                {% if card.disciplines %}
+                  <ul class="mt-3 flex flex-wrap gap-1.5" aria-label="Disciplinas">
+                    {% for discipline in card.disciplines %}
+                      <li>{% include "components/tag.html" with kind="discipline" label=discipline.name area=None url="" %}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+                <p class="mt-3 text-meta text-ink-3">
+                  {% if card.published_count %}
+                    {{ card.published_count }} publicaç{{ card.published_count|pluralize:"ão,ões" }}
+                  {% else %}
+                    Ainda sem publicações
+                  {% endif %}
+                </p>
+              </div>
+            </article>
+          </li>
+        {% endfor %}
+      </ul>
+    {% elif has_filters %}
+      {% include "components/empty_state.html" with title="Ninguém com esses filtros" text="Tente outra área ou outro cargo." action_url=request.path action_label="Limpar filtros" %}
+    {% else %}
+      {% include "components/empty_state.html" with title="A equipe ainda não apareceu por aqui" text="Os perfis de quem escreve aparecem aqui em breve." %}
+    {% endif %}
+  </div>
+{% endblock content %}

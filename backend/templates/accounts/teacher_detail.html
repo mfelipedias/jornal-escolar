@@ -1,0 +1,154 @@
+{% extends "layouts/public.html" %}
+{% comment %}
+  Perfil público de um membro da equipe (docs/13). Nunca mostra e-mail nem papel no sistema.
+  Conta desativada: só nome, cargo e publicações (show_details falso).
+{% endcomment %}
+{% block title %}{{ name }} · {{ jornal.name }}{% endblock title %}
+{% block description %}{{ profile.headline|default:name }}{% endblock description %}
+{% block head %}
+  {% if not profile.is_public %}<meta name="robots" content="noindex">{% endif %}
+{% endblock head %}
+{% block content %}
+  {% if not profile.is_public %}
+    <div class="border-b border-warn/30 bg-area-ambar-soft">
+      <p class="site-container py-2.5 text-center text-ui text-area-ambar">
+        <strong>Seu perfil está oculto.</strong> Só você vê esta página.
+      </p>
+    </div>
+  {% endif %}
+  <div class="site-container pt-10 pb-16 sm:pt-14">
+    <header class="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+      {% if avatar_url %}
+        <img src="{{ avatar_url }}"
+             alt=""
+             width="160"
+             height="160"
+             class="size-28 shrink-0 rounded-full bg-paper-2 object-cover sm:size-40">
+      {% else %}
+        <span class="flex size-28 shrink-0 items-center justify-center rounded-full font-serif text-h1 font-semibold sm:size-40
+                     {% if area %}{{ area.color_classes.soft_bg }} {{ area.color_classes.text }}{% else %}bg-paper-2 text-ink-2{% endif %}"
+              aria-hidden="true">{{ initials }}</span>
+      {% endif %}
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h1 class="font-serif text-h1 font-semibold text-balance sm:text-display">{{ name }}</h1>
+          {% if can_edit %}
+            <a href="{% url 'admin:accounts_user_change' person.pk %}"
+               class="text-meta text-ink-3 underline-offset-2 hover:text-accent hover:underline">Editar perfil</a>
+          {% endif %}
+        </div>
+        {% if profile.headline or kind_label %}
+          <p class="mt-2 flex flex-wrap items-center gap-2 font-serif text-lead text-ink-2">
+            {% if profile.headline %}<span>{{ profile.headline }}</span>{% endif %}
+            {% if kind_label %}
+              {% include "components/tag.html" with kind="type" label=kind_label area=None url="" %}
+            {% endif %}
+          </p>
+        {% endif %}
+        {% if profile.areas.all or profile.disciplines.all %}
+          <ul class="mt-4 flex flex-wrap gap-2" aria-label="Áreas e disciplinas">
+            {% for item in profile.areas.all %}
+              <li>{% include "components/tag.html" with kind="area" area=item label="" url=item.get_absolute_url %}</li>
+            {% endfor %}
+            {% for item in profile.disciplines.all %}
+              <li>{% include "components/tag.html" with kind="discipline" label=item.name area=None url=item.get_absolute_url %}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if show_details and profile.since_year %}
+          <p class="mt-3 text-meta text-ink-3">Na escola desde {{ profile.since_year|stringformat:"d" }}</p>
+        {% endif %}
+      </div>
+    </header>
+    {% if show_details %}
+      {% if profile.bio or education or profile.topics.all or links %}
+        <div class="mt-10 grid gap-10 border-t border-line pt-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
+          <div class="min-w-0">
+            {% if profile.bio %}
+              <section aria-labelledby="about-title">
+                <h2 id="about-title" class="font-serif text-h3 font-semibold">Sobre</h2>
+                <div class="mt-3 max-w-reading font-serif text-lead text-ink-2">{{ profile.bio|linebreaks }}</div>
+              </section>
+            {% endif %}
+          </div>
+          <div class="space-y-8">
+            {% if education %}
+              <section aria-labelledby="education-title">
+                <h2 id="education-title"
+                    class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Formação</h2>
+                <ul class="mt-3 space-y-2 text-ui text-ink-2">
+                  {% for line in education %}<li>{{ line }}</li>{% endfor %}
+                </ul>
+              </section>
+            {% endif %}
+            {% if profile.topics.all %}
+              <section aria-labelledby="topics-title">
+                <h2 id="topics-title"
+                    class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Interesses</h2>
+                <ul class="mt-3 flex flex-wrap gap-x-3 gap-y-1">
+                  {% for topic in profile.topics.all %}
+                    <li>{% include "components/tag.html" with kind="topic" label=topic.name area=None url="" size="md" %}</li>
+                  {% endfor %}
+                </ul>
+              </section>
+            {% endif %}
+            {% if links %}
+              <section aria-labelledby="links-title">
+                <h2 id="links-title"
+                    class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Links</h2>
+                <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-ui">
+                  {% for link in links %}
+                    <li>
+                      <a href="{{ link.url }}"
+                         rel="noopener nofollow"
+                         target="_blank"
+                         class="text-accent underline-offset-2 hover:underline">{{ link.label }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </section>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+    <section id="publicacoes"
+             class="mt-12 border-t border-line pt-8"
+             aria-labelledby="publications-title">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <h2 id="publications-title" class="font-serif text-h2 font-semibold">
+          Publicações <span class="text-ink-3">({{ total }})</span>
+        </h2>
+        {% if total %}
+          <nav aria-label="Filtrar publicações por participação">
+            <ul class="flex flex-wrap gap-2">
+              {% for item in tabs %}
+                <li>
+                  <a href="{{ item.url }}#publicacoes"
+                     class="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1 text-ui
+                            {% if item.key == tab %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+                     {% if item.key == tab %}aria-current="page"{% endif %}>
+                    {{ item.label }} <span class="text-meta
+              {% if item.key != tab %}text-ink-3{% endif %}">{{ item.count }}</span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </nav>
+        {% endif %}
+      </div>
+      {% if cards %}
+        <ul id="profile-articles" class="mt-8 max-w-[48rem] space-y-8">
+          {% for card in cards %}
+            <li>{% include "components/card.html" with card=card variant="compact" %}</li>
+          {% endfor %}
+        </ul>
+        <div class="max-w-[48rem]">{% include "components/pagination.html" with page_obj=page_obj mode="more" %}</div>
+      {% elif total %}
+        {% include "components/empty_state.html" with title="Nada nesta aba" text="Veja as outras abas." action_url="?#publicacoes" action_label="Ver todas" %}
+      {% else %}
+        {% include "components/empty_state.html" with title="Ainda não há publicações" text="Quando houver publicações com este nome nos créditos, elas aparecem aqui." %}
+      {% endif %}
+    </section>
+  </div>
+{% endblock content %}

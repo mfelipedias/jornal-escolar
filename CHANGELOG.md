@@ -8,6 +8,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Perfil público de cada membro da equipe em `/professores/<endereço>/` (E22): foto ou iniciais na cor da área, apresentação com cargo, áreas e disciplinas, sobre, formação, interesses, links e publicações em abas (Todas, Como autor(a), Colaborações) com "Carregar mais". Perfil oculto só aparece para o próprio dono; conta desativada mantém só o crédito histórico.
+- Página "Quem escreve" `/professores/` com toda a equipe de perfil público, filtros por área e cargo, ordem por publicação mais recente ou por nome, e "Quem escreve" no cabeçalho.
+- Nomes da equipe na home, nas páginas de área e disciplina e em "Quem fez" levam ao perfil.
 - Página pública da publicação `/publicacoes/<endereço>/` (E18): etiquetas de área e tipo, assinatura, data, tempo de leitura, disciplinas, bloco de evento, capa com `srcset`, corpo, fontes, compartilhar (copiar link, WhatsApp, compartilhamento do celular), "Quem fez" e "Leia também". Acessibilidade 100 no Lighthouse.
 - Pré-visualização para autores e editores (rascunhos em `/publicacoes/previa/<id>/`), com faixa de aviso e sem indexação; botões "Pré-visualizar" e "Ver no site" no editor; link "Editar" na página.
 - Publicação arquivada responde 410; página 404 própria.

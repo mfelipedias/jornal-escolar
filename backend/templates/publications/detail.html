@@ -136,10 +136,15 @@
                          class="size-10 rounded-full object-cover">
                   {% else %}
                     <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white font-serif text-ui font-semibold text-ink-2"
-                          aria-hidden="true">{{ credit.name|slice:":1" }}</span>
+                          aria-hidden="true">{{ credit.initials }}</span>
                   {% endif %}
                   <span>
-                    <span class="block text-ui font-medium text-ink">{{ credit.name }}</span>
+                    {% if credit.url %}
+                      <a href="{{ credit.url }}"
+                         class="block text-ui font-medium text-ink underline-offset-2 hover:text-accent hover:underline">{{ credit.name }}</a>
+                    {% else %}
+                      <span class="block text-ui font-medium text-ink">{{ credit.name }}</span>
+                    {% endif %}
                     {% if credit.detail %}<span class="block text-meta text-ink-2">{{ credit.detail }}</span>{% endif %}
                   </span>
                 </dd>

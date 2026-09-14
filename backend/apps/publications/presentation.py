@@ -20,6 +20,27 @@ class Credit:
     detail: str
     is_staff: bool
     avatar_url: str = ""
+    url: str = ""  # perfil público, quando existe e está visível
+
+    @property
+    def initials(self) -> str:
+        return initials(self.name)
+
+
+def initials(name: str) -> str:
+    """ "Carla Souza" → "CS"; "Ana" → "A". Usado quando não há foto."""
+    words = [w for w in name.split() if w[:1].isalpha()]
+    if not words:
+        return name[:1].upper()
+    if len(words) == 1:
+        return words[0][0].upper()
+    return (words[0][0] + words[-1][0]).upper()
+
+
+def profile_url(user) -> str:
+    """Endereço do perfil público, ou vazio se o perfil estiver oculto."""
+    profile = getattr(user, "profile", None)
+    return profile.get_absolute_url() if profile and profile.is_public else ""
 
 
 def join_names(names: list[str]) -> str:
@@ -48,6 +69,7 @@ def _credit(contributor: ArticleContributor) -> Credit:
         detail=_detail(contributor),
         is_staff=bool(contributor.user_id),
         avatar_url=avatar,
+        url=profile_url(contributor.user) if contributor.user_id else "",
     )
 
 
@@ -114,6 +136,7 @@ def writer(user) -> Credit:
         detail=(profile.headline if profile else "") or user.get_staff_kind_display(),
         is_staff=True,
         avatar_url=user.avatar.variant_url("w480") if user.avatar_id else "",
+        url=profile_url(user),
     )
 
 

@@ -1,11 +1,13 @@
 from allauth.account.views import logout
 from django.urls import path, re_path
 
-from . import views
+from . import public_views, views
 
 app_name = "accounts"
 
 urlpatterns = [
+    path("professores/", public_views.teacher_list, name="teacher_list"),
+    path("professores/<slug:slug>/", public_views.teacher_detail, name="teacher_detail"),
     path("entrar/", views.login, name="login"),
     path("sair/", logout, name="logout"),
     path("acesso/<uuid:token>/", views.access_link, name="access_link"),
