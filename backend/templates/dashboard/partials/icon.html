@@ -1,6 +1,7 @@
 {% comment %}
   Ícones em traço do painel (24x24, currentColor). Parâmetro: name
-  (home, list, plus, user, key, settings, newspaper, menu, pencil, bell, star, file, check, grid).
+  (home, list, plus, user, key, settings, newspaper, menu, pencil, bell, star, file, check, grid,
+  message).
 {% endcomment %}
 <svg class="size-5 shrink-0"
      viewBox="0 0 24 24"
@@ -45,6 +46,8 @@
   {% elif name == "check" %}
     <path d="M6 3h8l4 4v14H6z" />
     <path d="m9 14 2 2 4-4.5" />
+  {% elif name == "message" %}
+    <path d="M21 12a8 8 0 0 1-11.7 7.1L3 21l1.9-6.3A8 8 0 1 1 21 12Z" />
   {% elif name == "grid" %}
     <rect x="3.5" y="3.5" width="7" height="7" rx="1" />
     <rect x="13.5" y="3.5" width="7" height="7" rx="1" />

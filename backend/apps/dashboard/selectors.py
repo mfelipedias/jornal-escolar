@@ -15,7 +15,9 @@ from django.urls import reverse
 from apps.accounts.models import User
 from apps.accounts.selectors import missing_profile_items
 from apps.editorial.models import Notification
+from apps.engagement import selectors as moderation
 from apps.engagement import services as engagement
+from apps.engagement.models import Comment
 from apps.publications.models import Article, ArticleContributor
 
 Role = ArticleContributor.Role
@@ -53,8 +55,10 @@ def my_articles(user: User, status_filter: str = "") -> QuerySet[Article]:
     status = STATUS_FILTERS.get(status_filter, ("", None))[1]
     if status is not None:
         articles = articles.filter(status=status)
+    pending = Q(comments__status=Comment.Status.PENDING)
     return (
-        articles.select_related("type")
+        articles.annotate(pending_comments=Count("comments", filter=pending))
+        .select_related("type")
         .prefetch_related(
             Prefetch(
                 "contributors",
@@ -103,16 +107,44 @@ class Pending:
     when: datetime | None = None
 
 
+def comment_pending_items(user: User) -> list[Pending]:
+    """ "3 comentários aguardam sua aprovação" → fila de comentários (docs/15).
+
+    A conta é das publicações que a pessoa assina; editores veem também o total do jornal.
+    """
+    own = moderation.own_pending_count(user)
+    total = moderation.pending_count(user)
+    if not total:
+        return []
+    url = reverse("engagement:moderation")
+    if own == total:
+        verb = "aguarda" if own == 1 else "aguardam"
+        message = f"{_comments(own)} {verb} sua aprovação."
+    else:
+        verb = "aguarda" if total == 1 else "aguardam"
+        message = f"{_comments(total)} {verb} aprovação no jornal"
+        message += f" ({own} nas suas publicações)." if own else "."
+    return [Pending(kind="comments", message=message, url=url)]
+
+
+def _comments(n: int) -> str:
+    return "1 comentário" if n == 1 else f"{n} comentários"
+
+
 def pending_items(user: User, limit: int = HOME_NOTIFICATIONS) -> tuple[list[Pending], int]:
     """O que a pessoa precisa ver agora (docs/15, "Início do painel").
 
-    Na Fase 1: avisos não lidos (texto editado, publicado ou arquivado por outra pessoa) e
-    "Complete seu perfil". Comentários e revisões entram nas Fases 2 e 3.
+    Comentários públicos aguardando (E41) primeiro, depois os avisos não lidos (revisão,
+    texto editado, publicado ou arquivado por outra pessoa) e "Complete seu perfil".
     Devolve (itens, total de avisos não lidos).
     """
-    unread = Notification.objects.filter(user=user, read_at__isnull=True)
+    # Os avisos de comentário pendente já estão resumidos na primeira linha.
+    unread = Notification.objects.filter(user=user, read_at__isnull=True).exclude(
+        kind=Notification.Kind.COMMENT_PENDING
+    )
     total = unread.count()
-    items = [
+    items = comment_pending_items(user)
+    items += [
         Pending(
             kind=n.kind,
             message=n.message,

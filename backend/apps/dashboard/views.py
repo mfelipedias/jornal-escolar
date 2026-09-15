@@ -54,10 +54,13 @@ class Row:
     can_duplicate: bool
     can_archive: bool
     can_restore: bool
+    can_toggle_comments: bool = False
 
     @property
     def has_more(self) -> bool:
-        return self.can_duplicate or self.can_archive or self.can_restore
+        return (
+            self.can_duplicate or self.can_archive or self.can_restore or self.can_toggle_comments
+        )
 
 
 def _row(user, article: Article) -> Row:
@@ -71,6 +74,9 @@ def _row(user, article: Article) -> Row:
         can_archive=permissions.can_archive(user, article)
         and not permissions.archive_requires_note(user, article),
         can_restore=permissions.can_restore(user, article),
+        # Fechar/abrir comentários só faz diferença no que está no ar (E41).
+        can_toggle_comments=article.status == Article.Status.PUBLISHED
+        and permissions.can_toggle_comments(user, article),
     )
 
 

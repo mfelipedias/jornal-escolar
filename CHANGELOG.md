@@ -20,12 +20,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Comando `cleanup`: apaga registros diários de leitura com mais de 90 dias.
 - Comentários públicos (E40): no fim da publicação, leitores comentam sem conta, só com nome e texto. Todo comentário nasce pendente e fica invisível até a aprovação (fila de moderação na E41). Links e e-mails são removidos do texto (marca `had_links`), honeypot contra robôs, 10 envios por hora por IP e 3 pendentes por pessoa por publicação (429). Com HTMX troca só o formulário; sem JavaScript volta para a publicação. Aprovados aparecem do mais recente para o mais antigo, com a resposta da equipe ("Resposta de Carla Souza (autoria do texto)"), que autores, coautores, editores e admin escrevem na própria página. Comentários fechados na publicação mantêm os aprovados; `comments.enabled` desligado esconde o bloco. Linhas "Comentar" e "Responder comentários como autor" da matriz de permissões testadas.
 - Painel: número "Comentários aprovados" no início. Admin: consulta e exclusão de comentários.
+- Moderação de comentários (E41): item "Comentários" no menu do painel com contador e fila em `/painel/comentarios/` (abas Pendentes, Aprovados e Rejeitados, filtro por publicação). Editores veem os comentários de todas as publicações; autores e coautores, só das suas. Aprovar, rejeitar, editar o nome e responder e aprovar sem recarregar a página; marcar vários e aprovar ou rejeitar em lote; marcas "tinha links" e "mesmo IP enviou N". Toda moderação fica na auditoria. Linha "Moderar comentários públicos" da matriz de permissões testada.
+- Avisos de comentários: autores e coautores recebem um aviso por publicação com o total de pendentes (atualizado, sem empilhar), que sai do sino quando tudo é moderado. Comando `notify_pending_comments` avisa os editores de pendentes há mais de 3 dias.
+- Painel: "N comentários aguardam sua aprovação" nas pendências do início, coluna "Comentários pendentes" e "Fechar/Abrir comentários" em "Minhas publicações". Editorial: contador e alerta de comentários de leitores pendentes.
 - `cleanup` também apaga comentários rejeitados há mais de 30 dias e o hash do IP e o código anônimo dos comentários com mais de 30 dias. Exportação de dados inclui as respostas a comentários; anonimizar tira o nome delas.
 
 ### Alterado
 
 - No celular, com sessão aberta, "Escrever" e "Admin" saem do cabeçalho (ficam no painel) para a linha caber em 390px.
 - Texto padrão da página de Privacidade descreve o cookie `jv` e os comentários; `seed_site` atualiza os textos da E28 e da E38 se ninguém os editou.
+- Limite de comentários por IP subiu de 10 para 60 por hora, para não bloquear uma turma inteira atrás do IP da escola; entrou o limite de 10 comentários por pessoa por hora.
 - Produção: cache do Django numa tabela do PostgreSQL, compartilhada pelos workers do Gunicorn, para os limites por minuto e a limpeza de cache ao publicar valerem em todos eles (`createcachetable` no entrypoint).
 
 ## [1.1.0] - 2026-09-14

@@ -67,7 +67,6 @@ MATRIZ = [
 
 FORA_DO_ESCOPO = {
     "Buscar e filtrar": "busca e filtros completos: E35 a E37",
-    "Moderar comentários públicos": "moderação: E41",
     "Ver sugestões de pauta (Fase 4)": "sugestões de pauta: Fase 4",
     "Criar pauta a partir de sugestão (Fase 4)": "pautas: Fase 4",
     "Gerenciar fontes de notícia (Fase 4)": "fontes de notícia: Fase 4",
@@ -91,6 +90,9 @@ REGRAS = {
     "Reagir": Regra("can_react", "article", S.PUBLISHED, S.PUBLISHED),
     # O formulário depende também de comments.enabled e de comments_enabled (engagement/tests).
     "Comentar (vai para moderação)": Regra("can_comment", "article", S.PUBLISHED, S.PUBLISHED),
+    "Moderar comentários públicos": Regra(
+        "can_moderate_comments", "article", S.PUBLISHED, S.PUBLISHED
+    ),
     "Responder comentários como autor": Regra(
         "can_reply_comment", "article", S.PUBLISHED, S.PUBLISHED
     ),

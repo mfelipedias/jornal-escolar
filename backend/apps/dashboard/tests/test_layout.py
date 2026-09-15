@@ -7,9 +7,17 @@ from apps.dashboard.menu import menu_items
 
 pytestmark = pytest.mark.django_db
 
-BASE_KEYS = ["home", "my_articles", "create", "reviews", "profile", "account", "site"]
+BASE_KEYS = [
+    "home",
+    "my_articles",
+    "create",
+    "reviews",
+    "comments",
+    "profile",
+    "account",
+    "site",
+]
 LATER_PHASES = (
-    "/painel/comentarios/",
     "/painel/sugestoes/",
     "/painel/pautas/",
     "/painel/editorial/",
@@ -38,6 +46,7 @@ def test_only_admin_sees_administration(admin_user, editor_user):
         ("accounts:account_settings", "Conta"),
         ("editorial:notifications", "Início"),
         ("editorial:queue", "Revisões"),
+        ("engagement:moderation", "Comentários"),
     ],
 )
 def test_panel_pages_use_dashboard_layout(client, staff_user, url_name, active):

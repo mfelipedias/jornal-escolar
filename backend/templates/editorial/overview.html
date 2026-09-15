@@ -72,7 +72,7 @@
   <section aria-labelledby="sec-estados" class="mt-10">
     <h2 id="sec-estados" class="font-serif text-h3 font-semibold">Publicações</h2>
     {% url 'editorial:articles' as list_url %}
-    <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {% with drafts_url=list_url|add:"?estado=rascunhos" review_url=list_url|add:"?estado=em-revisao" changes_url=list_url|add:"?estado=alteracoes-sugeridas" published_url=list_url|add:"?estado=publicados" archived_url=list_url|add:"?estado=arquivados" %}
         {% include "components/stat.html" with value=counts.drafts label="Rascunhos" url=drafts_url %}
         {% include "components/stat.html" with value=counts.in_review label="Em revisão" url=review_url %}
@@ -80,6 +80,8 @@
         {% include "components/stat.html" with value=counts.published_recent label=published_label url=published_url %}
         {% include "components/stat.html" with value=counts.archived label="Arquivadas" url=archived_url %}
         {% include "components/stat.html" with value=counts.open_comments label="Comentários abertos na revisão" %}
+        {% url 'engagement:moderation' as moderation_url %}
+        {% include "components/stat.html" with value=counts.pending_public_comments label="Comentários de leitores pendentes" url=moderation_url %}
       {% endwith %}
     </div>
   </section>

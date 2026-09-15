@@ -119,6 +119,9 @@ COMMENT_SENT = "Recebido! Seu comentário aparece depois que o autor aprovar."
 COMMENT_RATE_LIMITED = (
     "Muitos comentários enviados desta rede na última hora. Tente de novo mais tarde."
 )
+COMMENT_KEY_RATE_LIMITED = (
+    "Você enviou muitos comentários na última hora. Tente de novo mais tarde."
+)
 COMMENT_PENDING_LIMIT = (
     "Você já tem comentários aguardando aprovação nesta publicação. Espere a moderação antes "
     "de enviar outro."
@@ -166,7 +169,8 @@ def comment(request: HttpRequest, pk: int) -> HttpResponse:
     """POST /x/articles/<id>/comments/: novo comentário, sempre pendente de aprovação.
 
     Honeypot preenchido responde como sucesso sem gravar (o robô não aprende a contornar).
-    Limites: COMMENTS_PER_HOUR_PER_IP envios válidos por IP por hora (429) e
+    Limites: COMMENTS_PER_HOUR_PER_IP envios válidos por IP por hora (429), depois
+    COMMENTS_PER_HOUR_PER_KEY por pessoa (cookie ou conta) por hora (429) e
     COMMENTS_PENDING_PER_KEY pendentes por pessoa na publicação (429).
     """
     article = get_object_or_404(
@@ -192,6 +196,11 @@ def comment(request: HttpRequest, pk: int) -> HttpResponse:
     key = None if user else visitor.anon_key(request)
     if user is None and key is None:
         return _comment_response(request, article, form, notice=COMMENT_NO_COOKIE)
+    who = f"u:{user.pk}" if user else f"a:{key}"
+    if not hit(f"comment-key:{who}", limit=settings.COMMENTS_PER_HOUR_PER_KEY, period=3600):
+        return _comment_response(
+            request, article, form, notice=COMMENT_KEY_RATE_LIMITED, status=429
+        )
 
     try:
         services.submit_comment(

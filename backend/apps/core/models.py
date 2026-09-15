@@ -131,6 +131,7 @@ class AuditLog(models.Model):
         FEATURED_CHANGED = "featured_changed", "Destaques da home alterados"
         PAGE_PUBLISHED = "page_published", "Página institucional posta no ar"
         PAGE_UNPUBLISHED = "page_unpublished", "Página institucional tirada do ar"
+        COMMENT_MODERATED = "comment_moderated", "Comentário público moderado"
 
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,

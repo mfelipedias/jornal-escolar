@@ -1,8 +1,9 @@
 """Alertas do painel editorial (docs/18, "Visão geral"; E33).
 
 Cada fonte é uma função sem argumentos obrigatórios que devolve um AlertGroup. A visão geral
-mostra só os grupos com itens. Alertas de recursos futuros (comentários públicos pendentes,
-curadoria, falha de backup) entram acrescentando a função em SOURCES quando a etapa chegar.
+mostra só os grupos com itens. Alertas de recursos futuros (curadoria, falha de backup) entram
+acrescentando a função em SOURCES quando a etapa chegar. Comentários públicos pendentes há mais
+de 3 dias entraram na E41 (pending_public_comments).
 
 Os alertas são calculados na hora, a partir do estado atual: quando a condição deixa de valer
 (o revisor comenta, alguém responde, a autorização é marcada), o alerta some sozinho.
@@ -12,14 +13,15 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from django.db.models import Max, Q
+from django.db.models import Count, Max, Min, Q
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.engagement.models import Comment
 from apps.publications import rendering
 from apps.publications.models import Article, ArticleContributor, MediaAsset
 
-from . import permissions
+from . import notifications, permissions
 from .models import EditorialComment
 
 Status = Article.Status
@@ -96,7 +98,7 @@ def stale_comments(now: datetime | None = None) -> AlertGroup:
     """Comentários da revisão abertos há mais de 3 dias sem resposta, em textos ainda em
     andamento (em revisão ou com alterações sugeridas).
 
-    Substitui, até a Fase 3, o alerta de comentários públicos pendentes do docs/18.
+    Os comentários públicos pendentes têm alerta próprio (pending_public_comments, E41).
     """
     now = now or timezone.now()
     cutoff = now - timedelta(days=STALE_COMMENT_DAYS)
@@ -135,6 +137,40 @@ def stale_comments(now: datetime | None = None) -> AlertGroup:
         title="Comentários da revisão sem resposta",
         help=f"Abertos há mais de {STALE_COMMENT_DAYS} dias em textos em revisão ou com"
         " alterações sugeridas, sem nenhuma resposta nesse período.",
+        level="warn",
+        items=items,
+    )
+
+
+def pending_public_comments(now: datetime | None = None) -> AlertGroup:
+    """Comentários de leitores aguardando aprovação há mais de 3 dias (docs/18, docs/20)."""
+    now = now or timezone.now()
+    days = notifications.STALE_PENDING_COMMENT_DAYS
+    rows = (
+        Comment.objects.filter(
+            status=Comment.Status.PENDING, created_at__lt=now - timedelta(days=days)
+        )
+        .values("article_id")
+        .annotate(total=Count("pk"), oldest=Min("created_at"))
+        .order_by("oldest", "article_id")
+    )
+    articles = Article.objects.in_bulk([row["article_id"] for row in rows])
+    items = [
+        Alert(
+            article=articles[row["article_id"]],
+            message=_plural(row["total"], "comentário aguarda", "comentários aguardam")
+            + f" aprovação; o mais antigo há {_days(row['oldest'], now)} dias.",
+            url=notifications.moderation_url(articles[row["article_id"]]),
+            action="Moderar",
+            since=row["oldest"],
+        )
+        for row in rows
+    ]
+    return AlertGroup(
+        key="comentarios-publicos-pendentes",
+        title="Comentários de leitores pendentes",
+        help=f"Aguardando aprovação há mais de {days} dias. Os autores foram avisados quando"
+        " chegaram; editores também podem aprovar ou rejeitar.",
         level="warn",
         items=items,
     )
@@ -218,6 +254,7 @@ SOURCES: list[Callable[..., AlertGroup]] = [
     image_consent,
     stale_reviews,
     stale_comments,
+    pending_public_comments,
 ]
 
 

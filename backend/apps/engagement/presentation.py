@@ -1,6 +1,6 @@
 """Dados prontos para os templates: barra de reações (engagement/partials/reaction_bar.html),
 contagem de leituras e bloco de comentários (engagement/partials/comments.html) da página da
-publicação."""
+publicação; itens da fila de moderação (engagement/partials/moderation_item.html)."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -9,7 +9,7 @@ from apps.core.site_settings import get_setting
 from apps.editorial import permissions
 from apps.publications.models import Article, ArticleContributor
 
-from . import services
+from . import selectors, services
 from .forms import CommentForm
 from .models import EMOJIS, Comment, Reaction
 
@@ -151,3 +151,47 @@ def comments_section(
         notice=notice,
         sent=sent,
     )
+
+
+# --- fila de moderação (E41) ---
+
+# Situação do comentário → estado usado pelo components/status_badge.html (só as cores).
+MODERATION_BADGES = {
+    Comment.Status.PENDING: "in_review",
+    Comment.Status.APPROVED: "published",
+    Comment.Status.REJECTED: "archived",
+}
+
+
+@dataclass(frozen=True)
+class ModerationItem:
+    comment: Comment
+    same_ip: int  # comentários do mesmo IP no mês (0 quando é o único ou não há hash)
+    badge: str
+
+    @property
+    def is_pending(self) -> bool:
+        return self.comment.status == Comment.Status.PENDING
+
+    @property
+    def is_approved(self) -> bool:
+        return self.comment.status == Comment.Status.APPROVED
+
+    @property
+    def is_rejected(self) -> bool:
+        return self.comment.status == Comment.Status.REJECTED
+
+
+def moderation_items(comments: list[Comment]) -> list[ModerationItem]:
+    counts = selectors.same_ip_counts(comments)
+    items = []
+    for comment in comments:
+        same_ip = counts.get(comment.ip_hash, 0) if comment.ip_hash else 0
+        items.append(
+            ModerationItem(
+                comment=comment,
+                same_ip=same_ip if same_ip > 1 else 0,
+                badge=MODERATION_BADGES[Comment.Status(comment.status)],
+            )
+        )
+    return items

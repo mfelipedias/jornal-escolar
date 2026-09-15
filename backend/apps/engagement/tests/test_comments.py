@@ -343,17 +343,38 @@ def test_aprovado_libera_vaga_de_pendente(article):
     assert make(article, anon_key=key).status == Comment.Status.PENDING
 
 
-def test_11o_comentario_do_mesmo_ip_na_hora_e_bloqueado(article):
+def test_limite_por_ip_e_tolerante_com_a_rede_da_escola(settings):
+    """E41: uma turma inteira sai pelo mesmo IP; o limite por IP subiu e o por pessoa entrou."""
+    assert settings.COMMENTS_PER_HOUR_PER_IP == 60
+    assert settings.COMMENTS_PER_HOUR_PER_KEY == 10
+
+
+def test_comentario_alem_do_limite_do_mesmo_ip_na_hora_e_bloqueado(article, settings):
+    settings.COMMENTS_PER_HOUR_PER_IP = 10
     for _ in range(10):
         assert visitor_client().post(url(article), OK, **HX).status_code == 200
 
     response = visitor_client().post(url(article), OK, **HX)
 
     assert response.status_code == 429
-    assert "na última hora" in response.content.decode()
+    assert "desta rede na última hora" in response.content.decode()
     assert Comment.objects.count() == 10
     other_ip = visitor_client().post(url(article), OK, REMOTE_ADDR="10.0.0.9", **HX)
     assert other_ip.status_code == 200
+
+
+def test_11o_comentario_da_mesma_pessoa_na_hora_e_bloqueado(article, settings):
+    settings.COMMENTS_PENDING_PER_KEY = 100
+    key = uuid.uuid4()
+    for _ in range(10):
+        assert visitor_client(key).post(url(article), OK, **HX).status_code == 200
+
+    response = visitor_client(key).post(url(article), OK, **HX)
+
+    assert response.status_code == 429
+    assert "Você enviou muitos comentários" in response.content.decode()
+    assert Comment.objects.count() == 10
+    assert visitor_client().post(url(article), OK, **HX).status_code == 200
 
 
 def test_envio_invalido_nao_gasta_o_limite_do_ip(article, settings):

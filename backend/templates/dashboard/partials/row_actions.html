@@ -48,6 +48,25 @@
                       class="block w-full px-4 py-2 text-left text-ui text-danger hover:bg-paper-2">Arquivar</button>
             </form>
           {% endif %}
+          {% if row.can_toggle_comments %}
+            <form method="post"
+                  action="{% url 'engagement:comments_toggle' article.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <input type="hidden"
+                     name="enabled"
+                     value="{% if article.comments_enabled %}0{% else %}1{% endif %}">
+              <button type="submit"
+                      class="block w-full px-4 py-2 text-left text-ui text-ink hover:bg-paper-2"
+                      data-comments-toggle>
+                {% if article.comments_enabled %}
+                  Fechar comentários
+                {% else %}
+                  Abrir comentários
+                {% endif %}
+              </button>
+            </form>
+          {% endif %}
           {% if row.can_restore %}
             <form method="post"
                   action="{% url 'publications:transition' article.pk 'restore' %}">

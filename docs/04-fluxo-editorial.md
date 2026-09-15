@@ -134,3 +134,4 @@ Checklist automática no editor:
 - 2026-09-12: reescrito. Autopublicação pela equipe, revisão opcional, estado "aprovado" removido, alunos como crédito sem conta, notificações só no painel.
 - 2026-09-14: E29. Seção "Implementação": um revisor por vez, cancelar a qualquer momento, recusar revisão, nota obrigatória para sugerir alterações até a E32 e tipos de evento `reviewer_removed` e `approved`.
 - 2026-09-14: E32. Sugerir alterações exige ao menos um comentário aberto; comentários geram eventos e avisos (ver [17](17-tela-de-revisao.md)).
+- 2026-09-15: E41. "Novo comentário público aguardando moderação" agrupado: um aviso por publicação enquanto não é lido, com o total atualizado; editores recebem pelo comando `notify_pending_comments` quando o pendente passa de 3 dias (ver [20](20-reacoes-leituras-comentarios.md)).

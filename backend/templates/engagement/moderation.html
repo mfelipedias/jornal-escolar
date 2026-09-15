@@ -1,0 +1,87 @@
+{% extends "layouts/dashboard.html" %}
+{% comment %}
+  Comentários (docs/15, docs/20 "Moderação no painel"; E41): abas Pendentes, Aprovados e
+  Rejeitados, filtro por publicação, ações por comentário (HTMX) e aprovar/rejeitar em lote.
+  Editores veem os comentários de todas as publicações; o restante da equipe, só das suas.
+{% endcomment %}
+{% block title %}Comentários · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <h1 class="font-serif text-h1 font-semibold">Comentários</h1>
+  <p class="mt-2 max-w-reading text-ui text-ink-2">
+    {% if sees_all %}
+      Todos os comentários de leitores do jornal. Nenhum aparece na página antes de alguém aprovar.
+    {% else %}
+      Comentários de leitores nas suas publicações. Nenhum aparece na página antes de você (ou um editor) aprovar.
+    {% endif %}
+  </p>
+  {% if filter_article %}
+    <p class="mt-4 flex flex-wrap items-center gap-2 rounded-card border border-line bg-white px-4 py-2.5 text-ui"
+       data-filter-article="{{ filter_article.pk }}">
+      <span class="min-w-0 text-ink-2">Só em <span class="font-medium text-ink">“{{ filter_article.title }}”</span></span>
+      <a href="{% url 'engagement:moderation' %}?aba={{ current }}"
+         class="text-meta text-accent hover:underline">Ver de todas as publicações</a>
+    </p>
+  {% endif %}
+  <nav class="mt-6" aria-label="Abas de comentários">
+    <ul class="flex flex-wrap gap-2">
+      {% for tab in tabs %}
+        <li>
+          <a href="{{ tab.url }}"
+             class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-ui
+                    {% if tab.active %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+             {% if tab.active %}aria-current="true"{% endif %}>
+            {{ tab.label }}
+            <span class="text-meta
+                         {% if tab.active %}text-accent-2{% else %}text-ink-3{% endif %}">{{ tab.count }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% if items %}
+    <form id="moderacao-lote"
+          method="post"
+          action="{% url 'engagement:moderate_bulk' %}"
+          class="mt-6 flex flex-wrap items-center gap-2 rounded-card border border-line bg-paper-2 px-4 py-3"
+          x-data="{ selected: 0 }"
+          @change.window="selected = document.querySelectorAll('input[form=moderacao-lote][name=ids]:checked').length"
+          data-bulk>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <label class="mr-auto inline-flex min-h-11 items-center gap-2 text-ui text-ink-2 sm:min-h-0">
+        <input type="checkbox"
+               class="size-5 accent-accent sm:size-4"
+               @change="document.querySelectorAll('input[form=moderacao-lote][name=ids]').forEach(i => i.checked = $el.checked)">
+        Marcar todos desta página
+        <span class="text-meta text-ink-3" x-text="'(' + selected + ' marcados)'"></span>
+      </label>
+      {% if current != "aprovados" %}
+        <button type="submit"
+                name="acao"
+                value="aprovar"
+                class="btn-primary min-h-11 sm:min-h-0"
+                :disabled="!selected">Aprovar marcados</button>
+      {% endif %}
+      {% if current != "rejeitados" %}
+        <button type="submit"
+                name="acao"
+                value="rejeitar"
+                class="btn-secondary min-h-11 sm:min-h-0"
+                :disabled="!selected">Rejeitar marcados</button>
+      {% endif %}
+    </form>
+    <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-white"
+        data-moderation-list>
+      {% for item in items %}
+        {% include "engagement/partials/moderation_item.html" %}
+      {% endfor %}
+    </ul>
+    {% include "components/pagination.html" %}
+  {% elif current == "pendentes" %}
+    {% include "components/empty_state.html" with title="Nenhum comentário aguardando" text="Quando um leitor comentar, o comentário aparece aqui e no sino de avisos." %}
+  {% elif current == "aprovados" %}
+    {% include "components/empty_state.html" with title="Nenhum comentário aprovado" text="Os comentários aprovados aparecem na página da publicação e aqui." %}
+  {% else %}
+    {% include "components/empty_state.html" with title="Nenhum comentário rejeitado" text="Rejeitados não aparecem na página e são apagados depois de 30 dias." %}
+  {% endif %}
+{% endblock content %}

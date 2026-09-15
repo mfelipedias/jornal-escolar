@@ -245,8 +245,10 @@ REACTIONS_PER_MINUTE_PER_KEY = 10
 READS_PER_MINUTE_PER_IP = 60
 READS_RETENTION_DAYS = 90
 
-# Comentários públicos (docs/20, docs/23): envios por IP por hora; pendentes por pessoa (cookie)
+# Comentários públicos (docs/20, docs/23): envios válidos por hora por IP (tolerante, porque uma
+# turma inteira sai pelo mesmo IP da escola) e por pessoa (cookie ou conta); pendentes por pessoa
 # por publicação; dias até apagar os rejeitados e os dados técnicos (ip_hash, código anônimo).
-COMMENTS_PER_HOUR_PER_IP = 10
+COMMENTS_PER_HOUR_PER_IP = 60
+COMMENTS_PER_HOUR_PER_KEY = 10
 COMMENTS_PENDING_PER_KEY = 3
 COMMENTS_RETENTION_DAYS = 30

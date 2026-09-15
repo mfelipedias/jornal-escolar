@@ -8,9 +8,10 @@ a função can_<acao> daqui.
 A E12 cobriu rascunho, publicado e arquivado; a E29 acrescentou a revisão por colega
 (em revisão, alterações sugeridas); a E30 fechou a matriz (perfil, entrada, administração,
 comentário interno da revisão) e a testa célula a célula em editorial/tests/test_matrix.py.
-Linhas da matriz que dependem de recursos futuros (moderação, pautas, fontes) ganham função
-quando a etapa delas chegar. Reações: can_react (E38). Comentários públicos: can_comment e
-can_reply_comment (E40).
+Linhas da matriz que dependem de recursos futuros (pautas, fontes) ganham função quando a
+etapa delas chegar. Reações: can_react (E38). Comentários públicos: can_comment e
+can_reply_comment (E40); moderação e abrir/fechar comentários: can_moderate_comments e
+can_toggle_comments (E41).
 """
 
 from django.contrib.auth.models import AnonymousUser
@@ -152,6 +153,17 @@ def can_comment(user: AnyUser, article: Article) -> bool:
 def can_reply_comment(user: AnyUser, article: Article) -> bool:
     """Responder a um comentário público, em nome da equipe: autores e coautores da publicação,
     editor e admin. O revisor designado não responde (a linha da matriz é 🔒, sem 🟡)."""
+    return is_editor(user) or is_author(user, article)
+
+
+def can_moderate_comments(user: AnyUser, article: Article) -> bool:
+    """Aprovar, rejeitar e editar o nome de comentários públicos (docs/20, "Quem modera"):
+    autores e coautores da publicação, editor e admin. O revisor designado não modera."""
+    return is_editor(user) or is_author(user, article)
+
+
+def can_toggle_comments(user: AnyUser, article: Article) -> bool:
+    """Abrir ou fechar os comentários de uma publicação: quem assina o texto e editores."""
     return is_editor(user) or is_author(user, article)
 
 

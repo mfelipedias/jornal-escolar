@@ -3,7 +3,7 @@
 {% comment %}
   Minhas publicações (docs/15): chips de estado, tabela no desktop e lista no celular.
   Revisões pedidas a mim ficam em editorial:queue (E31); leituras só das publicadas (E39);
-  comentários pendentes e "fechar comentários" nas etapas deles (E40, E41).
+  comentários pendentes com link para a fila e "fechar/abrir comentários" no menu (E41).
 {% endcomment %}
 {% block title %}Minhas publicações · {{ jornal.name }}{% endblock title %}
 {% block content %}
@@ -42,6 +42,7 @@
             <th scope="col" class="px-4 py-2.5 font-medium">Estado</th>
             <th scope="col" class="px-4 py-2.5 font-medium">Meu papel</th>
             <th scope="col" class="px-4 py-2.5 text-right font-medium">Leituras</th>
+            <th scope="col" class="px-4 py-2.5 text-right font-medium">Comentários pendentes</th>
             <th scope="col" class="px-4 py-2.5 font-medium">Atualizada</th>
             <th scope="col" class="px-4 py-2.5 font-medium">
               <span class="sr-only">Ações</span>
@@ -64,6 +65,18 @@
                   <span aria-hidden="true">—</span><span class="sr-only">não publicada</span>
                 {% endif %}
               </td>
+              <td class="px-4 py-3 text-right tabular-nums" data-pending-comments>
+                {% if row.article.pending_comments %}
+                  <a href="{% url 'engagement:moderation' %}?publicacao={{ row.article.pk }}"
+                     class="font-medium text-accent hover:underline"
+                     aria-label="{{ row.article.pending_comments }} comentário{{ row.article.pending_comments|pluralize }} aguardando em “{{ row.article.title }}”">{{ row.article.pending_comments }}</a>
+                {% else %}
+                  <span class="text-ink-3">0</span>
+                {% endif %}
+                {% if row.article.status == "published" and not row.article.comments_enabled %}
+                  <span class="block text-meta text-ink-3">fechados</span>
+                {% endif %}
+              </td>
               <td class="px-4 py-3 whitespace-nowrap text-ink-3">{{ row.article.updated_at|naturaltime }}</td>
               <td class="px-4 py-3">{% include "dashboard/partials/row_actions.html" %}</td>
             </tr>
@@ -81,6 +94,15 @@
             <span>{{ row.my_roles }}</span>
             {% if row.article.status == "published" %}
               <span>{{ row.article.reads_count|intcomma }} leitura{{ row.article.reads_count|pluralize }}</span>
+            {% endif %}
+            {% if row.article.pending_comments %}
+              <a href="{% url 'engagement:moderation' %}?publicacao={{ row.article.pk }}"
+                 class="font-medium text-accent hover:underline">
+                {{ row.article.pending_comments }} comentário{{ row.article.pending_comments|pluralize }} aguardando
+              </a>
+            {% endif %}
+            {% if row.article.status == "published" and not row.article.comments_enabled %}
+              <span>comentários fechados</span>
             {% endif %}
             <span>{{ row.article.updated_at|naturaltime }}</span>
           </p>

@@ -12,6 +12,8 @@ from apps.publications.models import Article, ArticleContributor
 from .models import Notification
 
 LIST_LIMIT = 20
+# Comentário público pendente há mais que isso avisa os editores (docs/04, docs/20).
+STALE_PENDING_COMMENT_DAYS = 3
 
 
 def notify(
@@ -262,6 +264,70 @@ def _reviewer_user(article: Article) -> User | None:
         role=ArticleContributor.Role.REVIEWER, user__isnull=False
     ).first()
     return credit.user if credit is not None else None
+
+
+# --- comentários públicos (docs/04 "Notificações", docs/20) ---
+
+
+def moderation_url(article: Article) -> str:
+    """Fila de moderação já filtrada na publicação (engagement:moderation)."""
+    return f"{reverse('engagement:moderation')}?publicacao={article.pk}"
+
+
+def _pending_text(pending: int) -> str:
+    if pending == 1:
+        return "1 comentário aguarda aprovação"
+    return f"{pending} comentários aguardam aprovação"
+
+
+def comment_pending(article: Article, pending: int, exclude: User | None = None) -> int:
+    """Comentário público novo: avisa autores e coautores.
+
+    Agrupado: enquanto o aviso da publicação não é lido, cada comentário novo só atualiza o
+    total ("3 comentários aguardam aprovação em ..."), em vez de empilhar um aviso por
+    comentário. Quem enviou o comentário (equipe logada) não é avisado.
+    """
+    message = f"{_pending_text(pending)} em “{article.title}”."
+    count = 0
+    for user in article_team(article, exclude=exclude):
+        notify(
+            user,
+            Notification.Kind.COMMENT_PENDING,
+            message,
+            article=article,
+            url=moderation_url(article),
+        )
+        count += 1
+    return count
+
+
+def comment_pending_stale(article: Article, pending: int, editors: Iterable[User]) -> int:
+    """Pendentes há mais de 3 dias: avisa os editores (docs/20, "Moderação no painel")."""
+    days = STALE_PENDING_COMMENT_DAYS
+    message = f"{_pending_text(pending)} há mais de {days} dias em “{article.title}”."
+    count = 0
+    for user in editors:
+        notify(
+            user,
+            Notification.Kind.COMMENT_PENDING,
+            message,
+            article=article,
+            url=moderation_url(article),
+        )
+        count += 1
+    return count
+
+
+def sync_comment_pending(article: Article, pending: int) -> int:
+    """Depois da moderação: sem pendentes, os avisos não lidos da publicação saem do sino;
+    com pendentes, o total dos avisos não lidos é corrigido."""
+    unread = Notification.objects.filter(
+        kind=Notification.Kind.COMMENT_PENDING, article=article, read_at__isnull=True
+    )
+    if not pending:
+        return unread.update(read_at=timezone.now())
+    message = f"{_pending_text(pending)} em “{article.title}”."[:200]
+    return unread.update(message=message, updated_at=timezone.now())
 
 
 # --- leitura ---

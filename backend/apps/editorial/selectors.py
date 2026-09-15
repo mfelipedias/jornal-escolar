@@ -8,6 +8,7 @@ from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 
 from apps.accounts.models import User
+from apps.engagement.models import Comment
 from apps.publications.models import Article, ArticleContributor
 
 from . import anchors, events, permissions
@@ -303,8 +304,8 @@ PERIODS: dict[str, tuple[str, int]] = {
 
 
 def editorial_counts(now: datetime | None = None) -> dict[str, int]:
-    """Contadores da visão geral: um por estado, publicados nos últimos 30 dias e comentários
-    da revisão abertos (fora dos arquivados)."""
+    """Contadores da visão geral: um por estado, publicados nos últimos 30 dias, comentários
+    da revisão abertos (fora dos arquivados) e comentários de leitores pendentes (E41)."""
     now = now or timezone.now()
     recent = now - timedelta(days=RECENT_PUBLISHED_DAYS)
     counts = Article.objects.aggregate(
@@ -314,6 +315,9 @@ def editorial_counts(now: datetime | None = None) -> dict[str, int]:
         published_recent=Count("pk", filter=Q(status=Status.PUBLISHED, published_at__gte=recent)),
         archived=Count("pk", filter=Q(status=Status.ARCHIVED)),
     )
+    counts["pending_public_comments"] = Comment.objects.filter(
+        status=Comment.Status.PENDING
+    ).count()
     counts["open_comments"] = (
         EditorialComment.objects.filter(parent__isnull=True, status=EditorialComment.Status.OPEN)
         .exclude(article__status=Status.ARCHIVED)

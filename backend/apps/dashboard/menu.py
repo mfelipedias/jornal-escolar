@@ -1,9 +1,10 @@
 """Menu lateral do painel (docs/15, "Menu lateral").
 
-Itens da Fase 1; Revisões (E31) com o contador de revisões pedidas à pessoa; Editorial (E33)
-só para editor+, agrupando visão geral, todas as publicações, Destaques e Páginas (as duas
-últimas mantêm os endereços da E25). Comentários, Sugestões e Pautas aparecem quando as fases
-deles chegarem: basta acrescentar a linha aqui.
+Itens da Fase 1; Revisões (E31) com o contador de revisões pedidas à pessoa; Comentários (E41)
+com o contador de comentários públicos pendentes que a pessoa modera; Editorial (E33) só para
+editor+, agrupando visão geral, todas as publicações, Destaques e Páginas (as duas últimas
+mantêm os endereços da E25). Sugestões e Pautas aparecem quando a Fase 4 chegar: basta
+acrescentar a linha aqui.
 """
 
 from dataclasses import dataclass
@@ -12,6 +13,7 @@ from django.urls import reverse
 
 from apps.accounts.models import User
 from apps.editorial import permissions, selectors
+from apps.engagement import selectors as engagement_selectors
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,7 @@ ACTIVE_BY_VIEW = {
     "editorial:notifications": "home",
     "editorial:queue": "reviews",
     "editorial:review": "reviews",
+    "engagement:moderation": "comments",
     "editorial:overview": "editorial",
     "editorial:articles": "editorial",
     "editorial:featured": "editorial",
@@ -49,6 +52,7 @@ def menu_items(user: User, view_name: str = "") -> list[MenuItem]:
         ("my_articles", "Minhas publicações", reverse("dashboard:my_articles"), "list", False),
         ("create", "Nova publicação", reverse("publications:create"), "plus", False),
         ("reviews", "Revisões", reverse("editorial:queue"), "check", False),
+        ("comments", "Comentários", reverse("engagement:moderation"), "message", False),
     ]
     if permissions.can_access_editorial(user):
         rows.append(("editorial", "Editorial", reverse("editorial:overview"), "grid", False))
@@ -59,7 +63,10 @@ def menu_items(user: User, view_name: str = "") -> list[MenuItem]:
     if permissions.can_access_admin(user):
         rows.append(("admin", "Administração", reverse("admin:index"), "settings", True))
     rows.append(("site", "Ver o jornal", reverse("core:home"), "newspaper", True))
-    counts = {"reviews": selectors.pending_review_count(user)}
+    counts = {
+        "reviews": selectors.pending_review_count(user),
+        "comments": engagement_selectors.pending_count(user),
+    }
     return [
         MenuItem(
             key=key,

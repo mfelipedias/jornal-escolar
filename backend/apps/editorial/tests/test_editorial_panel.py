@@ -186,6 +186,7 @@ def test_counts_by_state(editor_client, author, reviewer):
         "published_recent": 1,
         "archived": 1,
         "open_comments": 2,
+        "pending_public_comments": 0,
     }
     html = overview_html(editor_client)
     assert f'href="{ARTICLES}?estado=rascunhos"' in html

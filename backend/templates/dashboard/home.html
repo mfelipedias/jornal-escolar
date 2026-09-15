@@ -2,7 +2,7 @@
 {% load humanize permissions %}
 {% comment %}
   Início do painel (docs/15): pendências, continuar escrevendo, últimas publicadas e números.
-  Sugestões (Fase 4) e comentários (E40) ainda não aparecem.
+  Comentários de leitores aguardando entram nas pendências (E41). Sugestões chegam na Fase 4.
 {% endcomment %}
 {% block title %}Painel · {{ jornal.name }}{% endblock title %}
 {% block content %}
@@ -52,7 +52,7 @@
        data-editorial-alerts>
       <span class="min-w-0 flex-1 text-ui text-ink">
         {{ editorial_alerts }} alerta{{ editorial_alerts|pluralize }} no editorial
-        <span class="block text-meta text-ink-2">Revisões paradas, comentários sem resposta ou autorizações faltando.</span>
+        <span class="block text-meta text-ink-2">Revisões paradas, comentários esperando ou autorizações faltando.</span>
       </span>
       <span class="shrink-0 text-meta text-accent">Ver <span aria-hidden="true">→</span></span>
     </a>

@@ -10,8 +10,11 @@ record_read: conta uma leitura por pessoa, por publicação, por dia (INSERT ...
 NOTHING); só quando a linha entra, Article.reads_count sobe, também por update().
 
 submit_comment: comentário público pendente, com links removidos e limite de pendentes por
-pessoa. reply_to_comment: resposta da equipe. Article.comments_count (só aprovados) é
-recalculado por recount_comments, também por update().
+pessoa; avisa os autores. reply_to_comment: resposta da equipe. Article.comments_count (só
+aprovados) é recalculado por recount_comments, também por update().
+
+Moderação (E41): moderate_comment, moderate_many, rename_comment, reply_and_approve e
+set_comments_enabled. A auditoria (AuditLog) é gravada pelas views, que têm a requisição.
 """
 
 import hashlib
@@ -24,12 +27,12 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection, transaction
-from django.db.models import Count, F, Q, QuerySet
+from django.db.models import Count, F, Max, Q, QuerySet
 from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.core.audit import hash_ip
-from apps.editorial import permissions
+from apps.editorial import notifications, permissions
 from apps.publications.models import Article
 
 from .models import ArticleRead, Comment, Reaction
@@ -208,6 +211,20 @@ def clean_text(text: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
 
 
+def clean_name(author_name: str) -> str:
+    """Nome exibido: sem caracteres de controle nem espaços repetidos."""
+    return re.sub(r"\s+", " ", CONTROL_RE.sub("", author_name or "")).strip()
+
+
+def name_error(name: str) -> str:
+    """Motivo para recusar um nome já limpo, ou vazio se ele serve."""
+    if strip_links(name)[1]:
+        return "Use só o seu nome, sem links ou e-mail."
+    if not Comment.NAME_MIN <= len(name) <= Comment.NAME_MAX:
+        return f"O nome precisa ter de {Comment.NAME_MIN} a {Comment.NAME_MAX} caracteres."
+    return ""
+
+
 def pending_count(article: Article, anon_key: uuid.UUID) -> int:
     return Comment.objects.filter(
         article=article, anon_key=anon_key, status=Comment.Status.PENDING
@@ -237,13 +254,9 @@ def submit_comment(
         raise ValidationError("Visitante sem código anônimo.")
 
     errors: dict[str, str] = {}
-    name = re.sub(r"\s+", " ", CONTROL_RE.sub("", author_name)).strip()
-    if strip_links(name)[1]:
-        errors["author_name"] = "Use só o seu nome, sem links ou e-mail."
-    elif not Comment.NAME_MIN <= len(name) <= Comment.NAME_MAX:
-        errors["author_name"] = (
-            f"O nome precisa ter de {Comment.NAME_MIN} a {Comment.NAME_MAX} caracteres."
-        )
+    name = clean_name(author_name)
+    if error := name_error(name):
+        errors["author_name"] = error
     text, had_links = strip_links(body)
     text = clean_text(text)
     if len(text) < Comment.BODY_MIN:
@@ -260,7 +273,7 @@ def submit_comment(
     limit = settings.COMMENTS_PENDING_PER_KEY
     if anon_key is not None and pending_count(article, anon_key) >= limit:
         raise CommentLimitError
-    return Comment.objects.create(
+    comment = Comment.objects.create(
         article=article,
         author_name=name,
         body=text,
@@ -268,6 +281,8 @@ def submit_comment(
         ip_hash=hash_ip(ip),
         had_links=had_links,
     )
+    notifications.comment_pending(article, article_pending_count(article.pk), exclude=user)
+    return comment
 
 
 def approved_comments(article: Article) -> QuerySet[Comment]:
@@ -330,3 +345,141 @@ def purge_old_comments(days: int | None = None) -> tuple[int, int]:
         .update(ip_hash="", anon_key=None)
     )
     return deleted, cleared
+
+
+# --- moderação (E41; docs/20, "Moderação no painel") ---
+
+MODERATION_STATUSES = (Comment.Status.APPROVED, Comment.Status.REJECTED)
+
+
+def article_pending_count(article_id: int) -> int:
+    return Comment.objects.filter(article_id=article_id, status=Comment.Status.PENDING).count()
+
+
+def _apply_status(user: User, comment: Comment, status: str) -> bool:
+    """Muda a situação e carimba quem moderou. Devolve False se nada mudou."""
+    if not permissions.can_moderate_comments(user, comment.article):
+        raise PermissionDenied
+    if status not in MODERATION_STATUSES:
+        raise ValidationError("Situação inválida.")
+    if comment.status == status:
+        return False
+    comment.status = status
+    comment.moderated_by = user
+    comment.moderated_at = timezone.now()
+    comment.save(update_fields=["status", "moderated_by", "moderated_at"])
+    return True
+
+
+def _after_moderation(article: Article) -> None:
+    recount_comments(article.pk)
+    notifications.sync_comment_pending(article, article_pending_count(article.pk))
+
+
+@transaction.atomic
+def moderate_comment(user: User, comment: Comment, status: str) -> bool:
+    """Aprova ou rejeita um comentário. Qualquer situação pode mudar: um aprovado pode sair
+    da página, um rejeitado pode voltar. Devolve True se a situação mudou."""
+    changed = _apply_status(user, comment, status)
+    if changed:
+        _after_moderation(comment.article)
+    return changed
+
+
+@transaction.atomic
+def moderate_many(user: User, ids: list[int], status: str) -> list[int]:
+    """Aprovar ou rejeitar em lote. Comentários que a pessoa não modera são ignorados.
+
+    Devolve os ids que mudaram de situação. Contagem e avisos são refeitos uma vez por
+    publicação.
+    """
+    if status not in MODERATION_STATUSES:
+        raise ValidationError("Situação inválida.")
+    changed: list[int] = []
+    articles: dict[int, Article] = {}
+    comments = Comment.objects.filter(pk__in=ids).select_related("article").order_by("pk")
+    for comment in comments:
+        if not permissions.can_moderate_comments(user, comment.article):
+            continue
+        if _apply_status(user, comment, status):
+            changed.append(comment.pk)
+            articles[comment.article_id] = comment.article
+    for article in articles.values():
+        _after_moderation(article)
+    return changed
+
+
+def rename_comment(user: User, comment: Comment, author_name: str) -> Comment:
+    """O moderador troca o nome exibido (ex.: tirar o sobrenome), com a limpeza do envio."""
+    if not permissions.can_moderate_comments(user, comment.article):
+        raise PermissionDenied
+    name = clean_name(author_name)
+    if error := name_error(name):
+        raise ValidationError({"author_name": error})
+    if name != comment.author_name:
+        comment.author_name = name
+        comment.save(update_fields=["author_name"])
+    return comment
+
+
+@transaction.atomic
+def reply_and_approve(user: User, comment: Comment, body: str) -> Comment:
+    """Responder e aprovar: grava a resposta (reply_to_comment) e aprova. Exige texto."""
+    if not permissions.can_moderate_comments(user, comment.article):
+        raise PermissionDenied
+    if not clean_text(body or ""):
+        raise ValidationError({"reply_body": "Escreva a resposta."})
+    reply_to_comment(user, comment, body)
+    moderate_comment(user, comment, Comment.Status.APPROVED)
+    return comment
+
+
+def set_comments_enabled(user: User, article: Article, enabled: bool) -> Article:
+    """Abre ou fecha os comentários da publicação. Os aprovados continuam na página.
+
+    Grava com save(), que invalida o cache público: o formulário aparece ou some.
+    """
+    if not permissions.can_toggle_comments(user, article):
+        raise PermissionDenied
+    if article.comments_enabled != enabled:
+        article.comments_enabled = enabled
+        article.save(update_fields=["comments_enabled"])
+    return article
+
+
+def remind_stale_pending_comments(now=None) -> int:
+    """Avisa os editores das publicações com comentários pendentes há mais de 3 dias.
+
+    Um aviso por editor e publicação: quem já recebeu (ou teve atualizado) um aviso de
+    comentário pendente dessa publicação depois que o pendente mais recente passou dos 3 dias
+    não recebe outro. Rodar várias vezes não repete avisos. Devolve quantos avisos foram
+    criados ou atualizados.
+    """
+    from apps.editorial.models import Notification
+
+    now = now or timezone.now()
+    days = notifications.STALE_PENDING_COMMENT_DAYS
+    cutoff = now - timedelta(days=days)
+    rows = (
+        Comment.objects.filter(status=Comment.Status.PENDING, created_at__lt=cutoff)
+        .values("article_id")
+        .annotate(total=Count("pk"), newest=Max("created_at"))
+        .order_by("article_id")
+    )
+    editors = list(
+        User.objects.filter(is_active=True, role__in=(User.Role.EDITOR, User.Role.ADMIN))
+    )
+    sent = 0
+    for row in rows:
+        article = Article.objects.get(pk=row["article_id"])
+        stale_since = row["newest"] + timedelta(days=days)
+        already = set(
+            Notification.objects.filter(
+                kind=Notification.Kind.COMMENT_PENDING,
+                article=article,
+                updated_at__gte=stale_since,
+            ).values_list("user_id", flat=True)
+        )
+        targets = [editor for editor in editors if editor.pk not in already]
+        sent += notifications.comment_pending_stale(article, row["total"], targets)
+    return sent

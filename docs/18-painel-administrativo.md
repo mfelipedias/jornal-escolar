@@ -95,6 +95,7 @@ Comandos de gerenciamento para o admin:
 | `access_link <email>` | Gera link de primeiro acesso ou redefinição | 1 |
 | `rebuild_search_index` | Recalcula `search_vector` | 3 |
 | `cleanup` | Apaga leituras antigas, comentários rejeitados, notificações lidas, rascunhos vazios, erros antigos | 3 (cron do host) → 4 (worker) |
+| `notify_pending_comments` | Avisa os editores de comentários de leitores pendentes há mais de 3 dias | 3 (cron do host, diário) → 4 (worker) |
 | `fetch_news` | Coleta fontes (também agendado) | 4 |
 | `export_user_data <email>` | Exporta dados de um usuário | 2 |
 | `anonymize_user <email>` | Anonimiza | 2 |
@@ -113,3 +114,4 @@ Comandos de gerenciamento para o admin:
   - Todas as publicações: filtros por título, estado, tipo, área, autor, revisor e período (última atualização em 7, 30, 90 ou 365 dias). O título leva à tela de revisão; cada linha tem Revisar, Editar e Ver no jornal. Ações em massa: arquivar (motivo sempre obrigatório, vai no aviso) e trocar o revisor (só textos em revisão; o novo revisor não herda o "pode publicar por mim"; avisa o novo revisor, o antigo e os autores).
 - 2026-09-14: E34. "Anonimizar crédito de aluno em um clique" ficou só com o admin, como na matriz de docs/02 ("Configurações, auditoria, anonimização") e em docs/23: botão "Anonimizar" nos créditos de aluno do editor e em cada crédito do alerta "Alunos sem autorização" (sem mostrar o nome). Em Usuários, "Exportar dados" baixa o JSON de uma conta ou um ZIP com um JSON por conta; "Anonimizar" pede confirmação numa página própria; conta anonimizada não pode ser reativada. Comandos `export_user_data <email> [--zip --output arquivo]` e `anonymize_user <email> [--yes]`.
 - 2026-09-14: E39. Comando `cleanup` criado (em `apps/core`); por enquanto apaga só os registros diários de leitura com mais de 90 dias. As outras limpezas entram com as etapas delas.
+- 2026-09-15: E41. Visão geral ganha o contador "Comentários de leitores pendentes" (link para a fila) e o alerta "Comentários de leitores pendentes" (há mais de 3 dias, um item por publicação, com link para a fila filtrada). A fila do editor é a mesma `/painel/comentarios/` da equipe, que para editores já mostra todas as publicações; não há aba "Comentários" dentro do editorial. Comando `notify_pending_comments`.
