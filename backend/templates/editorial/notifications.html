@@ -4,7 +4,7 @@
   <section>
     <div class="mx-auto max-w-reading">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="font-serif text-h1 font-semibold">Notificações</h1>
+        <h1 class="font-display text-h1 font-semibold">Notificações</h1>
         {% if notification_unread %}
           <form method="post" action="{% url 'editorial:notification_read_all' %}">
             {% csrf_token %}

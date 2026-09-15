@@ -1,7 +1,7 @@
 {% extends "layouts/auth.html" %}
 {% block title %}Sair · {{ jornal.name }}{% endblock title %}
 {% block auth_content %}
-  <h1 class="text-center font-serif text-h2 font-semibold">Sair</h1>
+  <h1 class="text-center font-display text-h2 font-semibold">Sair</h1>
   <p class="mt-2 text-center text-ui text-ink-2">Deseja encerrar a sessão neste aparelho?</p>
   <form method="post" action="{% url 'accounts:logout' %}" class="mt-8">
     {% csrf_token %}

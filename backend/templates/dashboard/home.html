@@ -8,7 +8,7 @@
 {% block content %}
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h1 class="font-serif text-h1 font-semibold">Olá, {{ user.public_name }}</h1>
+      <h1 class="font-display text-h1 font-semibold">Olá, {{ user.public_name }}</h1>
       <p class="mt-1 text-ui text-ink-2">O que precisa da sua atenção agora.</p>
     </div>
     <a href="{% url 'publications:create' %}" class="btn-primary">Nova publicação</a>
@@ -17,7 +17,7 @@
     <section aria-labelledby="sec-pendencias"
              class="mt-8 rounded-card border border-line bg-white">
       <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-        <h2 id="sec-pendencias" class="font-serif text-h3 font-semibold">Pendências</h2>
+        <h2 id="sec-pendencias" class="font-display text-h3 font-semibold">Pendências</h2>
         {% if unread_total %}
           <a href="{% url 'editorial:notifications' %}"
              class="text-meta text-ink-2 hover:text-accent">
@@ -72,7 +72,7 @@
   <div class="mt-10 grid gap-10 lg:grid-cols-2">
     <section aria-labelledby="sec-rascunhos" class="min-w-0">
       <div class="flex items-baseline justify-between gap-2 border-b border-line pb-2">
-        <h2 id="sec-rascunhos" class="font-serif text-h3 font-semibold">Continuar escrevendo</h2>
+        <h2 id="sec-rascunhos" class="font-display text-h3 font-semibold">Continuar escrevendo</h2>
         {% if drafts %}
           <a href="{% url 'dashboard:my_articles' %}?estado=rascunhos"
              class="text-meta text-ink-2 hover:text-accent">Todos os rascunhos</a>
@@ -98,7 +98,7 @@
     </section>
     <section aria-labelledby="sec-publicadas" class="min-w-0">
       <div class="flex items-baseline justify-between gap-2 border-b border-line pb-2">
-        <h2 id="sec-publicadas" class="font-serif text-h3 font-semibold">Suas últimas publicadas</h2>
+        <h2 id="sec-publicadas" class="font-display text-h3 font-semibold">Suas últimas publicadas</h2>
         {% if published %}
           <a href="{% url 'dashboard:my_articles' %}?estado=publicados"
              class="text-meta text-ink-2 hover:text-accent">Todas</a>

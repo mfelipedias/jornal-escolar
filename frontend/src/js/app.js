@@ -1,5 +1,5 @@
-// Ponto de entrada de todas as páginas: estilos, HTMX e Alpine (docs/05, D3).
-import "../css/app.css";
+// Ponto de entrada de todas as páginas: HTMX e Alpine (docs/05, D3). O CSS não é importado
+// aqui: base.html o carrega com <link> antes deste script (docs/09, "Carregamento sem salto").
 
 import Alpine from "alpinejs";
 import htmx from "htmx.org";

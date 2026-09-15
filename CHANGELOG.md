@@ -26,6 +26,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - `cleanup` também apaga comentários rejeitados há mais de 30 dias e o hash do IP e o código anônimo dos comentários com mais de 30 dias. Exportação de dados inclui as respostas a comentários; anonimizar tira o nome delas.
 - Clima "Hoje na escola" (E42): bloco discreto na página inicial com a temperatura, a condição (ícone em linha e rótulo em português), mínima, máxima e chance de chuva do dia, do Open-Meteo, para Osasco, SP (`WEATHER_LAT` e `WEATHER_LON` no `.env`; `WEATHER_API_BASE` para auto-hospedar). A consulta é feita pelo servidor, sem chave e sem dados do visitante, com cache de 30 minutos e timeout de 3 segundos; em falha, o último valor bom vale por até 6 horas e, sem nada, o bloco some. No desktop fica na coluna lateral, acima da Agenda; no celular, em uma linha abaixo do destaque. Desliga em "Mostrar o clima na página inicial" no admin. Os testes nunca chamam a API.
 
+### Redesign visual (Fase 3b)
+
+- R1, fundações: o site ganha a direção visual "Pátio" (docs/09), pedida pelo dono do projeto para o jornal ficar mais atraente aos alunos. Títulos e interface passam para a fonte Bricolage Grotesque (a Inter saiu); o corpo de leitura continua em Newsreader. Cores novas: papel mais claro, acento framboesa, amarelo "marca-texto" e uma versão viva de cada cor de área para blocos, todas com contraste medido. Marca nova: um avião de papel dobrado de uma página de jornal, no cabeçalho, no favicon (SVG e ICO), nos ícones da tela inicial do celular (`manifest.json`) e na imagem padrão de compartilhamento; o wordmark tem um traço de marca-texto atrás de "Escolar". A página deixa de aparecer "quebrada" enquanto carrega: o CSS vem por `<link>` antes do JavaScript (também no modo de desenvolvimento), as duas fontes principais são pré-carregadas e as fontes substitutas têm métricas ajustadas para o texto não pular.
+
 ### Alterado
 
 - No celular, com sessão aberta, "Escrever" e "Admin" saem do cabeçalho (ficam no painel) para a linha caber em 390px.

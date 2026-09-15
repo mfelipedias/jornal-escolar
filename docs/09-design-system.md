@@ -1,153 +1,190 @@
 # 09 — Design system
 
-## Direção visual
+## Direção visual: "Pátio"
 
-**Uma revista escolar bem diagramada, não um portal de notícias.** Referências de tom: cadernos de cultura de jornais impressos, revistas de divulgação científica, sites editoriais com tipografia forte e poucas imagens por tela. Tema **claro e colorido**, conforme pedido do dono do projeto: fundo claro, tipografia escura, e cor usada com intenção (acento rosa e uma cor por área do conhecimento).
+**Um mural de pátio bem diagramado: jovem, colorido, com energia, e ainda assim editorial e legível.** Em 2026-09-15 o dono do projeto viu o site pronto e achou o design "muito sério" para o público: alunos do ensino médio ([27](27-decisoes-pendentes-e-perguntas.md), quarta rodada). A direção anterior ("uma revista escolar bem diagramada", tema claro com cor usada com parcimônia) foi substituída por esta, mantendo o que ela tinha de bom: tipografia forte, leitura confortável, cor com função.
 
-Cinco palavras: editorial, claro, legível, colorido com critério, escolar sem ser infantil.
+Referências de tom: revistas juvenis de ciência e cultura, cartazes de grêmio bem feitos, sites de festivais e de escolas de design. Cinco palavras: **vivo, colorido, ágil, claro, nosso.**
 
 O que isso significa na prática:
 
-- **Tipografia faz o trabalho.** Títulos em serifa com peso, corpo de texto em serifa confortável, interface em sans. Poucas imagens, bem tratadas.
-- **Papel, não tela.** Fundo levemente quente, texto quase preto, linhas finas como separadores. Sem sombras pesadas, sem gradientes.
-- **Cor com função.** O rosa de acento marca ações, links e a marca. As cores de área aparecem em etiquetas, filetes dos cards, títulos de seção da home e no cabeçalho das páginas de área: é isso que dá o "colorido" sem virar arco-íris.
-- **Espaço em branco generoso.** A home não precisa mostrar tudo; precisa convidar a ler.
-- **Sem infantilização.** Nada de mascotes, ícones em excesso, fontes arredondadas.
+- **Duas vozes tipográficas.** Títulos e interface em uma grotesca expressiva e pesada (Bricolage Grotesque); corpo de leitura em serifa confortável (Newsreader). O contraste entre as duas é a personalidade do site.
+- **Cor de verdade.** Um acento vivo (framboesa), um marca-texto amarelo para destacar palavras e blocos, e as oito cores de área em três intensidades: escura para texto, clara para fundos e viva para blocos e formas. Gradientes discretos entre a versão clara e o papel são permitidos em faixas e cabeçalhos.
+- **Formas macias.** Pílulas em botões, chips e etiquetas; cards com cantos de 16px; hero com 24px. Sombras suaves e coloridas no hover.
+- **Movimento com propósito.** Cards levantam, imagens dão zoom leve, seções entram com fade escalonado, o masthead encolhe ao rolar. Tudo curto (150 a 250ms) e desligado com `prefers-reduced-motion`.
+- **Ainda editorial.** Hierarquia clara, espaço em branco, uma coluna de leitura de 68 caracteres. O jornal continua sendo para ler.
+
+O que **não** muda (continua proibido):
+
+- **Infantilização**: nada de mascote, fontes "arredondadas de criança", emojis como ícones ou excesso de ícones.
+- Contraste **AA em todo texto**, AAA no corpo de leitura.
+- O nome da escola em qualquer lugar do site.
+- Cor escrita direto no template: só tokens (`bg-paper`, `text-area-verde`, `bg-sun`).
 
 ## Marca
 
 - **Nome:** Jornal Escolar (padrão de `site.name`, editável no painel). **Tagline:** "Jornal digital da comunidade escolar". O nome da escola não aparece em lugar nenhum do site.
-- **Wordmark:** "Jornal Escolar" em Newsreader 600, com "Escolar" na cor de acento. O wordmark é texto, não imagem, para acompanhar `site.name` se o nome mudar.
-- **Glifo:** uma folha de jornal dobrada em traço único, monocromática, 24 a 32px, usada como favicon, ao lado do wordmark no masthead e como marca d'água nas imagens padrão de compartilhamento. Desenhado em SVG na etapa E04.
-- **Não usar:** fotos ilustrativas na marca, gradientes, o glifo em tamanho grande como ilustração.
+- **Wordmark:** "Jornal Escolar" em Bricolage Grotesque 800, com a última palavra em `accent` e um traço de marca-texto (`sun`) inclinado atrás dela (classe `wordmark-accent`, em `app.css`). O wordmark é texto, não imagem, para acompanhar `site.name` se o nome mudar; o context processor separa a última palavra (`wordmark_head`, `wordmark_accent`).
+- **Glifo:** um **avião de papel dobrado de uma página de jornal**, em traço único com duas linhas de "texto" na asa, monocromático, `currentColor`. Vive em `templates/components/glyph.html` (parâmetro `class` para tamanho e cor). No masthead fica em `accent`, 28 a 32px; no hover do link da marca ele inclina (R2).
+- **Favicon e ícones:** `static/img/favicon.svg` (glifo branco sobre quadrado arredondado no acento), `favicon.ico` (32px), `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, `logo.png` (512, usado no JSON-LD) e `og-default.png` (1200×630, imagem padrão de compartilhamento: glifo no acento sobre papel com um traço de marca-texto). `static/manifest.json` descreve nome, cores e ícones para a tela inicial do celular. Os PNGs, o ICO e o manifest são gerados por `scripts/brand.py` (Pillow) a partir da mesma geometria do SVG: ao mudar o desenho, mudar nos três lugares (glyph.html, favicon.svg, brand.py) e rodar `uv run --directory backend python ../scripts/brand.py`.
+- **Não usar:** fotos ilustrativas na marca, o glifo em tamanho grande como ilustração de página (só em estados vazios, dentro de um "adesivo"), nem versões em outras cores além de `accent`, `ink` e branco.
 
 ## Tokens
 
-Definidos como variáveis CSS em `static/src/css/app.css` e expostos ao Tailwind 4 via `@theme`. Os valores abaixo são a proposta decidida; ajustes finos acontecem na etapa E04 olhando a tela.
+Definidos como variáveis CSS em `frontend/src/css/app.css` e expostos ao Tailwind 4 via `@theme`. Contrastes medidos com `scripts` de apoio (WCAG 2.x, relação de luminância); a tabela abaixo é o valor atual.
 
 ### Cores base
 
-| Token | Valor | Uso |
-|---|---|---|
-| `--color-paper` | `#FBF9F5` | Fundo da página |
-| `--color-paper-2` | `#F1EDE6` | Fundos de seção, cabeçalho de tabela, campos |
-| `--color-ink` | `#1B1A21` | Texto principal, títulos |
-| `--color-ink-2` | `#4B4955` | Texto secundário, subtítulos |
-| `--color-ink-3` | `#6B6875` | Metadados, legendas, placeholders (era `#7B7885`, ver Histórico) |
-| `--color-line` | `#E0DBD2` | Bordas e separadores |
-| `--color-accent` | `#A8174F` | Rosa da marca: links, botões primários, foco, "Escolar" no wordmark |
-| `--color-accent-2` | `#8A1140` | Hover do acento |
-| `--color-accent-soft` | `#FBE4EC` | Fundo de destaque suave, seleção |
-| `--color-warn` | `#B45309` | Avisos |
-| `--color-danger` | `#B42318` | Erros, ações destrutivas |
-| `--color-ok` | `#1F7A4D` | Sucesso, publicado |
+| Token | Valor | Uso | Contraste |
+|---|---|---|---|
+| `--color-paper` | `#FFFDF7` | Fundo da página | — |
+| `--color-paper-2` | `#F6F1E4` | Fundos de seção, cabeçalho de tabela, campos, etiqueta de tipo | — |
+| `--color-paper-3` | `#EDE6D3` | Blocos mais marcados (adesivos, faixas neutras) | — |
+| `--color-ink` | `#17151F` | Texto principal, títulos | 17,7:1 sobre paper; 14,5:1 sobre paper-3 |
+| `--color-ink-2` | `#47454F` | Texto secundário, linha fina | 9,3:1 sobre paper; 7,6:1 sobre paper-3 |
+| `--color-ink-3` | `#67646F` | Metadados, legendas, placeholders (13px) | 5,7:1 sobre paper; 4,7:1 sobre paper-3 e accent-soft |
+| `--color-line` | `#E6E0D2` | Bordas e separadores | — |
+| `--color-accent` | `#C41260` | Framboesa da marca: links, botões primários, foco, "Escolar" no wordmark | 5,7:1 sobre paper; 4,7:1 sobre paper-3; branco sobre ele 5,8:1 |
+| `--color-accent-2` | `#9C0D4D` | Hover do acento, texto pequeno em accent | 8,0:1 sobre paper |
+| `--color-accent-soft` | `#FFE1EE` | Fundo de destaque suave, chip ativo | — |
+| `--color-sun` | `#FFD23F` | Marca-texto: fundo atrás de palavras, adesivos, barras. **Nunca como texto.** | ink sobre ele 12,5:1 |
+| `--color-sun-soft` | `#FFF3C4` | Seleção de texto, fundos de aviso leve | — |
+| `--color-warn` | `#B45309` | Avisos | |
+| `--color-danger` | `#B42318` | Erros, ações destrutivas | |
+| `--color-ok` | `#1F7A4D` | Sucesso | |
 
-Contraste: `ink` sobre `paper` é cerca de 16:1; `accent` sobre `paper` é cerca de 6.5:1; `ink-3` sobre `paper` é cerca de 5.2:1 e sobre `paper-2` cerca de 4.7:1.
+O briefing propôs `accent #D6156A`; ficou em `#C41260` porque o original dava 4,0:1 sobre `paper-3` e 4,1:1 sobre `accent-soft`, abaixo de AA. A versão `#D6156A` sobrevive como `area-magenta-bright`.
 
 ### Cores por área do conhecimento
 
-Cada `KnowledgeArea` escolhe uma cor entre estas oito, mais vivas que em um jornal tradicional. Usadas em etiquetas (texto escuro sobre fundo claro), filete superior dos cards, título da faixa da área na home e cabeçalho da página de área (fundo claro da cor, texto escuro).
+Cada `KnowledgeArea` escolhe uma cor entre estas oito. Três intensidades por cor:
 
-| Nome | Escuro (texto) | Claro (fundo) | Sugestão de área |
-|---|---|---|---|
-| coral | `#B23A1F` | `#FDE6DF` | Linguagens e suas Tecnologias |
-| verde | `#2F7A3E` | `#E2F3E4` | Ciências da Natureza |
-| azul | `#1D5FB8` | `#E1EBFA` | Matemática e suas Tecnologias |
-| âmbar | `#8F5A00` | `#FBEFD3` | Ciências Humanas e Sociais Aplicadas |
-| violeta | `#6A3FB5` | `#ECE4FA` | Formação e Projetos |
-| petróleo | `#1C6F6B` | `#DDF2F0` | Escola e Comunidade |
-| magenta | `#A8174F` | `#FBE4EC` | Reservada (mesma do acento; usar só se uma área precisar) |
-| grafite | `#4A4F5A` | `#E9EAEE` | Reservada / Geral |
+- **escura** (`area-x`): texto sobre fundos claros, pontos do menu, barras finas;
+- **clara** (`area-x-soft`): fundo de etiquetas, faixas da home, cabeçalho da página de área;
+- **viva** (`area-x-bright`): blocos, formas decorativas, marcadores, gradientes com a versão clara. O texto sobre a viva é `ink` ou branco, o que passar 4,5:1 (`on_bright` em `taxonomy.AREA_COLOR_CLASSES`).
+
+| Nome | Escura (texto) | Clara (fundo) | Viva (blocos) | Texto sobre a viva | Sugestão de área |
+|---|---|---|---|---|---|
+| coral | `#B23A1F` | `#FDE6DF` | `#E4552F` | ink (4,9:1) | Linguagens e suas Tecnologias |
+| verde | `#2F7A3E` | `#E2F3E4` | `#2FA65A` | ink (5,8:1) | Ciências da Natureza |
+| azul | `#1D5FB8` | `#E1EBFA` | `#2563EB` | branco (5,2:1) | Matemática e suas Tecnologias |
+| âmbar | `#8F5A00` | `#FBEFD3` | `#F5A524` | ink (8,8:1) | Ciências Humanas e Sociais Aplicadas |
+| violeta | `#6A3FB5` | `#ECE4FA` | `#A78BFA` | ink (6,1:1) | Formação e Projetos |
+| petróleo | `#1C6F6B` | `#DDF2F0` | `#14B8A6` | ink (7,3:1) | Escola e Comunidade |
+| magenta | `#C41260` | `#FFE1EE` | `#D6156A` | branco (5,0:1) | Reservada (mesma do acento) |
+| grafite | `#4A4F5A` | `#E9EAEE` | `#64748B` | branco (4,8:1) | Reservada / Geral |
+
+A escura sobre a clara da mesma cor passa 4,5:1 em todas (mínimo: magenta 4,8:1, verde 4,6:1).
 
 ### Tipografia
 
 | Papel | Fonte | Fallback | Onde |
 |---|---|---|---|
-| Display e títulos | **Newsreader** (variável, eixo óptico) | Georgia, serif | Títulos de página, de publicação, de card |
-| Corpo de leitura | **Newsreader** 400, tamanho 18 a 19px, entrelinha 1.6 | Georgia, serif | Corpo da publicação |
-| Interface | **Inter** (variável) | system-ui, sans-serif | Navegação, botões, formulários, metadados, painel |
+| Display, títulos e interface | **Bricolage Grotesque** (variável, eixos opsz/wdth/wght) | "Bricolage Fallback" (Arial com métricas ajustadas), system-ui | Títulos de página, de publicação, de card; navegação, botões, formulários, metadados, painel |
+| Corpo de leitura | **Newsreader** 400, 18px, entrelinha 1.6 | "Newsreader Fallback" (Georgia com métricas ajustadas) | Corpo da publicação, linha fina, citações |
 
-Fontes auto-hospedadas (licença OFL), com `font-display: swap`, vindas dos pacotes `@fontsource-variable/newsreader` (eixo óptico, com itálico) e `@fontsource-variable/inter` e servidas pelo próprio site a partir do build do Vite. Sem Google Fonts em produção: evita requisição externa e rastreamento.
+Classes: `font-display` (títulos: `font-variation-settings: "opsz" 96`, tracking -0.02em, `text-wrap: balance`), `font-sans` (interface, a mesma fonte) e `font-serif` (leitura). Inter saiu na R1: uma grotesca só para display e interface deixa o site mais coeso e carrega menos.
 
-Escala (desktop; mobile reduz um passo nos maiores):
+Fontes auto-hospedadas (licença OFL), `font-display: swap`, dos pacotes `@fontsource-variable/bricolage-grotesque` e `@fontsource-variable/newsreader`, servidas pelo próprio site a partir do build do Vite. Sem Google Fonts.
 
-| Token | Tamanho | Uso |
-|---|---|---|
-| `text-display` | 44/48px | Título da publicação em destaque na home |
-| `text-h1` | 36px | Título da publicação, título de página |
-| `text-h2` | 28px | Seções da home, subtítulos internos |
-| `text-h3` | 22px | Título de card |
-| `text-lead` | 21px | Linha fina |
-| `text-body` | 18px | Corpo de leitura |
-| `text-ui` | 15px | Interface |
-| `text-meta` | 13px | Metadados, etiquetas |
+Escala (desktop; o celular reduz os maiores em `app.css`, `@media (width < 40rem)`):
+
+| Token | Desktop | Celular | Uso |
+|---|---|---|---|
+| `text-display` | 52px (3.25rem) | 36px | Título da publicação em destaque na home |
+| `text-h1` | 36px | 30px | Título da publicação, título de página |
+| `text-h2` | 32px | 26px | Seções da home, subtítulos internos |
+| `text-h3` | 22px | 22px | Título de card |
+| `text-lead` | 21px | | Linha fina |
+| `text-body` | 18px | | Corpo de leitura |
+| `text-ui` | 15px | | Interface |
+| `text-meta` | 13px | | Metadados, etiquetas |
+
+### Carregamento sem salto
+
+O dono reclamou de ver "um emoji e uma página toda quebrada" até a página se montar. Causa: o CSS era importado pelo JavaScript, então o HTML aparecia sem estilo até o script rodar (no modo dev do Vite isso é bem visível). Regras desde a R1:
+
+- `src/css/app.css` é uma **entrada própria do Vite** e `base.html` a carrega com `<link rel="stylesheet" href="{% vite_asset_url 'src/css/app.css' %}">` **antes** do JavaScript. Em dev o link aponta para o servidor do Vite (que responde CSS para o navegador); em produção, para o arquivo do build.
+- `{% font_preloads %}` (`apps/core/templatetags/assets.py`) pré-carrega as duas fontes da primeira tela (Bricolage e Newsreader, alfabeto latino, eixo óptico) a partir dos nomes com hash do build. Em dev não faz nada.
+- Fallbacks com métricas (`size-adjust`, `ascent-override`, `descent-override`) para Arial e Georgia, para o texto ocupar quase o mesmo espaço enquanto a fonte de verdade chega.
+- `[x-cloak] { display: none }` está no CSS carregado por `<link>`, então componentes do Alpine não piscam abertos.
 
 ### Espaçamento e grade
 
 - Escala de 4px: 4, 8, 12, 16, 24, 32, 48, 64, 96.
 - Largura máxima do site: 1200px. Coluna de leitura: 68 caracteres (cerca de 700px).
 - Grade de 12 colunas no desktop, 6 no tablet, 4 no celular. Gutter 24px (16px no celular).
-- Margens laterais mínimas: 16px no celular, 32px no tablet, 48px no desktop.
+- Margens laterais mínimas: 16px no celular, 32px no tablet, 48px no desktop (`.site-container`).
 
 ### Raios, bordas, sombras
 
-- Raio: 4px em campos e botões; 8px em imagens e cards; sem raio em separadores.
-- Bordas: 1px `line`. Cards não têm borda em todos os lados; usam filete superior de 3px na cor da área e separadores horizontais.
-- Sombra: apenas em menus suspensos e diálogos (`0 8px 24px rgba(23,25,30,.12)`).
+- Raios: `radius-field` 12px em campos, botões e chips (pílulas usam `radius-pill` 999px); `radius-card` 16px em imagens e cards; `radius-hero` 24px no destaque da home e nos cabeçalhos coloridos; sem raio em separadores.
+- Bordas: 1px `line`. O "filete superior de 3px na cor da área" dos cards sai na R3; a área passa a aparecer como etiqueta pílula ou barra lateral arredondada.
+- Sombras: `shadow-popover` (`0 12px 32px rgb(23 21 31 / .14)`) em menus e diálogos; `shadow-card-hover` (`0 12px 32px rgb(196 18 96 / .18)`, o acento a 18%) em cards no hover.
 
 ### Movimento
 
-- Transições de 150ms em hover e foco. Nada de animação de entrada em conteúdo. Respeitar `prefers-reduced-motion`.
+Regras gerais (implementação na R5, exceto o que R2 a R4 já usarem):
+
+- Curva padrão `--ease-snappy` (`cubic-bezier(.2,.8,.2,1)`), 200ms em transformações e 150ms em cor. Foco e hover sempre com transição.
+- **Cards:** `translateY(-4px)` + `shadow-card-hover` + imagem `scale(1.04)` no hover. **Links de texto:** sublinhado que desliza (`background-size`). **Botões:** levantam 1px no hover e encolhem para `scale(.97)` ao pressionar.
+- **Entrada:** seções da home e cards aparecem com fade + `translateY(12px)`, escalonados por `nth-child` (até 6), quando entram na tela (`IntersectionObserver` em `app.js` adiciona `is-visible`). Sem JavaScript nada fica escondido.
+- **Masthead:** `position: sticky`, fundo `paper` a 85% com `backdrop-filter: blur(12px)`; encolhe depois de rolar (`is-scrolled` via JS).
+- **Reações:** `scale(1.15)` com bounce curto ao pressionar. **Toasts:** deslizam de baixo. **Filtros no celular:** a folha inferior desliza.
+- **Entre páginas:** `@view-transition { navigation: auto }` e `htmx.config.globalViewTransitions = true` (fade curto onde o navegador suporta).
+- **`prefers-reduced-motion: reduce` desliga tudo isso** (transições e animações a 0.01ms; conteúdo já visível).
 
 ## Navegação
 
 ### Cabeçalho público (masthead)
 
-Duas linhas no desktop, uma no celular.
+Duas linhas no desktop, uma no celular. Visual novo na R2.
 
-- **Linha 1**: glifo + wordmark "Jornal Escolar" (Newsreader, 28px) à esquerda; à direita: busca (ícone que expande campo), "Entrar" ou avatar do usuário.
-- **Linha 2**: áreas do conhecimento como links de texto, na ordem configurada, cada uma com um ponto na cor da área antes do nome; "Agenda"; "Quem escreve"; "Sobre". Área ativa sublinhada na cor da área.
-- No celular: glifo + wordmark + ícone de busca + menu.
-- Data por extenso pequena abaixo do nome, opcional via configuração.
+- **Linha 1**: glifo (avião, `accent`) + wordmark à esquerda; à direita: data por extenso (opcional via configuração), busca (ícone que abre um campo em popover), "Entrar" (pílula) ou, com sessão, "Escrever", sino, Painel, nome e Sair.
+- **Linha 2**: barra de chips: cada área do conhecimento é um chip com um ponto na cor da área, na ordem configurada; "Agenda"; "Quem escreve"; "Sobre". Chip ativo: fundo `area-x-soft` e texto `area-x` (ou `accent-soft`/`accent` para os fixos).
+- No celular: glifo + wordmark + busca + "Entrar"; a linha 2 rola na horizontal com "fade" nas bordas. Com sessão aberta, "Escrever" e "Admin" ficam só no painel para a linha 1 caber em 390px.
+- Sticky com fundo translúcido; encolhe ao rolar (R5).
 
 ### Rodapé
 
-Três linhas, todas em `text-meta`:
+Fundo `ink`, texto `paper`, links em `accent-soft` (R2). Conteúdo:
 
-1. Links: Sobre · Privacidade · Como participar · RSS.
-2. Crédito (configurável em `site.footer_credit`): "Desenvolvido por Professor Marcos Felipe A. D. da Silva · marcossilva06@professor.educacao.sp.gov.br". O e-mail é um link `mailto:` e é o contato para pedidos de privacidade.
-3. À direita, a versão do sistema (`v1.2.3`, `ink-3`).
+1. Glifo grande em `accent` + wordmark + tagline.
+2. Links: Sobre · Privacidade · Como participar · RSS (a partir da E43).
+3. Crédito (configurável em `site.footer_credit`): "Desenvolvido por Professor Marcos Felipe A. D. da Silva · marcossilva06@professor.educacao.sp.gov.br". O e-mail é um link `mailto:` e é o contato para pedidos de privacidade.
+4. À direita, a versão do sistema (`v1.2.3`, discreta).
 
 Sem nome, endereço ou logotipo da escola.
 
 ### Painel
 
-Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celular): Início, Minhas publicações, Nova publicação, Revisões, Comentários, Sugestões (Fase 4), Pautas (Fase 4), Perfil, Conta. Editor+ vê "Editorial". Admin vê `/admin/`. Sino de notificações no cabeçalho. Versão no rodapé do menu.
+Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celular): Início, Minhas publicações, Nova publicação, Revisões, Comentários, Sugestões (Fase 4), Pautas (Fase 4), Perfil, Conta. Editor+ vê "Editorial". Admin vê `/admin/`. Sino de notificações no cabeçalho. Versão no rodapé do menu. Herda fontes e tokens; itens do menu viram pílulas (R5).
 
 ## Componentes
 
 | Componente | Descrição | Variantes |
 |---|---|---|
-| `card` | Publicação: filete de área, etiqueta de tipo, título, linha fina, byline, metadados (data, tempo de leitura), imagem opcional | `hero` (imagem grande, título display), `standard` (imagem 3:2 acima), `compact` (sem imagem, lista), `mini` (título + data, para sidebar) |
+| `card` | Publicação: etiqueta de área (pílula), etiqueta de tipo, título, linha fina, byline, metadados (data, tempo de leitura), imagem opcional com cantos `radius-card`; levanta no hover | `hero` (imagem grande, título display), `standard` (imagem 3:2 acima), `compact` (sem imagem, lista), `mini` (título + data, para sidebar) |
 | `byline` | Avatares empilhados (até 3) + nomes com papel: "Por Carla Souza e Rafael S." | com/sem avatar |
-| `tag` | Etiqueta de área (colorida), disciplina (contorno), tipo (preenchida neutra), tópico (texto com `#` discreto) | tamanho `sm`/`md` |
+| `tag` | Etiqueta de área (pílula `soft` + texto `area-x`), disciplina (contorno), tipo (pílula `paper-2`), tópico (texto com `#` discreto) | tamanho `sm`/`md` |
 | `status-badge` | Estado editorial: rascunho (cinza), em revisão (ocre), alterações (terracota), aprovado (azul), publicado (verde), arquivado (grafite) | |
 | `filter-bar` | Chips de filtro ativos + botão "Filtrar" que abre painel; no celular é uma folha inferior | |
-| `pagination` | "Carregar mais" via HTMX no público; numeração no painel | |
-| `empty-state` | Ilustração em linha (traço simples), título curto, uma frase, uma ação | |
+| `pagination` | "Carregar mais" (pílula) via HTMX no público; numeração no painel | |
+| `empty-state` | "Adesivo" (círculo `sun-soft` com o glifo), título curto em Bricolage, uma frase, uma ação | |
 | `toast` | Feedback de ação no canto inferior; some em 4s; acessível via `aria-live` | sucesso, erro, info |
 | `dialog` | Confirmações (arquivar, publicar); `<dialog>` nativo | |
-| `form-field` | Rótulo acima, ajuda abaixo, erro em `danger`, contador de caracteres quando há limite | |
-| `button` | `primary` (acento), `secondary` (contorno), `ghost` (texto), `danger` | tamanhos `sm`/`md` |
-| `reaction-bar` | Quatro botões com emoji e contagem; estado ativo com fundo `paper-2` | |
+| `form-field` | Rótulo acima, ajuda abaixo, erro em `danger`, contador de caracteres quando há limite; campo com `radius-field` | |
+| `button` | Pílulas: `primary` (accent, texto branco), `secondary` (contorno), `ghost` (texto), `danger` | tamanhos `sm`/`md` |
+| `reaction-bar` | Quatro pílulas com emoji e contagem; ativa com fundo `accent-soft`; bounce ao pressionar | |
 | `editor-toolbar` | Botões do TipTap: parágrafo/títulos, negrito, itálico, link, lista, citação, imagem, separador, desfazer | |
 | `comment-thread` | Comentário editorial com trecho citado, respostas, botão resolver | |
-| `public-comment` | Comentário de leitor: nome, data, texto, resposta da equipe destacada com filete no acento | público, moderação (com botões) |
+| `public-comment` | Comentário de leitor: nome, data, texto, resposta da equipe destacada com barra no acento | público, moderação (com botões) |
 | `comment-form` | Nome + texto + honeypot + aviso de moderação | |
-| `weather` | Ícone em linha, temperatura, condição, mín/máx | |
+| `weather` | Cartãozinho com fundo `area-azul-soft`, ícone em `accent`, temperatura, condição, mín/máx e chance de chuva; uma linha no celular | `aside`, `line` |
 | `notification-bell` | Ícone com contador; lista suspensa | |
 | `timeline` | Eventos editoriais em lista vertical com data | |
-| `stat` | Número grande + rótulo, para painel | |
+| `stat` | Número grande em Bricolage + rótulo, para painel | |
+| `glyph` | Avião de papel da marca | parâmetro `class` |
 
 ## Estados vazios (textos de referência)
 
@@ -174,7 +211,7 @@ Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celula
 
 | Breakpoint | Largura | Comportamento |
 |---|---|---|
-| celular | < 640px | Uma coluna; cards `compact`; menu; filtros em folha inferior; editor com toolbar fixa no rodapé |
+| celular | < 640px | Uma coluna; cards `compact`; menu; filtros em folha inferior; editor com toolbar fixa no rodapé; títulos um passo menores |
 | tablet | 640 a 1023px | Duas colunas na home; painel com sidebar em ícones |
 | desktop | ≥ 1024px | Grade completa; painel com sidebar aberta |
 
@@ -182,7 +219,7 @@ Imagens sempre com `srcset` das variantes (480, 960, 1600) e `loading="lazy"` fo
 
 ## Acessibilidade
 
-- Contraste mínimo AA em todo texto; AAA no corpo de leitura.
+- Contraste mínimo AA em todo texto; AAA no corpo de leitura. Cores vivas (`bright`, `sun`) só com o texto medido acima ou como decoração.
 - Navegação por teclado completa; foco visível (anel de 2px na cor de acento).
 - Um `h1` por página; ordem lógica de títulos.
 - Texto alternativo obrigatório nas imagens (o editor exige ou marca como decorativa).
@@ -190,6 +227,7 @@ Imagens sempre com `srcset` das variantes (480, 960, 1600) e `loading="lazy"` fo
 - Tamanho de fonte respeita zoom do navegador (unidades `rem`).
 - Skip link para o conteúdo.
 - Formulários com rótulos reais, não placeholders.
+- Todo movimento respeita `prefers-reduced-motion`; nada pisca, nada rola sozinho.
 
 ## Modo escuro
 
@@ -201,7 +239,8 @@ Fora do escopo por decisão do dono do projeto. Preparação sem custo: todas as
 - 2026-09-12: nome e marca "Jornal da Rosa"; acento rosa; áreas mais vivas com nomes da escola; componentes de comentário, clima e notificação; versão no rodapé; modo escuro fora do escopo.
 - 2026-09-12: nome genérico "Jornal Escolar" a pedido do dono do projeto; glifo trocado de rosa para folha de jornal; a cor de acento rosa se mantém.
 - 2026-09-12: E18: Lighthouse mostrou que `ink-3 #7B7885` tinha contraste 4,1:1 (não 4,6:1) em texto de 13px; token escurecido para `#6B6875`.
-- 2026-09-12: E19: componentes em `templates/components/` (`card`, `byline`, `tag`, `status_badge`, `empty_state`, `pagination`, `toast`) e vitrine em `/dev/components/` (aberta com `DEBUG` ou para o papel admin). O card recebe um `ArticleCard` (`publications/presentation.py`), não o modelo. Toast: sucesso e informação somem em 4s; **erro e aviso ficam até fechar** (sumir sozinho faria quem lê devagar perder a mensagem); mensagens do Django em respostas HTMX viram toast pelo `HtmxMessagesMiddleware`. Âmbar de área escurecido de `#9A6200` para `#8F5A00` (4,46:1 → 5,07:1 sobre `ambar-soft`). Status "publicado" usa o verde de área em vez de `ok` sobre fundo claro.
-- 2026-09-12: E20: card `hero` com imagem 16:9 em cima e texto embaixo (cabe na coluna de 2/3 da home); sem capa, vira bloco tipográfico em `paper-2` com filete da área. Paginação usa `?pagina=N` (tag `page_url`).
-- 2026-09-12: E04 implementada. Tokens em `frontend/src/css/app.css` (cores de área como `area-coral`, `area-coral-soft` etc.); glifo em `templates/components/glyph.html` e `static/img/favicon.svg`. Masthead provisório sem busca, "Entrar" e linha de áreas (chegam em E36, E09 e E21); rodapé sem a linha de links até as páginas existirem. Data do masthead em minúsculas ("sábado, 12 de setembro de 2026").
-- 2026-09-14: E36: busca no masthead é um ícone que abre um campo em popover abaixo da linha da marca, em qualquer largura (sem JavaScript, o ícone leva a `/busca/`). No celular, com sessão aberta, "Escrever" e "Admin" saem da linha 1 (continuam no painel) para caber em 390px. Termo encontrado no trecho usa `<mark>` com `accent-soft` (classe `search-snippet`).
+- 2026-09-12: E19: componentes em `templates/components/` e vitrine em `/dev/components/`. Toast: sucesso e informação somem em 4s; erro e aviso ficam até fechar. Âmbar de área escurecido para `#8F5A00`. Status "publicado" usa o verde de área.
+- 2026-09-12: E20: card `hero` com imagem 16:9 em cima e texto embaixo; sem capa, vira bloco tipográfico em `paper-2`. Paginação usa `?pagina=N`.
+- 2026-09-12: E04 implementada: tokens em `frontend/src/css/app.css`; glifo em `templates/components/glyph.html` e `static/img/favicon.svg`.
+- 2026-09-14: E36: busca no masthead é um ícone que abre um campo em popover. No celular, com sessão aberta, "Escrever" e "Admin" saem da linha 1. Termo encontrado no trecho usa `<mark>` com `accent-soft`.
+- 2026-09-15: **R1 (Fase 3b, redesign "Pátio")**, a pedido do dono ([27](27-decisoes-pendentes-e-perguntas.md), quarta rodada; plano em [26](26-plano-de-desenvolvimento.md)). Direção visual reescrita; revogadas as regras "nada de animação de entrada", "sem gradientes" e "sem sombras pesadas". Tipografia: Bricolage Grotesque para display e interface (Inter removida), Newsreader continua na leitura; classe `font-display` nos títulos; escala com display 52px e h2 32px. Tokens: `paper` mais claro, `paper-3` novo, acento framboesa `#C41260` (o `#D6156A` do briefing falhava AA sobre `paper-3` e `accent-soft`), `sun`/`sun-soft`, cores vivas `area-x-bright` com `on_bright` medido, raios 12/16/24 e pílula, `shadow-card-hover`, `--ease-snappy`. Marca nova: avião de papel de jornal (glifo, favicon SVG/ICO, ícones PNG, manifest, `og-default.png` e `logo.png` gerados por `scripts/brand.py`); wordmark com marca-texto. Carregamento sem salto: CSS como entrada própria do Vite carregada por `<link>` antes do JS, preload das fontes (`{% font_preloads %}`), fallbacks com métricas. `theme-color` passa a `#FFFDF7`.

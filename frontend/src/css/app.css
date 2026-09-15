@@ -1,60 +1,94 @@
-/* Design system do Jornal Escolar: tokens de docs/09. */
+/* Design system do Jornal Escolar: tokens de docs/09 (direção "Pátio", R1). */
 @import "tailwindcss";
 
-/* Fontes auto-hospedadas (OFL), empacotadas pelo Vite. Sem Google Fonts. */
+/* Fontes auto-hospedadas (OFL), empacotadas pelo Vite. Sem Google Fonts.
+   Bricolage Grotesque: títulos e interface. Newsreader: corpo de leitura e linha fina. */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
 @import "@fontsource-variable/newsreader/opsz.css";
 @import "@fontsource-variable/newsreader/opsz-italic.css";
-@import "@fontsource-variable/inter/wght.css";
+
+/* Fallbacks com métricas ajustadas (docs/09, "Carregamento sem salto"): enquanto a fonte de
+   verdade não chega, Arial e Georgia ocupam quase o mesmo espaço e o texto não pula na troca.
+   Valores aproximados a olho; ajustar se alguma tela "pular" ao carregar. */
+@font-face {
+  font-family: "Bricolage Fallback";
+  src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  size-adjust: 98%;
+  ascent-override: 93%;
+  descent-override: 23%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Newsreader Fallback";
+  src: local("Georgia"), local("Times New Roman");
+  size-adjust: 90%;
+  ascent-override: 100%;
+  descent-override: 27%;
+  line-gap-override: 0%;
+}
 
 /* Onde o Tailwind procura classes usadas. */
 @source "../../../backend/templates";
 @source "../../../backend/apps";
 
 @theme {
-  /* Cores base */
-  --color-paper: #fbf9f5;
-  --color-paper-2: #f1ede6;
-  --color-ink: #1b1a21;
-  --color-ink-2: #4b4955;
-  --color-ink-3: #6b6875; /* era #7b7885 (4,1:1); ajustado para passar AA em paper e paper-2 */
-  --color-line: #e0dbd2;
-  --color-accent: #a8174f;
-  --color-accent-2: #8a1140;
-  --color-accent-soft: #fbe4ec;
+  /* Cores base (contrastes medidos em docs/09) */
+  --color-paper: #fffdf7;
+  --color-paper-2: #f6f1e4;
+  --color-paper-3: #ede6d3;
+  --color-ink: #17151f;
+  --color-ink-2: #47454f;
+  --color-ink-3: #67646f;
+  --color-line: #e6e0d2;
+  --color-accent: #c41260; /* framboesa: 5,7:1 sobre paper, 4,7:1 sobre paper-3, branco 5,8:1 */
+  --color-accent-2: #9c0d4d;
+  --color-accent-soft: #ffe1ee;
+  --color-sun: #ffd23f; /* marca-texto: só fundo e decoração, nunca texto */
+  --color-sun-soft: #fff3c4;
   --color-warn: #b45309;
   --color-danger: #b42318;
   --color-ok: #1f7a4d;
 
-  /* Cores por área do conhecimento: escuro (texto) e claro (fundo) */
+  /* Cores por área do conhecimento: escuro (texto), claro (fundo) e vivo (blocos e formas).
+     Sobre o "bright" o texto é ink ou branco, o que passar 4,5:1 (taxonomy.AREA_COLOR_CLASSES). */
   --color-area-coral: #b23a1f;
   --color-area-coral-soft: #fde6df;
+  --color-area-coral-bright: #e4552f;
   --color-area-verde: #2f7a3e;
   --color-area-verde-soft: #e2f3e4;
+  --color-area-verde-bright: #2fa65a;
   --color-area-azul: #1d5fb8;
   --color-area-azul-soft: #e1ebfa;
-  --color-area-ambar: #8f5a00; /* era #9a6200 (4,46:1 sobre ambar-soft) */
+  --color-area-azul-bright: #2563eb;
+  --color-area-ambar: #8f5a00;
   --color-area-ambar-soft: #fbefd3;
+  --color-area-ambar-bright: #f5a524;
   --color-area-violeta: #6a3fb5;
   --color-area-violeta-soft: #ece4fa;
+  --color-area-violeta-bright: #a78bfa;
   --color-area-petroleo: #1c6f6b;
   --color-area-petroleo-soft: #ddf2f0;
-  --color-area-magenta: #a8174f;
-  --color-area-magenta-soft: #fbe4ec;
+  --color-area-petroleo-bright: #14b8a6;
+  --color-area-magenta: #c41260;
+  --color-area-magenta-soft: #ffe1ee;
+  --color-area-magenta-bright: #d6156a;
   --color-area-grafite: #4a4f5a;
   --color-area-grafite-soft: #e9eaee;
+  --color-area-grafite-bright: #64748b;
 
-  /* Tipografia */
-  --font-serif: "Newsreader Variable", Georgia, serif;
-  --font-sans: "Inter Variable", system-ui, sans-serif;
+  /* Tipografia: display e interface na mesma fonte; leitura em serifa */
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Fallback", system-ui, sans-serif;
+  --font-sans: "Bricolage Grotesque Variable", "Bricolage Fallback", system-ui, sans-serif;
+  --font-serif: "Newsreader Variable", "Newsreader Fallback", Georgia, serif;
 
-  --text-display: 2.75rem;
-  --text-display--line-height: 1.09;
+  --text-display: 3.25rem;
+  --text-display--line-height: 1.02;
   --text-h1: 2.25rem;
-  --text-h1--line-height: 1.15;
-  --text-h2: 1.75rem;
-  --text-h2--line-height: 1.2;
+  --text-h1--line-height: 1.1;
+  --text-h2: 2rem;
+  --text-h2--line-height: 1.12;
   --text-h3: 1.375rem;
-  --text-h3--line-height: 1.25;
+  --text-h3--line-height: 1.2;
   --text-lead: 1.3125rem;
   --text-lead--line-height: 1.45;
   --text-body: 1.125rem;
@@ -68,10 +102,14 @@
   --container-site: 75rem; /* 1200px */
   --container-reading: 43.75rem; /* ~68 caracteres */
 
-  /* Raios e sombra */
-  --radius-field: 4px;
-  --radius-card: 8px;
-  --shadow-popover: 0 8px 24px rgb(23 25 30 / 0.12);
+  /* Raios, sombras e movimento */
+  --radius-field: 12px;
+  --radius-card: 16px;
+  --radius-hero: 24px;
+  --radius-pill: 999px;
+  --shadow-popover: 0 12px 32px rgb(23 21 31 / 0.14);
+  --shadow-card-hover: 0 12px 32px rgb(196 18 96 / 0.18);
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @layer base {
@@ -83,12 +121,29 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Celular reduz um passo os maiores títulos (docs/09, "Escala"). */
+  @media (width < 40rem) {
+    :root {
+      --text-display: 2.25rem;
+      --text-display--line-height: 1.06;
+      --text-h1: 1.875rem;
+      --text-h2: 1.625rem;
+    }
+  }
+
+  /* Títulos em Bricolage: pesados, apertados e equilibrados nas quebras. */
+  .font-display {
+    font-variation-settings: "opsz" 96;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
   [x-cloak] {
     display: none !important;
   }
 
   ::selection {
-    background-color: var(--color-accent-soft);
+    background-color: var(--color-sun-soft);
   }
 
   :focus-visible {
@@ -111,6 +166,24 @@
 }
 
 @layer components {
+  /* Wordmark (docs/09, "Marca"): a última palavra em accent com um traço de marca-texto atrás. */
+  .wordmark-accent {
+    position: relative;
+    isolation: isolate;
+    color: var(--color-accent);
+  }
+  .wordmark-accent::before {
+    content: "";
+    position: absolute;
+    inset-inline: -0.06em -0.1em;
+    bottom: 0.04em;
+    z-index: -1;
+    height: 0.4em;
+    border-radius: 2px;
+    background-color: var(--color-sun);
+    transform: skewX(-10deg) rotate(-1.5deg);
+  }
+
   /* Corpo das publicações: o mesmo no editor e na página pública (docs/09, docs/11). */
   .article-body {
     font-family: var(--font-serif);

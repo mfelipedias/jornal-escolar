@@ -12,9 +12,9 @@
            class="mb-10 flex items-center justify-center gap-2.5 text-ink"
            aria-label="{{ jornal.name }}, página inicial">
           {% include "components/glyph.html" with class="size-8 shrink-0 text-accent" %}
-          <span class="font-serif text-[1.75rem] leading-none font-semibold tracking-tight">
+          <span class="font-display text-[1.75rem] leading-none font-extrabold">
             {% if jornal.wordmark_head %}{{ jornal.wordmark_head }}{% endif %}
-            <span class="text-accent">{{ jornal.wordmark_accent }}</span>
+            <span class="wordmark-accent">{{ jornal.wordmark_accent }}</span>
           </span>
         </a>
         {% block auth_content %}

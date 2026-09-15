@@ -10,7 +10,7 @@
          role="alert">{{ error }}</p>
     {% endif %}
     <section aria-labelledby="featured-chosen-title">
-      <h2 id="featured-chosen-title" class="font-serif text-h3 font-semibold">
+      <h2 id="featured-chosen-title" class="font-display text-h3 font-semibold">
         Escolhidos <span class="text-ui font-normal text-ink-3">{{ chosen|length }} de {{ max_featured }}</span>
       </h2>
       {% if chosen %}
@@ -18,7 +18,7 @@
           {% for item in chosen %}
             <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
                 data-featured="{{ item.article.pk }}">
-              <span class="w-5 text-center font-serif text-h3 text-ink-3">{{ forloop.counter }}</span>
+              <span class="w-5 text-center font-display text-h3 text-ink-3">{{ forloop.counter }}</span>
               {% if item.card.image %}
                 <img src="{{ item.card.image.src }}"
                      alt=""
@@ -52,7 +52,7 @@
       {% endif %}
     </section>
     <section aria-labelledby="featured-add-title">
-      <h2 id="featured-add-title" class="font-serif text-h3 font-semibold">Adicionar</h2>
+      <h2 id="featured-add-title" class="font-display text-h3 font-semibold">Adicionar</h2>
       <p class="mt-1 text-meta text-ink-3">Só aparecem publicações no ar com imagem de capa.</p>
       <form method="get"
             action="{% url 'editorial:featured' %}"
@@ -76,7 +76,7 @@
     </section>
   </div>
   <aside aria-labelledby="featured-preview-title">
-    <h2 id="featured-preview-title" class="font-serif text-h3 font-semibold">Prévia na home</h2>
+    <h2 id="featured-preview-title" class="font-display text-h3 font-semibold">Prévia na home</h2>
     {% if preview %}
       <div class="mt-4 space-y-3 rounded-card border border-line bg-paper p-3"
            data-featured-preview>
@@ -89,7 +89,7 @@
                        alt=""
                        class="mt-2 aspect-video w-full rounded-field bg-paper-2 object-cover">
                 {% endif %}
-                <p class="mt-2 font-serif text-h3 leading-snug font-semibold text-balance text-ink">{{ card.title }}</p>
+                <p class="mt-2 font-display text-h3 leading-snug font-semibold text-balance text-ink">{{ card.title }}</p>
               </div>
             {% else %}
               <div class="border-t border-line pt-2">

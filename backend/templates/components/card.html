@@ -19,7 +19,7 @@
       {% endif %}
       <div class="{% if card.image %}border-t-[3px] {{ border }} pt-4{% endif %}">
         {% include "components/card_tags.html" %}
-        <h2 class="mt-3 font-serif text-h1 font-semibold text-balance text-ink sm:text-display">
+        <h2 class="mt-3 font-display text-h1 font-semibold text-balance text-ink sm:text-display">
           <a href="{{ card.url }}"
              class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
         </h2>
@@ -33,7 +33,7 @@
   {% elif variant == "compact" %}
     <article class="group relative border-t-[3px] {{ border }} pt-3">
       {% include "components/card_tags.html" %}
-      <h3 class="mt-2 font-serif text-h3 font-semibold text-balance text-ink">
+      <h3 class="mt-2 font-display text-h3 font-semibold text-balance text-ink">
         <a href="{{ card.url }}"
            class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
       </h3>
@@ -50,7 +50,7 @@
       <span class="mt-2 size-2 shrink-0 rounded-full {{ card.area.color_classes.solid_bg|default:'bg-line' }}"
             aria-hidden="true"></span>
       <div>
-        <h3 class="font-serif text-[1.0625rem] leading-snug font-semibold text-ink">
+        <h3 class="font-display text-[1.0625rem] leading-snug font-semibold text-ink">
           <a href="{{ card.url }}"
              class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
         </h3>
@@ -73,7 +73,7 @@
       {% endif %}
       <div class="border-t-[3px] {{ border }} pt-3">
         {% include "components/card_tags.html" %}
-        <h3 class="mt-2 font-serif text-h3 font-semibold text-balance text-ink">
+        <h3 class="mt-2 font-display text-h3 font-semibold text-balance text-ink">
           <a href="{{ card.url }}"
              class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
         </h3>

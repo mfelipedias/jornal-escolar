@@ -5,7 +5,7 @@
     <header class="border-b-[3px] {{ classes.border }} {{ classes.soft_bg }}">
       <div class="site-container py-10 sm:py-14">
         <p class="text-meta font-semibold tracking-wide uppercase {{ classes.text }}">Área do conhecimento</p>
-        <h1 class="mt-2 font-serif text-h1 font-semibold text-balance text-ink sm:text-display">{{ area.name }}</h1>
+        <h1 class="mt-2 font-display text-h1 font-semibold text-balance text-ink sm:text-display">{{ area.name }}</h1>
         {% if area.description %}<p class="mt-3 max-w-reading font-serif text-lead text-ink-2">{{ area.description }}</p>{% endif %}
         {% if area.disciplines.all %}
           <ul class="mt-6 flex flex-wrap gap-2" aria-label="Disciplinas">

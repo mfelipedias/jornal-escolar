@@ -1,4 +1,4 @@
-{% load static django_vite %}
+{% load static django_vite assets %}
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
@@ -7,13 +7,19 @@
     <title>{% block title %}{{ jornal.name }}{% endblock title %}</title>
     <meta name="description"
           content="{% block description %}{% if seo %}{{ seo.description }}{% else %}{{ jornal.tagline }}{% endif %}{% endblock description %}">
-    <meta name="theme-color" content="#FBF9F5">
+    <meta name="theme-color" content="#FFFDF7">
     <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" sizes="32x32">
+    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'manifest.json' %}">
     {% block robots %}
     {% endblock robots %}
     {% if seo %}
       {% include "components/seo.html" %}
     {% endif %}
+    {# Estilos antes do JavaScript: o primeiro paint já sai estilizado (docs/09). #}
+    {% font_preloads %}
+    <link rel="stylesheet" href="{% vite_asset_url 'src/css/app.css' %}">
     {% vite_hmr_client %}
     {% vite_asset 'src/js/app.js' %}
     {% block head %}

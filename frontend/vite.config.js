@@ -21,6 +21,9 @@ export default defineConfig({
     manifest: "manifest.json",
     rollupOptions: {
       input: {
+        // O CSS é uma entrada própria: o Django o carrega com <link> antes do JavaScript,
+        // então a página já nasce estilizada (docs/09, "Carregamento sem salto").
+        styles: resolve(import.meta.dirname, "src/css/app.css"),
         app: resolve(import.meta.dirname, "src/js/app.js"),
         editor: resolve(import.meta.dirname, "src/js/editor.js"),
       },

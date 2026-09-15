@@ -7,7 +7,7 @@
   <div class="site-container pt-10 pb-20 sm:pt-14">
     <header class="max-w-reading">
       <p class="text-meta font-medium tracking-[0.08em] text-accent uppercase">Design system</p>
-      <h1 class="mt-3 font-serif text-h1 font-semibold">Componentes</h1>
+      <h1 class="mt-3 font-display text-h1 font-semibold">Componentes</h1>
       <p class="mt-4 text-ui text-ink-2">
         Vitrine das peças de <code>templates/components/</code> com dados de exemplo. Regras e variantes em <code>docs/09</code>.
       </p>
@@ -24,7 +24,7 @@
     </header>
     <section id="cards" class="mt-16" aria-labelledby="cards-title">
       <h2 id="cards-title"
-          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Cards</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-semibold">Cards</h2>
       <h3 class="mt-8 text-meta font-semibold tracking-wide text-ink-3 uppercase">hero</h3>
       <div class="mt-4">{% include "components/card.html" with card=hero variant="hero" %}</div>
       <h3 class="mt-14 text-meta font-semibold tracking-wide text-ink-3 uppercase">standard</h3>
@@ -54,7 +54,7 @@
     </section>
     <section id="byline" class="mt-16" aria-labelledby="byline-title">
       <h2 id="byline-title"
-          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Assinatura</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-semibold">Assinatura</h2>
       <div class="mt-6 space-y-4">
         {% with card=cards.1 %}
           {% include "components/byline.html" with people=card.people names=card.byline avatars=True size="md" %}
@@ -65,7 +65,7 @@
     </section>
     <section id="tags" class="mt-16" aria-labelledby="tags-title">
       <h2 id="tags-title"
-          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Etiquetas</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-semibold">Etiquetas</h2>
       <h3 class="mt-6 text-meta font-semibold tracking-wide text-ink-3 uppercase">área (8 cores)</h3>
       <div class="mt-3 flex flex-wrap gap-2">
         {% for area in areas %}
@@ -85,7 +85,7 @@
     </section>
     <section id="status" class="mt-16" aria-labelledby="status-title">
       <h2 id="status-title"
-          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Estados editoriais</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-semibold">Estados editoriais</h2>
       <div class="mt-6 flex flex-wrap gap-2">
         {% for status in statuses %}
           {% include "components/status_badge.html" with status=status label="" %}
@@ -94,7 +94,7 @@
     </section>
     <section id="vazio" class="mt-16" aria-labelledby="vazio-title">
       <h2 id="vazio-title"
-          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Estado vazio</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-semibold">Estado vazio</h2>
       <div class="mt-6 grid gap-6 md:grid-cols-2">
         <div class="rounded-card border border-line bg-white px-4">
           {% url 'core:components' as demo_url %}
@@ -107,7 +107,7 @@
     </section>
     <section id="paginacao" class="mt-16" aria-labelledby="paginacao-title">
       <h2 id="paginacao-title"
-          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Paginação</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-semibold">Paginação</h2>
       <div class="mt-6 grid gap-10 md:grid-cols-2">
         <div>
           <h3 class="text-meta font-semibold tracking-wide text-ink-3 uppercase">carregar mais (público)</h3>
@@ -124,7 +124,7 @@
     </section>
     <section id="toast" class="mt-16" aria-labelledby="toast-title">
       <h2 id="toast-title"
-          class="border-b border-line pb-2 font-serif text-h2 font-semibold">Toast</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-semibold">Toast</h2>
       <p class="mt-4 max-w-reading text-ui text-ink-2">
         Sucesso e informação somem em 4 segundos; erro e aviso ficam até fechar. Os botões pedem ao servidor uma mensagem do Django e ela chega como toast pela resposta HTMX.
       </p>

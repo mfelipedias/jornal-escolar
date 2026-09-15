@@ -21,54 +21,71 @@ class AreaColor(models.TextChoices):
 
 
 # Classes do Tailwind escritas por extenso: o Tailwind só gera classes que encontra no código.
+# on_bright: cor do texto sobre o fundo vivo (bright_bg), a que passa 4,5:1 (docs/09, R1).
 AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
     "coral": {
         "text": "text-area-coral",
         "soft_bg": "bg-area-coral-soft",
         "solid_bg": "bg-area-coral",
         "border": "border-area-coral",
+        "bright_bg": "bg-area-coral-bright",
+        "on_bright": "text-ink",
     },
     "verde": {
         "text": "text-area-verde",
         "soft_bg": "bg-area-verde-soft",
         "solid_bg": "bg-area-verde",
         "border": "border-area-verde",
+        "bright_bg": "bg-area-verde-bright",
+        "on_bright": "text-ink",
     },
     "azul": {
         "text": "text-area-azul",
         "soft_bg": "bg-area-azul-soft",
         "solid_bg": "bg-area-azul",
         "border": "border-area-azul",
+        "bright_bg": "bg-area-azul-bright",
+        "on_bright": "text-white",
     },
     "ambar": {
         "text": "text-area-ambar",
         "soft_bg": "bg-area-ambar-soft",
         "solid_bg": "bg-area-ambar",
         "border": "border-area-ambar",
+        "bright_bg": "bg-area-ambar-bright",
+        "on_bright": "text-ink",
     },
     "violeta": {
         "text": "text-area-violeta",
         "soft_bg": "bg-area-violeta-soft",
         "solid_bg": "bg-area-violeta",
         "border": "border-area-violeta",
+        "bright_bg": "bg-area-violeta-bright",
+        "on_bright": "text-ink",
     },
     "petroleo": {
         "text": "text-area-petroleo",
         "soft_bg": "bg-area-petroleo-soft",
         "solid_bg": "bg-area-petroleo",
         "border": "border-area-petroleo",
+        "bright_bg": "bg-area-petroleo-bright",
+        "on_bright": "text-ink",
     },
     "magenta": {
         "text": "text-area-magenta",
         "soft_bg": "bg-area-magenta-soft",
         "solid_bg": "bg-area-magenta",
         "border": "border-area-magenta",
+        "bright_bg": "bg-area-magenta-bright",
+        "on_bright": "text-white",
     },
     "grafite": {
         "text": "text-area-grafite",
         "soft_bg": "bg-area-grafite-soft",
         "solid_bg": "bg-area-grafite",
         "border": "border-area-grafite",
+        "bright_bg": "bg-area-grafite-bright",
+        "on_bright": "text-white",
     },
 }
 

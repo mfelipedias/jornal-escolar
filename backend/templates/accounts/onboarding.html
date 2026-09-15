@@ -15,7 +15,7 @@
            class="flex items-center gap-2 text-ink"
            aria-label="{{ jornal.name }}, página inicial">
           {% include "components/glyph.html" with class="size-6 shrink-0 text-accent" %}
-          <span class="font-serif text-xl leading-none font-semibold tracking-tight">
+          <span class="font-display text-xl leading-none font-semibold tracking-tight">
             {% if jornal.wordmark_head %}{{ jornal.wordmark_head }}{% endif %}
             <span class="text-accent">{{ jornal.wordmark_accent }}</span>
           </span>
@@ -42,7 +42,7 @@
         {% endfor %}
       </ol>
       <p class="mt-10 text-meta tracking-wide text-ink-3 uppercase">Passo {{ step }} de {{ steps|length }}</p>
-      <h1 class="mt-1 font-serif text-h1 font-semibold">{{ title }}</h1>
+      <h1 class="mt-1 font-display text-h1 font-semibold">{{ title }}</h1>
       {% if step == 1 %}
         <p class="mt-2 font-serif text-lead text-ink-2">
           Olá, {{ person.public_name }}! Em poucos minutos seu perfil fica pronto. Tudo pode ser mudado depois.

@@ -6,7 +6,7 @@
     <section class="site-container py-16 sm:py-24">
       <div class="max-w-reading">
         <p class="text-meta font-medium tracking-[0.08em] text-accent uppercase">{{ jornal.tagline }}</p>
-        <h1 class="mt-4 font-serif text-h1 font-semibold text-balance sm:text-display">O jornal está sendo preparado</h1>
+        <h1 class="mt-4 font-display text-h1 font-semibold text-balance sm:text-display">O jornal está sendo preparado</h1>
         <p class="mt-6 font-serif text-lead text-ink-2">As primeiras publicações aparecem aqui em breve.</p>
         <hr class="mt-12 w-16 border-t-[3px] border-accent">
       </div>
@@ -33,7 +33,7 @@
         {# Últimas publicações #}
         <section class="lg:col-span-2" aria-labelledby="latest-title">
           <div class="flex items-baseline justify-between gap-4">
-            <h2 id="latest-title" class="font-serif text-h2 font-semibold">Últimas publicações</h2>
+            <h2 id="latest-title" class="font-display text-h2 font-semibold">Últimas publicações</h2>
             <a href="{% url 'publications:list' %}"
                class="shrink-0 text-meta font-medium text-ink-2 hover:text-accent hover:underline">ver todas <span aria-hidden="true">→</span></a>
           </div>
@@ -80,7 +80,7 @@
           <section class="mt-16" aria-labelledby="area-{{ strip.area.slug }}">
             <div class="flex items-baseline justify-between gap-4 border-b-[3px] pb-2 {{ classes.border }}">
               <h2 id="area-{{ strip.area.slug }}"
-                  class="font-serif text-h2 font-semibold {{ classes.text }}">{{ strip.area.name }}</h2>
+                  class="font-display text-h2 font-semibold {{ classes.text }}">{{ strip.area.name }}</h2>
               <a href="{{ strip.area.get_absolute_url }}"
                  class="shrink-0 text-meta font-medium text-ink-2 hover:text-accent hover:underline">ver tudo<span class="sr-only"> em {{ strip.area.name }}</span> <span aria-hidden="true">→</span></a>
             </div>

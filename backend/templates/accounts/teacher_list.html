@@ -7,7 +7,7 @@
 {% block content %}
   <div class="site-container pt-10 pb-16 sm:pt-14">
     <header class="max-w-reading">
-      <h1 class="font-serif text-h1 font-semibold">Quem escreve</h1>
+      <h1 class="font-display text-h1 font-semibold">Quem escreve</h1>
       <p class="mt-2 font-serif text-lead text-ink-2">A equipe da escola que publica no jornal.</p>
     </header>
     <div class="mt-8 space-y-4">
@@ -62,11 +62,11 @@
                      loading="lazy"
                      class="size-16 shrink-0 rounded-full bg-paper-2 object-cover">
               {% else %}
-                <span class="flex size-16 shrink-0 items-center justify-center rounded-full bg-paper-2 font-serif text-h3 font-semibold text-ink-2"
+                <span class="flex size-16 shrink-0 items-center justify-center rounded-full bg-paper-2 font-display text-h3 font-semibold text-ink-2"
                       aria-hidden="true">{{ card.person.initials }}</span>
               {% endif %}
               <div class="min-w-0">
-                <h2 class="font-serif text-h3 font-semibold text-ink">
+                <h2 class="font-display text-h3 font-semibold text-ink">
                   <a href="{{ card.person.url }}"
                      class="after:absolute after:inset-0 group-hover:text-accent">{{ card.person.name }}</a>
                 </h2>

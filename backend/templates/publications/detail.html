@@ -26,7 +26,7 @@
         {% endif %}
       </div>
       <h1 id="article-title"
-          class="mt-4 font-serif text-h1 font-semibold text-balance sm:text-[2.5rem] sm:leading-[1.12]">
+          class="mt-4 font-display text-h1 font-semibold text-balance sm:text-[2.5rem] sm:leading-[1.12]">
         {{ article.title }}
       </h1>
       {% if article.subtitle %}<p class="mt-4 font-serif text-lead text-ink-2">{{ article.subtitle }}</p>{% endif %}
@@ -58,7 +58,7 @@
       {% if article.event_at %}
         <div class="mt-6 rounded-card border border-line bg-white p-4">
           <p class="text-meta font-semibold tracking-wide text-accent uppercase">Evento</p>
-          <p class="mt-1 font-serif text-h3 font-semibold">
+          <p class="mt-1 font-display text-h3 font-semibold">
             <time datetime="{{ article.event_at|date:'c' }}">{{ article.event_at|date:"l, j \d\e F \d\e Y, H\hi"|lower }}</time>
           </p>
           {% if article.event_location %}<p class="mt-0.5 text-ui text-ink-2">{{ article.event_location }}</p>{% endif %}
@@ -132,7 +132,7 @@
     {% if credit_groups %}
       <section class="mx-auto mt-12 max-w-reading rounded-card bg-paper-2 p-5 sm:p-6"
                aria-labelledby="credits-title">
-        <h2 id="credits-title" class="font-serif text-h3 font-semibold">Quem fez</h2>
+        <h2 id="credits-title" class="font-display text-h3 font-semibold">Quem fez</h2>
         <dl class="mt-4 space-y-4">
           {% for heading, credits in credit_groups %}
             <div>
@@ -174,7 +174,7 @@
     <section class="border-t border-line bg-paper-2/50 py-12"
              aria-labelledby="related-title">
       <div class="site-container">
-        <h2 id="related-title" class="font-serif text-h2 font-semibold">Leia também</h2>
+        <h2 id="related-title" class="font-display text-h2 font-semibold">Leia também</h2>
         <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {% for item in related %}
             <li>{% include "components/card.html" with card=item variant="standard" %}</li>

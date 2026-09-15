@@ -36,7 +36,7 @@ def test_login_page_without_microsoft(client):
     html = client.get(LOGIN_URL).content.decode()
 
     # O allauth põe "site" no contexto; a identidade do jornal não pode ser sobrescrita.
-    assert '<span class="text-accent">Escolar</span>' in html
+    assert '<span class="wordmark-accent">Escolar</span>' in html
     assert "<title>Entrar · Jornal Escolar</title>" in html
     assert "Entrar com senha" in html
     assert "Entrar com a conta da escola" not in html

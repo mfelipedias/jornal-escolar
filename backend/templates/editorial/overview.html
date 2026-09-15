@@ -6,13 +6,13 @@
 {% endcomment %}
 {% block title %}Editorial · {{ jornal.name }}{% endblock title %}
 {% block content %}
-  <h1 class="font-serif text-h1 font-semibold">Editorial</h1>
+  <h1 class="font-display text-h1 font-semibold">Editorial</h1>
   <p class="mt-2 max-w-reading text-ui text-ink-2">
     O jornal inteiro em uma olhada: o que está parado, o que precisa de correção e em que pé estão os textos.
   </p>
   <div class="mt-6">{% include "editorial/partials/editorial_nav.html" %}</div>
   <section aria-labelledby="sec-alertas" class="mt-8" data-alerts>
-    <h2 id="sec-alertas" class="font-serif text-h3 font-semibold">
+    <h2 id="sec-alertas" class="font-display text-h3 font-semibold">
       Alertas
       {% if alert_total %}<span class="text-ink-3">({{ alert_total }})</span>{% endif %}
     </h2>
@@ -70,7 +70,7 @@
     {% endif %}
   </section>
   <section aria-labelledby="sec-estados" class="mt-10">
-    <h2 id="sec-estados" class="font-serif text-h3 font-semibold">Publicações</h2>
+    <h2 id="sec-estados" class="font-display text-h3 font-semibold">Publicações</h2>
     {% url 'editorial:articles' as list_url %}
     <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {% with drafts_url=list_url|add:"?estado=rascunhos" review_url=list_url|add:"?estado=em-revisao" changes_url=list_url|add:"?estado=alteracoes-sugeridas" published_url=list_url|add:"?estado=publicados" archived_url=list_url|add:"?estado=arquivados" %}
@@ -86,7 +86,7 @@
     </div>
   </section>
   <section aria-labelledby="sec-rascunhos" class="mt-10">
-    <h2 id="sec-rascunhos" class="font-serif text-h3 font-semibold">Rascunhos por autor</h2>
+    <h2 id="sec-rascunhos" class="font-display text-h3 font-semibold">Rascunhos por autor</h2>
     {% if draft_authors %}
       <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-white sm:max-w-md">
         {% for person in draft_authors %}

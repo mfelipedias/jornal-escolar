@@ -65,7 +65,7 @@ def test_masthead_uses_setting_from_database(client):
     html = client.get("/").content.decode()
 
     assert "Gazeta da" in html
-    assert '<span class="text-accent">Escola</span>' in html
+    assert '<span class="wordmark-accent">Escola</span>' in html
     assert "<title>Gazeta da Escola · " in html  # nome + tagline (docs/10)
 
 

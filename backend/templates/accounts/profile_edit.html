@@ -9,7 +9,7 @@
     <div class="mx-auto max-w-2xl">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 class="font-serif text-h1 font-semibold">Meu perfil</h1>
+          <h1 class="font-display text-h1 font-semibold">Meu perfil</h1>
           <p class="mt-1 text-ui text-ink-2">Como você aparece no jornal.</p>
         </div>
         <p class="flex gap-4 text-ui">
@@ -39,7 +39,7 @@
         {% csrf_token %}
         <section aria-labelledby="sec-apresentacao" class="space-y-6">
           <h2 id="sec-apresentacao"
-              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Apresentação</h2>
+              class="border-b border-line pb-2 font-display text-h3 font-semibold">Apresentação</h2>
           {% include "accounts/partials/photo_field.html" with field=form.photo remove_field=form.remove_photo %}
           <div x-data="{ original: '{{ person.public_name|escapejs }}', name: '{{ form.display_name.value|default:''|escapejs }}' }"
                @input="name = $event.target.value.trim()">
@@ -134,7 +134,7 @@
         </section>
         <section aria-labelledby="sec-atuacao" class="space-y-6">
           <h2 id="sec-atuacao"
-              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Atuação</h2>
+              class="border-b border-line pb-2 font-display text-h3 font-semibold">Atuação</h2>
           <fieldset>
             <legend class="text-ui font-medium text-ink">
               Disciplinas
@@ -160,7 +160,7 @@
         </section>
         <section aria-labelledby="sec-interesses" class="space-y-6">
           <h2 id="sec-interesses"
-              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Interesses</h2>
+              class="border-b border-line pb-2 font-display text-h3 font-semibold">Interesses</h2>
           <fieldset>
             <legend class="text-ui font-medium text-ink">Tópicos</legend>
             <p class="mt-1 text-meta text-ink-3">Usados para sugerir pautas para você.</p>
@@ -176,7 +176,7 @@
         </section>
         <section aria-labelledby="sec-formacao" class="space-y-6">
           <h2 id="sec-formacao"
-              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Formação e links</h2>
+              class="border-b border-line pb-2 font-display text-h3 font-semibold">Formação e links</h2>
           <fieldset>
             <legend class="text-ui font-medium text-ink">
               Formação <span class="font-normal text-ink-3">(opcional, até 6)</span>
@@ -241,7 +241,7 @@
         </section>
         <section aria-labelledby="sec-preferencias" class="space-y-4">
           <h2 id="sec-preferencias"
-              class="border-b border-line pb-2 font-serif text-h3 font-semibold">Preferências</h2>
+              class="border-b border-line pb-2 font-display text-h3 font-semibold">Preferências</h2>
           <label class="flex items-start gap-3">
             <input type="checkbox"
                    name="{{ form.show_reviewer_credit.html_name }}"

@@ -9,7 +9,7 @@
     <div class="mx-auto max-w-2xl space-y-12">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 class="font-serif text-h1 font-semibold">Conta</h1>
+          <h1 class="font-display text-h1 font-semibold">Conta</h1>
           <p class="mt-1 text-ui text-ink-2">{{ person.email }}</p>
         </div>
         <a href="{{ profile_edit_url }}"
@@ -17,7 +17,7 @@
       </div>
       <section aria-labelledby="sec-entrada" class="space-y-3">
         <h2 id="sec-entrada"
-            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Como você entra</h2>
+            class="border-b border-line pb-2 font-display text-h3 font-semibold">Como você entra</h2>
         <ul class="space-y-1 text-ui text-ink-2">
           {% if uses_microsoft %}<li>Conta da escola (Microsoft)</li>{% endif %}
           {% if has_password %}<li>E-mail e senha</li>{% endif %}
@@ -28,7 +28,7 @@
       </section>
       <section aria-labelledby="sec-senha" class="space-y-4">
         <h2 id="sec-senha"
-            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Senha</h2>
+            class="border-b border-line pb-2 font-display text-h3 font-semibold">Senha</h2>
         {% if has_password %}
           <form method="post" class="max-w-sm space-y-5" novalidate>
             {% csrf_token %}
@@ -53,7 +53,7 @@
       </section>
       <section aria-labelledby="sec-sessoes" class="space-y-4">
         <h2 id="sec-sessoes"
-            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Sessões abertas</h2>
+            class="border-b border-line pb-2 font-display text-h3 font-semibold">Sessões abertas</h2>
         <p class="text-ui text-ink-2">
           Cada navegador ou celular em que você entrou. A sessão acaba sozinha depois de 14 dias sem uso.
         </p>
@@ -83,7 +83,7 @@
       </section>
       <section aria-labelledby="sec-dados" class="space-y-4" data-export>
         <h2 id="sec-dados"
-            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Seus dados</h2>
+            class="border-b border-line pb-2 font-display text-h3 font-semibold">Seus dados</h2>
         <p class="text-ui text-ink-2">
           Baixe uma cópia de tudo o que o jornal guarda sobre você: conta, perfil, créditos, comentários
           da revisão, histórico editorial, avisos e registros de auditoria. O arquivo JSON abre em
@@ -98,7 +98,7 @@
       </section>
       <section aria-labelledby="sec-exclusao" class="space-y-4" data-deletion>
         <h2 id="sec-exclusao"
-            class="border-b border-line pb-2 font-serif text-h3 font-semibold">Excluir a conta</h2>
+            class="border-b border-line pb-2 font-display text-h3 font-semibold">Excluir a conta</h2>
         <p class="text-ui text-ink-2">
           O pedido vai para o administrador. Ele desativa a conta e apaga seus dados pessoais: nome, e-mail,
           foto e perfil. As publicações continuam no jornal, com o crédito “Ex-membro da equipe”.

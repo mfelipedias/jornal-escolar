@@ -45,7 +45,7 @@ def test_home_basics(home):
 
 def test_masthead_wordmark_and_glyph(home):
     assert "Jornal" in home
-    assert '<span class="text-accent">Escolar</span>' in home
+    assert '<span class="wordmark-accent">Escolar</span>' in home
     assert "<svg" in home
 
 

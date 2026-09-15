@@ -10,7 +10,7 @@
 {% block content %}
   <div class="site-container pt-10 pb-16 sm:pt-14">
     <header class="max-w-reading">
-      <h1 class="font-serif text-h1 font-semibold">Buscar</h1>
+      <h1 class="font-display text-h1 font-semibold">Buscar</h1>
       <div class="mt-5">{% include "components/search_form.html" with query=query autofocus=query|yesno:",True" %}</div>
     </header>
     {% if rate_limited %}
@@ -51,7 +51,7 @@
             <p class="mt-6 text-ui text-ink-2">Nenhuma publicação encontrada para “{{ query }}”.</p>
           {% else %}
             <div class="mx-auto max-w-md py-12 text-center">
-              <h3 class="font-serif text-h3 font-semibold text-balance text-ink">Nada encontrado para “{{ query }}”</h3>
+              <h3 class="font-display text-h3 font-semibold text-balance text-ink">Nada encontrado para “{{ query }}”</h3>
               <p class="mt-2 text-ui text-ink-2">Tente termos mais gerais ou navegue por área.</p>
             </div>
             {% include "search/partials/areas.html" with title="Áreas do conhecimento" %}

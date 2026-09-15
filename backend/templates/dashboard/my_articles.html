@@ -8,7 +8,7 @@
 {% block title %}Minhas publicações · {{ jornal.name }}{% endblock title %}
 {% block content %}
   <div class="flex flex-wrap items-end justify-between gap-3">
-    <h1 class="font-serif text-h1 font-semibold">Minhas publicações</h1>
+    <h1 class="font-display text-h1 font-semibold">Minhas publicações</h1>
     <a href="{% url 'publications:create' %}" class="btn-primary">Nova publicação</a>
   </div>
   {% if total %}
