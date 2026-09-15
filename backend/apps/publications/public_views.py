@@ -43,6 +43,9 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
         ),
         "reaction_bar": None if preview else _reaction_bar(request, article),
         "show_reads": not preview and engagement_presentation.show_reads(article),
+        "comments": (
+            None if preview else engagement_presentation.comments_section(article, request.user)
+        ),
         "reads_min_seconds": get_setting("reads.min_seconds"),
         "share_url": seo.absolute_url(article.get_absolute_url()),
         "seo": article_seo.page_meta(article, preview=preview),

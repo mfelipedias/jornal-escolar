@@ -67,9 +67,7 @@ MATRIZ = [
 
 FORA_DO_ESCOPO = {
     "Buscar e filtrar": "busca e filtros completos: E35 a E37",
-    "Comentar (vai para moderação)": "comentários públicos: E40",
     "Moderar comentários públicos": "moderação: E41",
-    "Responder comentários como autor": "resposta do autor: E40",
     "Ver sugestões de pauta (Fase 4)": "sugestões de pauta: Fase 4",
     "Criar pauta a partir de sugestão (Fase 4)": "pautas: Fase 4",
     "Gerenciar fontes de notícia (Fase 4)": "fontes de notícia: Fase 4",
@@ -91,6 +89,11 @@ REGRAS = {
     "Ler publicações publicadas": Regra("can_view", "article", S.PUBLISHED, S.PUBLISHED),
     # Visitante reage pelo cookie anônimo; a regra do cookie é testada em engagement/tests.
     "Reagir": Regra("can_react", "article", S.PUBLISHED, S.PUBLISHED),
+    # O formulário depende também de comments.enabled e de comments_enabled (engagement/tests).
+    "Comentar (vai para moderação)": Regra("can_comment", "article", S.PUBLISHED, S.PUBLISHED),
+    "Responder comentários como autor": Regra(
+        "can_reply_comment", "article", S.PUBLISHED, S.PUBLISHED
+    ),
     "Ver perfil público da equipe": Regra("can_view_profile", "profile"),
     "Entrar (Microsoft ou senha)": Regra("can_log_in"),
     "Editar o próprio perfil": Regra("can_edit_profile", "person"),

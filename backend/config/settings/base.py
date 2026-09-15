@@ -244,3 +244,9 @@ REACTIONS_PER_MINUTE_PER_KEY = 10
 # Leituras (docs/20, docs/23): beacons por IP por minuto; dias que os registros diários ficam.
 READS_PER_MINUTE_PER_IP = 60
 READS_RETENTION_DAYS = 90
+
+# Comentários públicos (docs/20, docs/23): envios por IP por hora; pendentes por pessoa (cookie)
+# por publicação; dias até apagar os rejeitados e os dados técnicos (ip_hash, código anônimo).
+COMMENTS_PER_HOUR_PER_IP = 10
+COMMENTS_PENDING_PER_KEY = 3
+COMMENTS_RETENTION_DAYS = 30

@@ -37,11 +37,14 @@ document.addEventListener("htmx:afterSettle", () => {
   keepFilterPanelOpen = false;
 });
 
-// Barra de reações (docs/20): limite atingido (429) ou reação inválida (400) também trocam a
-// barra, que traz o aviso. O HTMX, por padrão, não troca conteúdo em respostas de erro.
+// Barra de reações e comentários (docs/20): limite atingido (429) ou envio inválido (400)
+// também trocam o bloco, que traz o aviso ou o erro do campo. O HTMX, por padrão, não troca
+// conteúdo em respostas de erro.
+const SWAP_ON_ERROR = "[data-reaction-bar], [data-comment-form], [data-comment-item]";
+
 document.addEventListener("htmx:beforeSwap", (event) => {
   const { elt, xhr } = event.detail;
-  if ([400, 429].includes(xhr.status) && elt.closest?.("[data-reaction-bar]")) {
+  if ([400, 429].includes(xhr.status) && elt.closest?.(SWAP_ON_ERROR)) {
     event.detail.shouldSwap = true;
     event.detail.isError = false;
   }

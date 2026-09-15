@@ -101,3 +101,73 @@ class ArticleRead(models.Model):
 
     def __str__(self) -> str:
         return f"{self.article} · {self.day}"
+
+
+class Comment(models.Model):
+    """Comentário público de um leitor (docs/20, "Comentários públicos"; docs/06).
+
+    Nasce pendente e só aparece na página depois de aprovado (moderação na E41). Não há conta
+    nem e-mail: o leitor informa um nome. anon_key (cookie "jv") e ip_hash (SHA-256 com sal
+    mensal, apps.core.audit.hash_ip) servem só para os limites e para o moderador ver rajadas;
+    o comando cleanup os apaga depois de 30 dias, junto com os rejeitados. URLs são removidas
+    do corpo ao salvar, com a marca had_links. A equipe responde com reply_body (um nível só,
+    sem conversa entre leitores). Article.comments_count guarda só os aprovados.
+    """
+
+    NAME_MIN = 2
+    NAME_MAX = 60
+    BODY_MIN = 5
+    BODY_MAX = 1000
+    REPLY_MAX = 1000
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Aguardando aprovação"
+        APPROVED = "approved", "Aprovado"
+        REJECTED = "rejected", "Rejeitado"
+
+    article = models.ForeignKey(
+        "publications.Article",
+        verbose_name="publicação",
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+    author_name = models.CharField("nome", max_length=NAME_MAX)
+    body = models.TextField("comentário", max_length=BODY_MAX)
+    status = models.CharField(
+        "situação", max_length=10, choices=Status.choices, default=Status.PENDING
+    )
+    anon_key = models.UUIDField("código anônimo", null=True, blank=True)
+    ip_hash = models.CharField("IP (hash)", max_length=64, blank=True)
+    had_links = models.BooleanField("tinha links", default=False)
+    reply_body = models.TextField("resposta", max_length=REPLY_MAX, blank=True)
+    replied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="respondido por",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="comment_replies",
+    )
+    replied_at = models.DateTimeField("respondido em", null=True, blank=True)
+    moderated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="moderado por",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="moderated_comments",
+    )
+    moderated_at = models.DateTimeField("moderado em", null=True, blank=True)
+    created_at = models.DateTimeField("enviado em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "comentário público"
+        verbose_name_plural = "comentários públicos"
+        ordering = ["-created_at", "-pk"]
+        indexes = [
+            models.Index(fields=["article", "status", "created_at"], name="comment_article_status"),
+            models.Index(fields=["status", "created_at"], name="comment_status_created"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.author_name} · {self.article}"

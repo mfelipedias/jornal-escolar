@@ -59,12 +59,13 @@
   {% endif %}
   <section aria-labelledby="sec-numeros" class="mt-8">
     <h2 id="sec-numeros" class="sr-only">Números</h2>
-    <div class="grid grid-cols-2 gap-3 sm:max-w-2xl sm:grid-cols-3">
+    <div class="grid grid-cols-2 gap-3 sm:max-w-3xl sm:grid-cols-4">
       {% url 'dashboard:my_articles' as list_url %}
       {% with published_url=list_url|add:"?estado=publicados" drafts_url=list_url|add:"?estado=rascunhos" %}
         {% include "components/stat.html" with value=stats.published label="Publicadas" url=published_url %}
         {% include "components/stat.html" with value=stats.drafts label="Rascunhos" url=drafts_url %}
         {% include "components/stat.html" with value=stats.reads_30d label="Leituras em 30 dias" %}
+        {% include "components/stat.html" with value=stats.comments_approved label="Comentários aprovados" %}
       {% endwith %}
     </div>
   </section>

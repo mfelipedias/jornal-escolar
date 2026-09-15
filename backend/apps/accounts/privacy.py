@@ -4,7 +4,8 @@
   JSON. export_zip junta esse JSON e a foto de perfil em um arquivo .zip.
 - anonymize_user: apaga os dados pessoais e mantém a história do jornal. Os créditos viram
   "Ex-membro da equipe", o perfil some, o login é desativado, a foto é apagada; eventos,
-  comentários da revisão e auditoria continuam apontando para a conta, agora sem nome.
+  comentários da revisão, respostas a comentários públicos e auditoria continuam apontando para
+  a conta, agora sem nome.
 - request_deletion: a própria pessoa pede a exclusão; o administrador recebe um aviso no painel
   e decide (anonimizar é a forma de excluir sem quebrar as publicações).
 
@@ -56,7 +57,7 @@ def export_user_data(user: User) -> dict[str, Any]:
     códigos de links de acesso ou hashes de IP.
     """
     from apps.editorial.models import EditorialComment, EditorialEvent, Notification
-    from apps.engagement.models import Reaction
+    from apps.engagement.models import Comment, Reaction
     from apps.publications.models import Article, ArticleContributor, MediaAsset
 
     profile = TeacherProfile.objects.filter(user=user).first()
@@ -179,6 +180,19 @@ def export_user_data(user: User) -> dict[str, Any]:
         for reaction in Reaction.objects.filter(user=user)
         .select_related("article")
         .order_by("created_at")
+    ]
+    # Respostas da equipe a comentários públicos. O comentário do leitor não entra: é dado de
+    # outra pessoa (nome e texto de quem comentou).
+    data["respostas_a_comentarios"] = [
+        {
+            "publicacao": _article_ref(comment.article),
+            "resposta": comment.reply_body,
+            "situacao_do_comentario": comment.get_status_display(),
+            "respondida_em": _date(comment.replied_at),
+        }
+        for comment in Comment.objects.filter(replied_by=user)
+        .select_related("article")
+        .order_by("replied_at", "pk")
     ]
     data["links_de_acesso"] = [
         {
@@ -303,6 +317,7 @@ def anonymize_user(actor: User | None, person: User, *, request: HttpRequest | N
     """
     from apps.editorial import permissions
     from apps.editorial.models import EditorialEvent, Notification
+    from apps.engagement.models import Comment
     from apps.publications.models import ArticleContributor
     from apps.publications.search import update_search_vectors
 
@@ -348,6 +363,17 @@ def anonymize_user(actor: User | None, person: User, *, request: HttpRequest | N
             notification.message = cleaned
             notification.save(update_fields=["message"])
     Notification.objects.filter(user=person).delete()
+
+    # Respostas a comentários públicos continuam no ar, assinadas por "equipe do jornal"
+    # (engagement/presentation.reply_author); o nome sai também do texto delas.
+    mentions = Q()
+    for name in names:
+        mentions |= Q(reply_body__contains=name)
+    for comment in Comment.objects.filter(mentions) if names else []:
+        cleaned = _scrub(comment.reply_body, names)
+        if cleaned != comment.reply_body:
+            comment.reply_body = cleaned
+            comment.save(update_fields=["reply_body"])
 
     # Foto: apagada (fica só se estiver em uso numa publicação, sem o nome no texto alternativo).
     avatar = person.avatar

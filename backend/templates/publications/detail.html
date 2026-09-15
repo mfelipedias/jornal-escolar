@@ -165,6 +165,10 @@
         </dl>
       </section>
     {% endif %}
+    {# Comentários depois de "Quem fez", antes de "Leia também" (docs/11). #}
+    {% if comments %}
+      {% include "engagement/partials/comments.html" %}
+    {% endif %}
   </article>
   {% if related %}
     <section class="border-t border-line bg-paper-2/50 py-12"

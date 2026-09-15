@@ -50,9 +50,10 @@ não alugamos e não compartilhamos dados para publicidade.
 - O site usa só cookies técnicos: o de proteção dos formulários e, para a equipe que entra \
 no painel, o de sessão.
 - Quem abre uma publicação recebe o cookie “jv”, com um código aleatório que dura um ano. Ele \
-serve só para lembrar a reação que você deixou e para não contar a mesma leitura duas vezes. \
-Não guarda nome, e-mail ou endereço IP, não identifica quem lê e não é usado para publicidade. \
-Apagar os cookies do navegador apaga esse código.
+serve só para lembrar a reação que você deixou, para não contar a mesma leitura duas vezes e \
+para limitar quantos comentários seus esperam aprovação ao mesmo tempo. Não guarda nome, \
+e-mail ou endereço IP, não identifica quem lê e não é usado para publicidade. Apagar \
+os cookies do navegador apaga esse código.
 - Quem reage não aparece em lugar nenhum: o site mostra só o total de cada reação.
 - Os registros técnicos do servidor (página pedida, horário e erros) não guardam o endereço \
 IP de quem visita e são descartados automaticamente. A Cloudflare, que protege o site contra \
@@ -87,9 +88,19 @@ pedido.
 
 ## Comentários
 
-- Quem comenta informa só um nome, de preferência apenas o primeiro.
-- Os comentários só aparecem depois de aprovados por quem publicou ou pela coordenação.
-- Guardamos um código cifrado do endereço IP para evitar abusos, nunca o endereço em si.
+- Para comentar não é preciso conta. O formulário pede só um nome e o comentário; não pedimos \
+e-mail nem telefone.
+- O nome informado aparece em público junto do comentário. Use só o primeiro nome.
+- Nenhum comentário aparece antes de ser aprovado por quem publicou o texto ou pela \
+coordenação, que pode encurtar o nome antes de aprovar.
+- Links e endereços de e-mail escritos no comentário são apagados no envio.
+- Não há verificação de identidade: um comentário assinado com um nome pode não ser dessa \
+pessoa.
+- Para evitar abusos, junto do comentário ficam um código embaralhado (hash) do endereço IP, \
+nunca o endereço em si, e o código do cookie “jv”. Esses dados técnicos são apagados em 30 \
+dias; os comentários rejeitados também.
+- Respostas da equipe aparecem com o nome de quem respondeu.
+- Para pedir a remoção de um comentário, escreva para o e-mail de contato do rodapé.
 
 ## Onde os dados ficam
 
@@ -150,19 +161,21 @@ INITIAL_PAGES = [
     },
 ]
 
-# Textos padrão antigos, reconhecidos por um trecho que só eles têm: o rascunho curto da E15 e
-# o texto da E28 (antes do cookie das reações, E38). Página nunca editada por ninguém (sem
-# updated_by) com um desses trechos recebe o PRIVACY_BODY atual; se alguém já editou, nada muda.
+# Textos padrão antigos, reconhecidos por um trecho que só eles têm: o rascunho curto da E15, o
+# texto da E28 (antes do cookie das reações, E38) e o da E38 (antes dos comentários, E40).
+# Página nunca editada por ninguém (sem updated_by) com um desses trechos recebe o
+# PRIVACY_BODY atual; se alguém já editou, nada muda.
 OLD_PRIVACY_MARKER = "RASCUNHO: revisar com a direção antes de publicar."
 E28_PRIVACY_MARKER = "Quando reações e contagem de leituras estiverem ligadas"
-OLD_PRIVACY_MARKERS = (OLD_PRIVACY_MARKER, E28_PRIVACY_MARKER)
+E38_PRIVACY_MARKER = "Guardamos um código cifrado do endereço IP para evitar abusos"
+OLD_PRIVACY_MARKERS = (OLD_PRIVACY_MARKER, E28_PRIVACY_MARKER, E38_PRIVACY_MARKER)
 
 
 @transaction.atomic
 def seed_site() -> dict[str, int]:
     """Cria configurações e páginas institucionais que faltam, sem alterar as existentes.
 
-    Exceção: a Privacidade ainda com um texto padrão antigo (E15 ou E28), nunca editada, recebe
+    Exceção: a Privacidade ainda com um texto padrão antigo (E15, E28 ou E38), nunca editada, recebe
     o texto atual. Publicada ou não, continua como estava.
     """
     created_pages = 0

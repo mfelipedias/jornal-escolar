@@ -116,3 +116,4 @@ Em qualquer valor: **alunos não têm conta e nunca publicam**; o professor resp
 - 2026-09-12: versão inicial.
 - 2026-09-12: alunos sem conta; papéis reduzidos a equipe, editor e admin; cargo para exibição; autopublicação como padrão; comentários públicos moderados. Conforme respostas em [27](27-decisoes-pendentes-e-perguntas.md).
 - 2026-09-14: E30: notas da matriz (ninguém revisa o próprio texto, alcance do revisor, Django Admin), tag `{% can %}` e teste célula a célula.
+- 2026-09-14: E40: linhas "Comentar" (`can_comment`, que respeita `comments.enabled` e `comments_enabled`) e "Responder comentários como autor" (`can_reply_comment`) testadas na matriz.

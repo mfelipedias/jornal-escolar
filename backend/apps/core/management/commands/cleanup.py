@@ -7,11 +7,17 @@ from apps.engagement import services as engagement
 
 class Command(BaseCommand):
     help = (
-        "Apaga dados que já cumpriram o prazo (docs/18). Por enquanto: registros diários de "
-        "leitura com mais de 90 dias (o total de cada publicação continua). Pode rodar quantas "
-        "vezes quiser; o agendamento mensal chega com o worker (E44)."
+        "Apaga dados que já cumpriram o prazo (docs/18, docs/20): registros diários de leitura "
+        "com mais de 90 dias (o total de cada publicação continua), comentários rejeitados há "
+        "mais de 30 dias e o hash do IP e o código anônimo dos comentários com mais de 30 dias. "
+        "Pode rodar quantas vezes quiser; o agendamento mensal chega com o worker (E44)."
     )
 
     def handle(self, *args: Any, **options: Any) -> None:
         reads = engagement.purge_old_reads()
         self.stdout.write(self.style.SUCCESS(f"Leituras antigas apagadas: {reads}."))
+        rejected, cleared = engagement.purge_old_comments()
+        self.stdout.write(self.style.SUCCESS(f"Comentários rejeitados apagados: {rejected}."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Comentários com dados técnicos removidos: {cleared}.")
+        )

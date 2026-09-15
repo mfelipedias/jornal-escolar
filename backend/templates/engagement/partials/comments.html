@@ -1,0 +1,26 @@
+{% comment %}
+  Comentários públicos (docs/20, docs/11). Parâmetro: comments (engagement/presentation.py,
+  CommentsSection). Só aprovados aparecem; o formulário manda para a moderação.
+{% endcomment %}
+<section id="comentarios"
+         class="mx-auto mt-12 max-w-reading scroll-mt-24 border-t border-line pt-6"
+         aria-labelledby="comments-title">
+  <h2 id="comments-title" class="font-serif text-h3 font-semibold">
+    Comentários
+    {% if comments.count %}<span class="text-ink-3">({{ comments.count }})</span>{% endif %}
+  </h2>
+  {% if comments.items %}
+    <ol class="mt-4 divide-y divide-line" aria-label="Comentários aprovados">
+      {% for comment in comments.items %}
+        {% include "engagement/partials/comment_item.html" with comment=comment can_reply=comments.can_reply reply_form=None reply_open=False %}
+      {% endfor %}
+    </ol>
+  {% elif comments.is_open %}
+    <p class="mt-3 text-ui text-ink-2">Ainda não há comentários. Seja a primeira pessoa a comentar.</p>
+  {% endif %}
+  {% if comments.is_open %}
+    {% include "engagement/partials/comment_form.html" with article_id=comments.article_id form=comments.form notice=comments.notice sent=comments.sent %}
+  {% else %}
+    <p class="mt-6 text-meta text-ink-3">Os comentários desta publicação estão fechados.</p>
+  {% endif %}
+</section>

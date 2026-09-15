@@ -541,6 +541,16 @@
     color: var(--color-ink);
   }
 
+  /* Armadilha para robôs no formulário de comentário (docs/20): fora da tela e fora do leitor
+     de tela. Gente não vê o campo; robô que preenche tudo é descartado. */
+  .hp-field {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
   .editor-sep {
     margin-inline: 0.25rem;
     height: 1.25rem;

@@ -18,11 +18,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Ordem "Mais lidas" nas listas e na busca.
 - Painel: "Leituras em 30 dias" nos números, leituras e reações em "Suas últimas publicadas" e coluna "Leituras" em "Minhas publicações".
 - Comando `cleanup`: apaga registros diários de leitura com mais de 90 dias.
+- Comentários públicos (E40): no fim da publicação, leitores comentam sem conta, só com nome e texto. Todo comentário nasce pendente e fica invisível até a aprovação (fila de moderação na E41). Links e e-mails são removidos do texto (marca `had_links`), honeypot contra robôs, 10 envios por hora por IP e 3 pendentes por pessoa por publicação (429). Com HTMX troca só o formulário; sem JavaScript volta para a publicação. Aprovados aparecem do mais recente para o mais antigo, com a resposta da equipe ("Resposta de Carla Souza (autoria do texto)"), que autores, coautores, editores e admin escrevem na própria página. Comentários fechados na publicação mantêm os aprovados; `comments.enabled` desligado esconde o bloco. Linhas "Comentar" e "Responder comentários como autor" da matriz de permissões testadas.
+- Painel: número "Comentários aprovados" no início. Admin: consulta e exclusão de comentários.
+- `cleanup` também apaga comentários rejeitados há mais de 30 dias e o hash do IP e o código anônimo dos comentários com mais de 30 dias. Exportação de dados inclui as respostas a comentários; anonimizar tira o nome delas.
 
 ### Alterado
 
 - No celular, com sessão aberta, "Escrever" e "Admin" saem do cabeçalho (ficam no painel) para a linha caber em 390px.
-- Texto padrão da página de Privacidade descreve o cookie `jv`; `seed_site` atualiza o texto da E28 se ninguém o editou.
+- Texto padrão da página de Privacidade descreve o cookie `jv` e os comentários; `seed_site` atualiza os textos da E28 e da E38 se ninguém os editou.
 - Produção: cache do Django numa tabela do PostgreSQL, compartilhada pelos workers do Gunicorn, para os limites por minuto e a limpeza de cache ao publicar valerem em todos eles (`createcachetable` no entrypoint).
 
 ## [1.1.0] - 2026-09-14

@@ -336,3 +336,4 @@ erDiagram
 - 2026-09-14: E29: `EditorialEvent` criado, com os tipos `reviewer_removed` (pedido cancelado ou revisão recusada) e `approved` (docs/04 e docs/17 já citavam o evento de aprovação). `Article.status` ganha `in_review` e `changes_requested`.
 - 2026-09-14: E32: `EditorialComment` criado com `anchor_prefix` e `anchor_suffix` (até 40 caracteres de contexto), além dos campos previstos; `anchor_from`/`anchor_to` são posições no texto da âncora (docs/17). `EditorialEvent` ganha `comment_added`, `comment_replied`, `comment_resolved`, `comment_reopened`; `Notification.kind` ganha `review_comment`.
 - 2026-09-14: E34: `AuditLog` criado (detalhes na seção); `User.anonymized_at` e `ArticleContributor.anonymized_at`.
+- 2026-09-14: E40: `engagement.Comment` criado; além dos campos previstos, `replied_at`. `reply_body` é texto vazio quando não há resposta; `replied_by` e `moderated_by` com `SET_NULL`; `ip_hash` e `anon_key` são limpos depois de 30 dias.

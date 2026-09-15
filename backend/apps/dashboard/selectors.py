@@ -9,7 +9,7 @@ Os textos em que a pessoa só revisa ficam em "Revisões" (editorial:queue, E31)
 from dataclasses import dataclass
 from datetime import datetime
 
-from django.db.models import Count, Prefetch, Q, QuerySet
+from django.db.models import Count, Prefetch, Q, QuerySet, Sum
 from django.urls import reverse
 
 from apps.accounts.models import User
@@ -134,11 +134,13 @@ def pending_items(user: User, limit: int = HOME_NOTIFICATIONS) -> tuple[list[Pen
 
 
 def stats(user: User) -> dict[str, int]:
-    """Números do início. Comentários aprovados entram com os comentários (E40)."""
+    """Números do início: publicadas, rascunhos, leituras em 30 dias e comentários aprovados
+    (total nas minhas publicadas, de Article.comments_count)."""
     counts = status_counts(user)
-    published = my_articles(user, "publicados").order_by().values("pk")
+    published = my_articles(user, "publicados").order_by()
     return {
         "published": counts["publicados"],
         "drafts": counts["rascunhos"],
-        "reads_30d": engagement.reads_since(published, days=30),
+        "reads_30d": engagement.reads_since(published.values("pk"), days=30),
+        "comments_approved": published.aggregate(total=Sum("comments_count"))["total"] or 0,
     }

@@ -5,6 +5,7 @@ import pytest
 from apps.core.models import StaticPage
 from apps.core.services import (
     E28_PRIVACY_MARKER,
+    E38_PRIVACY_MARKER,
     OLD_PRIVACY_MARKER,
     seed_site,
     text_to_document,
@@ -119,4 +120,30 @@ def test_seed_nao_mexe_em_privacidade_editada(editor_user):
 
     page = StaticPage.objects.get(slug="privacidade")
     assert "Revisado pela direção." in page.body_html
+    assert page.is_published
+
+
+def test_privacidade_descreve_os_comentarios():
+    seed_site()
+
+    html = StaticPage.objects.get(slug="privacidade").body_html
+    assert "não pedimos e-mail nem telefone" in html
+    assert "aparece em público" in html
+    assert "apagados em 30 dias" in html
+    assert "remoção de um comentário" in html
+    assert E38_PRIVACY_MARKER not in html
+
+
+def test_seed_atualiza_texto_da_e38_nunca_editado():
+    StaticPage.objects.create(
+        slug="privacidade",
+        title="Privacidade",
+        body_html=f"<p>{E38_PRIVACY_MARKER}, nunca o endereço em si.</p>",
+        is_published=True,
+    )
+
+    seed_site()
+
+    page = StaticPage.objects.get(slug="privacidade")
+    assert "não pedimos e-mail nem telefone" in page.body_html
     assert page.is_published

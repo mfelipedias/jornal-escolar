@@ -8,8 +8,9 @@ a função can_<acao> daqui.
 A E12 cobriu rascunho, publicado e arquivado; a E29 acrescentou a revisão por colega
 (em revisão, alterações sugeridas); a E30 fechou a matriz (perfil, entrada, administração,
 comentário interno da revisão) e a testa célula a célula em editorial/tests/test_matrix.py.
-Linhas da matriz que dependem de recursos futuros (comentários públicos, pautas, fontes)
-ganham função quando a etapa delas chegar. Reações: can_react (E38).
+Linhas da matriz que dependem de recursos futuros (moderação, pautas, fontes) ganham função
+quando a etapa delas chegar. Reações: can_react (E38). Comentários públicos: can_comment e
+can_reply_comment (E40).
 """
 
 from django.contrib.auth.models import AnonymousUser
@@ -132,6 +133,26 @@ def can_react(user: AnyUser, article: Article) -> bool:
     if article.status != Article.Status.PUBLISHED:
         return False
     return is_staff_member(user) or not get_setting("reactions.require_login")
+
+
+def comments_open(article: Article) -> bool:
+    """O formulário de comentário aparece: publicada, comentários ligados no site e no texto."""
+    return (
+        article.status == Article.Status.PUBLISHED
+        and article.comments_enabled
+        and bool(get_setting("comments.enabled"))
+    )
+
+
+def can_comment(user: AnyUser, article: Article) -> bool:
+    """Comentar em público: todo mundo, sem conta; o comentário vai para a moderação (docs/20)."""
+    return comments_open(article)
+
+
+def can_reply_comment(user: AnyUser, article: Article) -> bool:
+    """Responder a um comentário público, em nome da equipe: autores e coautores da publicação,
+    editor e admin. O revisor designado não responde (a linha da matriz é 🔒, sem 🟡)."""
+    return is_editor(user) or is_author(user, article)
 
 
 def can_edit(user: AnyUser, article: Article) -> bool:
