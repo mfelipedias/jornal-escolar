@@ -6,4 +6,5 @@ app_name = "engagement"
 
 urlpatterns = [
     path("x/articles/<int:pk>/react/", views.react, name="react"),
+    path("x/articles/<int:pk>/read/", views.read, name="read"),
 ]

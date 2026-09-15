@@ -38,11 +38,16 @@ CACHE_SECONDS = 60
 # Região trocada pelo HTMX quando um filtro muda (templates: id="listing-region").
 REGION_ID = "listing-region"
 
-# Ordens (docs/19). "lidas" (reads_count) entra quando existirem leituras (E39).
+# Ordens (docs/19). "lidas" usa Article.reads_count (E39); empate vai para a mais recente.
 ORDER_RECENT = "recentes"
 ORDER_RELEVANCE = "relevancia"
-LIST_ORDERS: dict[str, str] = {ORDER_RECENT: "Mais recentes"}
-SEARCH_ORDERS: dict[str, str] = {ORDER_RELEVANCE: "Mais relevantes", ORDER_RECENT: "Mais recentes"}
+ORDER_MOST_READ = "lidas"
+LIST_ORDERS: dict[str, str] = {ORDER_RECENT: "Mais recentes", ORDER_MOST_READ: "Mais lidas"}
+SEARCH_ORDERS: dict[str, str] = {
+    ORDER_RELEVANCE: "Mais relevantes",
+    ORDER_RECENT: "Mais recentes",
+    ORDER_MOST_READ: "Mais lidas",
+}
 
 # Períodos predefinidos: relativos a hoje, para a URL compartilhada continuar "atual".
 PERIODS: dict[str, str] = {
@@ -200,6 +205,8 @@ def apply(queryset: QuerySet[Article], filters: ListingFilters) -> QuerySet[Arti
     """Filtra e ordena. A ordem por relevância mantém a da consulta de busca."""
     if filters.order == ORDER_RECENT:
         queryset = queryset.order_by("-published_at", "-pk")
+    elif filters.order == ORDER_MOST_READ:
+        queryset = queryset.order_by("-reads_count", "-published_at", "-pk")
     if filters.date_from:
         queryset = queryset.filter(published_at__date__gte=filters.date_from)
     if filters.date_to:

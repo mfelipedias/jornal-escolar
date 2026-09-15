@@ -42,6 +42,8 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
             else []
         ),
         "reaction_bar": None if preview else _reaction_bar(request, article),
+        "show_reads": not preview and engagement_presentation.show_reads(article),
+        "reads_min_seconds": get_setting("reads.min_seconds"),
         "share_url": seo.absolute_url(article.get_absolute_url()),
         "seo": article_seo.page_meta(article, preview=preview),
         "was_updated": bool(
@@ -55,7 +57,7 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
         response["X-Robots-Tag"] = "noindex"
         response["Cache-Control"] = "private, no-store"
     elif not request.user.is_authenticated:
-        # Cookie anônimo das reações (e das leituras, E39): o endpoint só aceita quem já o tem.
+        # Cookie anônimo das reações e das leituras: os endpoints só aceitam quem já o tem.
         visitor.ensure_cookie(request, response)
     return response
 

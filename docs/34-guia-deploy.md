@@ -221,3 +221,4 @@ O que falta, e só acontece no servidor real: túnel, R2, UptimeRobot e o site n
 ## Histórico
 
 - 2026-09-14: criado na E27.
+- 2026-09-14: E39. Nada muda nos passos: o site passa a guardar o cache numa tabela do banco, criada sozinha ao ligar (`createcachetable` no entrypoint).

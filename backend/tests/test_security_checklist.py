@@ -181,7 +181,7 @@ def test_producao_liga_cookies_seguros_hsts_e_desliga_debug():
         "'debug': s.DEBUG, 'session': s.SESSION_COOKIE_SECURE, 'csrf': s.CSRF_COOKIE_SECURE, "
         "'httponly': s.SESSION_COOKIE_HTTPONLY, 'ssl': s.SECURE_SSL_REDIRECT, "
         "'hsts': s.SECURE_HSTS_SECONDS, 'csp': bool(s.CONTENT_SECURITY_POLICY), "
-        "'proxy': s.SECURE_PROXY_SSL_HEADER}))"
+        "'proxy': s.SECURE_PROXY_SSL_HEADER, 'cache': s.CACHES['default']['BACKEND']}))"
     )
     result = _run_with_prod_settings("shell", "-c", code)
 
@@ -196,4 +196,6 @@ def test_producao_liga_cookies_seguros_hsts_e_desliga_debug():
         "hsts": 60 * 60 * 24 * 30,
         "csp": True,
         "proxy": ["HTTP_X_FORWARDED_PROTO", "https"],
+        # Cache no banco, compartilhado pelos workers do Gunicorn (limites e invalidação).
+        "cache": "django.core.cache.backends.db.DatabaseCache",
     }

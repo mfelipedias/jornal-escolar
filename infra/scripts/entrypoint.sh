@@ -3,7 +3,7 @@
 #
 # Com o comando padrão ("gunicorn"):
 #   1. copia os arquivos estáticos da imagem para o volume que o Caddy entrega em /static/;
-#   2. aplica as migrações do banco;
+#   2. aplica as migrações do banco e cria a tabela do cache compartilhado (se faltar);
 #   3. liga o Gunicorn, o servidor que executa o Django.
 # Qualquer outro comando roda direto, por exemplo:
 #   docker compose -f infra/docker-compose.yml run --rm web python manage.py createsuperuser
@@ -17,6 +17,7 @@ if [ "${1:-}" = "gunicorn" ]; then
     fi
 
     python manage.py migrate --noinput
+    python manage.py createcachetable
 
     exec gunicorn config.wsgi:application \
         --bind 0.0.0.0:8000 \

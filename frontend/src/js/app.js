@@ -4,6 +4,7 @@ import "../css/app.css";
 import Alpine from "alpinejs";
 import htmx from "htmx.org";
 
+import { startReadBeacon } from "./read-beacon.js";
 import { registerReviewComments } from "./review-comments.js";
 
 window.htmx = htmx;
@@ -206,3 +207,6 @@ Alpine.data("share", () => ({
 registerReviewComments(Alpine);
 
 Alpine.start();
+
+// Contador de leituras (docs/20): só age na página de uma publicação no ar.
+startReadBeacon();

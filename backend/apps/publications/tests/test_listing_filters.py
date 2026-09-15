@@ -185,14 +185,32 @@ def test_period_chip_removes_period_and_dates(taxonomy):
 # --- ordem ---
 
 
-def test_list_order_offers_only_recent_until_reads_exist(client, articles):
-    filters = listing.parse(QueryDict("ordem=lidas"))
+def test_list_order_by_most_read(client, articles):
+    Article.objects.filter(pk=articles["antiga"].pk).update(reads_count=50)
+    Article.objects.filter(pk=articles["bairro"].pk).update(reads_count=8)
 
-    assert filters.order == "recentes"  # "lidas" chega com as leituras (E39)
-    assert listing.options(filters).orders == {}
-    html = client.get("/publicacoes/?ordem=lidas").content.decode()
-    assert 'name="ordem"' not in html
-    assert html.index("Pêndulo na sala") < html.index("Horta de 2020")
+    recent = client.get("/publicacoes/").content.decode()
+    most_read = client.get("/publicacoes/?ordem=lidas").content.decode()
+
+    assert listing.options(listing.parse(QueryDict(""))).orders == listing.LIST_ORDERS
+    assert 'id="filtro-ordem-lidas"' in recent
+    assert recent.index("Pêndulo na sala") < recent.index("Horta de 2020")
+    order = ["Horta de 2020", "Memórias do bairro", "Pêndulo na sala", "Feira de ciências"]
+    positions = [most_read.index(title) for title in order]
+    assert positions == sorted(positions)  # empate em zero: a mais recente primeiro
+    assert "Remover filtro Mais lidas" in most_read
+
+
+def test_search_order_by_most_read(client, carla, taxonomy):
+    t = taxonomy
+    publish(carla, "Horta na escola", t["fisica"], t["noticia"], days_ago=30)
+    popular = publish(carla, "Horta vertical", t["fisica"], t["noticia"], days_ago=60)
+    Article.objects.filter(pk=popular.pk).update(reads_count=20)
+
+    html = client.get("/busca/?q=horta&ordem=lidas").content.decode()
+
+    assert html.index("Horta vertical") < html.index("Horta na escola")
+    assert "Remover filtro Mais lidas" in html
 
 
 def test_search_order_by_relevance_or_recent(client, carla, taxonomy):

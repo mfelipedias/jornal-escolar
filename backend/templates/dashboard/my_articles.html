@@ -2,8 +2,8 @@
 {% load humanize %}
 {% comment %}
   Minhas publicações (docs/15): chips de estado, tabela no desktop e lista no celular.
-  Revisões pedidas a mim ficam em editorial:queue (E31); leituras, comentários pendentes e
-  "fechar comentários" na Fase 3.
+  Revisões pedidas a mim ficam em editorial:queue (E31); leituras só das publicadas (E39);
+  comentários pendentes e "fechar comentários" nas etapas deles (E40, E41).
 {% endcomment %}
 {% block title %}Minhas publicações · {{ jornal.name }}{% endblock title %}
 {% block content %}
@@ -41,6 +41,7 @@
             <th scope="col" class="px-4 py-2.5 font-medium">Tipo</th>
             <th scope="col" class="px-4 py-2.5 font-medium">Estado</th>
             <th scope="col" class="px-4 py-2.5 font-medium">Meu papel</th>
+            <th scope="col" class="px-4 py-2.5 text-right font-medium">Leituras</th>
             <th scope="col" class="px-4 py-2.5 font-medium">Atualizada</th>
             <th scope="col" class="px-4 py-2.5 font-medium">
               <span class="sr-only">Ações</span>
@@ -56,6 +57,13 @@
               <td class="px-4 py-3 text-ink-2">{{ row.article.type.name|default:"—" }}</td>
               <td class="px-4 py-3">{% include "components/status_badge.html" with status=row.article.status %}</td>
               <td class="px-4 py-3 text-ink-2">{{ row.my_roles }}</td>
+              <td class="px-4 py-3 text-right text-ink-2 tabular-nums" data-reads>
+                {% if row.article.status == "published" %}
+                  {{ row.article.reads_count|intcomma }}
+                {% else %}
+                  <span aria-hidden="true">—</span><span class="sr-only">não publicada</span>
+                {% endif %}
+              </td>
               <td class="px-4 py-3 whitespace-nowrap text-ink-3">{{ row.article.updated_at|naturaltime }}</td>
               <td class="px-4 py-3">{% include "dashboard/partials/row_actions.html" %}</td>
             </tr>
@@ -71,6 +79,9 @@
             {% include "components/status_badge.html" with status=row.article.status %}
             {% if row.article.type %}<span>{{ row.article.type.name }}</span>{% endif %}
             <span>{{ row.my_roles }}</span>
+            {% if row.article.status == "published" %}
+              <span>{{ row.article.reads_count|intcomma }} leitura{{ row.article.reads_count|pluralize }}</span>
+            {% endif %}
             <span>{{ row.article.updated_at|naturaltime }}</span>
           </p>
           {% include "dashboard/partials/row_actions.html" %}

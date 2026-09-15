@@ -59,6 +59,10 @@ Variáveis de ambiente (`django-environ`), documentadas em `infra/env/.env.examp
 | `EMAIL_URL` | vazio no MVP; serviço gratuito se ligado (Evolução) |
 | `AI_*` | Fase 5, congelada |
 
+### Cache
+
+O cache do Django (limites por minuto, configurações do site, blocos da home e listas) fica, em produção, numa tabela do próprio PostgreSQL (`DatabaseCache`, tabela `django_cache`, em `config/settings/prod.py`). O Gunicorn roda vários workers, e cada um é um processo separado: com o cache em memória, cada worker teria o seu, e um limite de 60 por minuto viraria 60 por worker; publicar limparia o cache de um worker só. A tabela resolve isso sem serviço novo (sem Redis). O `entrypoint.sh` roda `createcachetable` depois do `migrate`, então o `make deploy` cria a tabela sozinho. Em desenvolvimento e nos testes o cache continua em memória. Se um dia o volume de acessos pedir, trocar por Redis é mudar só `CACHES`.
+
 ## Backups
 
 Diário às 3h no container `backup` (`infra/backup/backup.py`, disparado pelo `supercronic`):
@@ -122,3 +126,4 @@ GitHub Actions: `ruff`, `djlint`, `pytest` com PostgreSQL, build do frontend e b
 - 2026-09-12: versão inicial.
 - 2026-09-12: domínio `jornal.projetosrosa.com.br`, Cloudflare Tunnel decidido, Oracle Free Tier como alvo alternativo (ARM), sem e-mail, variáveis de Microsoft e clima, versão no healthz.
 - 2026-09-14: E27. `/static/` passa a ser entregue pelo Caddy a partir de um volume preenchido pelo entrypoint, em vez do WhiteNoise: uma dependência a menos e o mesmo caminho da mídia. Backup criptografado com o `crypt` do rclone em vez do `age`, porque o `age` só aceita senha digitada no terminal e o backup roda sozinho; mídia espelhada com `rclone sync --backup-dir` em vez de `tar` incremental (restauração sem cadeia de arquivos, e fotos apagadas somem de vez após 6 meses). Scripts de backup em Python, não shell. Node 24 no build, igual ao dev. `cloudflared` no perfil `tunel`. A retenção diária guarda todos os backups dos 7 últimos dias, para que um backup manual não substitua o das 3h.
+- 2026-09-14: E39. Cache compartilhado em produção com `DatabaseCache` (seção "Cache"); `createcachetable` no entrypoint.

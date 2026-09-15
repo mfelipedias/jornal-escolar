@@ -68,3 +68,36 @@ EMOJIS = {
     Reaction.Kind.LIKED: "❤️",
     Reaction.Kind.CONGRATS: "👏",
 }
+
+
+class ArticleRead(models.Model):
+    """Uma leitura contada: no máximo uma por pessoa, por publicação, por dia (docs/20).
+
+    viewer_key não guarda o usuário nem o código do cookie em claro: é um HMAC com a
+    SECRET_KEY e o dia (services.viewer_key), então os registros não formam um histórico de
+    leitura de alguém (docs/23) nem se ligam de um dia para o outro. O total fica em
+    Article.reads_count; registros com mais de 90 dias são apagados pelo comando cleanup.
+    """
+
+    article = models.ForeignKey(
+        "publications.Article",
+        verbose_name="publicação",
+        on_delete=models.CASCADE,
+        related_name="reads",
+    )
+    viewer_key = models.CharField("leitor (hash)", max_length=64)
+    day = models.DateField("dia")
+    created_at = models.DateTimeField("registrada em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "leitura"
+        verbose_name_plural = "leituras"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["article", "viewer_key", "day"], name="article_read_unique_per_day"
+            ),
+        ]
+        indexes = [models.Index(fields=["day"], name="article_read_day")]
+
+    def __str__(self) -> str:
+        return f"{self.article} · {self.day}"

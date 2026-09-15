@@ -1,8 +1,15 @@
-"""Endpoint das reações (docs/20, docs/07): POST /x/articles/<id>/react/ com kind.
+"""Endpoints das reações e das leituras (docs/20, docs/07).
+
+Reações: POST /x/articles/<id>/react/ com kind.
 
 Com HTMX devolve o fragmento da barra; sem JavaScript o formulário faz POST e volta para a
 publicação. Limites (docs/23): 30 por minuto por IP e 10 por minuto por pessoa (usuário ou
 código do cookie). Visitante sem o cookie emitido pela página da publicação não reage.
+
+Leituras: POST /x/articles/<id>/read/, enviado pelo read-beacon.js com navigator.sendBeacon
+depois do tempo mínimo com a aba visível e de rolar 25% do corpo. Responde 204 sem corpo,
+tenha contado ou não; 429 passado o limite de 60 por minuto por IP. Exige CSRF como todo POST:
+o token vai no corpo do beacon (csrfmiddlewaretoken), que não aceita cabeçalhos.
 """
 
 from django.conf import settings
@@ -83,3 +90,18 @@ def react(request: HttpRequest, pk: int) -> HttpResponse:
     except ValidationError:
         return _respond(request, article, user=user, key=key, notice=INVALID, status=400)
     return _respond(request, article, user=user, key=key)
+
+
+@never_cache
+@require_POST
+def read(request: HttpRequest, pk: int) -> HttpResponse:
+    article = get_object_or_404(Article.objects.only("pk", "status"), pk=pk)
+    if article.status != Article.Status.PUBLISHED:
+        raise Http404
+    ip = client_ip(request) or "sem-ip"
+    if not hit(f"read-ip:{ip}", limit=settings.READS_PER_MINUTE_PER_IP, period=60):
+        return HttpResponse(status=429)
+    user = request.user if request.user.is_authenticated else None
+    key = None if user else visitor.anon_key(request)
+    services.record_read(article, user=user, anon_key=key)
+    return HttpResponse(status=204)

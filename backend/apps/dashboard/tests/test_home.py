@@ -104,7 +104,7 @@ def test_home_shows_blocks(client, scenario, ana):
     assert "Velha" not in html
 
     stats = selectors.stats(ana)
-    assert stats == {"published": 5, "drafts": 4}
+    assert stats == {"published": 5, "drafts": 4, "reads_30d": 0}
 
 
 def test_pending_hidden_when_nothing_to_do(client, ana):

@@ -1,5 +1,5 @@
 {% extends "layouts/public.html" %}
-{% load permissions %}
+{% load humanize permissions %}
 {% block title %}{{ article.title }} · {{ jornal.name }}{% endblock title %}
 {% block content %}
   {% if preview %}
@@ -84,7 +84,7 @@
         {% endif %}
       </figure>
     {% endif %}
-    <div class="article-body mx-auto mt-10 max-w-reading">{{ article.body_html|safe }}</div>
+    <div class="article-body mx-auto mt-10 max-w-reading" data-article-body>{{ article.body_html|safe }}</div>
     {% if article.sources %}
       <section class="mx-auto mt-12 max-w-reading border-t border-line pt-6"
                aria-labelledby="sources-title">
@@ -107,10 +107,24 @@
         </ol>
       </section>
     {% endif %}
-    {% if reaction_bar %}
-      <div class="mx-auto mt-10 max-w-reading">{% include "engagement/partials/reaction_bar.html" %}</div>
+    {% if reaction_bar or show_reads %}
+      <div class="mx-auto mt-10 max-w-reading">
+        {% if reaction_bar %}
+          {% include "engagement/partials/reaction_bar.html" %}
+        {% endif %}
+        {% if show_reads %}
+          <p class="mt-1 text-meta text-ink-3" data-reads-count>
+            {{ article.reads_count|intcomma }} leitura{{ article.reads_count|pluralize }}
+          </p>
+        {% endif %}
+      </div>
     {% endif %}
     {% if not preview %}
+      {# Contador de leituras (docs/20): frontend/src/js/read-beacon.js #}
+      <div data-read-beacon
+           data-url="{% url 'engagement:read' article.pk %}"
+           data-min-seconds="{{ reads_min_seconds }}"
+           hidden>{% csrf_token %}</div>
       <div class="mx-auto mt-8 max-w-reading">
         {% include "components/share.html" with url=share_url title=article.title %}
       </div>

@@ -240,3 +240,7 @@ SEARCHES_PER_MINUTE = 60
 # Reações (docs/20, docs/23): por IP e por pessoa (usuário ou cookie anônimo), por minuto.
 REACTIONS_PER_MINUTE_PER_IP = 30
 REACTIONS_PER_MINUTE_PER_KEY = 10
+
+# Leituras (docs/20, docs/23): beacons por IP por minuto; dias que os registros diários ficam.
+READS_PER_MINUTE_PER_IP = 60
+READS_RETENTION_DAYS = 90

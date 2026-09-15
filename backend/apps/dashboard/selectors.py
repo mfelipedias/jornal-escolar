@@ -15,6 +15,7 @@ from django.urls import reverse
 from apps.accounts.models import User
 from apps.accounts.selectors import missing_profile_items
 from apps.editorial.models import Notification
+from apps.engagement import services as engagement
 from apps.publications.models import Article, ArticleContributor
 
 Role = ArticleContributor.Role
@@ -85,7 +86,11 @@ def recent_drafts(user: User, limit: int = HOME_DRAFTS) -> list[Article]:
 
 
 def recent_published(user: User, limit: int = HOME_PUBLISHED) -> list[Article]:
-    return list(my_articles(user, "publicados").order_by("-published_at", "-pk")[:limit])
+    """Últimas publicadas, cada uma com `reactions_total` (soma dos tipos de reação)."""
+    articles = list(my_articles(user, "publicados").order_by("-published_at", "-pk")[:limit])
+    for article in articles:
+        article.reactions_total = sum((article.reactions_count or {}).values())
+    return articles
 
 
 @dataclass(frozen=True)
@@ -129,6 +134,11 @@ def pending_items(user: User, limit: int = HOME_NOTIFICATIONS) -> tuple[list[Pen
 
 
 def stats(user: User) -> dict[str, int]:
-    """Números do início. Leituras e comentários aprovados entram com a Fase 3."""
+    """Números do início. Comentários aprovados entram com os comentários (E40)."""
     counts = status_counts(user)
-    return {"published": counts["publicados"], "drafts": counts["rascunhos"]}
+    published = my_articles(user, "publicados").order_by().values("pk")
+    return {
+        "published": counts["publicados"],
+        "drafts": counts["rascunhos"],
+        "reads_30d": engagement.reads_since(published, days=30),
+    }

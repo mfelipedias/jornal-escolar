@@ -15,6 +15,18 @@ SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W021"]
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REDIRECT_EXEMPT = [r"^healthz/$"]  # healthcheck interno do Compose usa HTTP
 
+# Cache compartilhado entre os workers do Gunicorn (docs/24): cada worker é um processo, e o
+# cache padrão (em memória) seria um por processo. Limites por minuto (login, reações, leituras,
+# busca) contariam separado em cada um, e publicar só limparia o cache de um deles. Uma tabela
+# no próprio PostgreSQL resolve sem serviço novo; o entrypoint roda createcachetable.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+        "OPTIONS": {"MAX_ENTRIES": 20000},
+    }
+}
+
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
