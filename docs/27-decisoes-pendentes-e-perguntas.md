@@ -78,6 +78,13 @@ Em 2026-09-12 o dono do projeto respondeu às perguntas da primeira versão dest
 | Registro do app na Microsoft | Não pretende fazer tão cedo | E06 parte 2 adiada. Login por senha com link de acesso é o caminho padrão; o botão Microsoft só aparece quando as credenciais forem configuradas. → [32](32-guia-login-microsoft.md) |
 | Termo de uso de imagem | O projeto pode redigir o modelo | Modelo em [33](33-termo-de-autorizacao.md); direção revisa e aprova antes da primeira publicação com aluno. |
 
+## Quarta rodada (2026-09-15)
+
+| Pergunta | Resposta | Decisão |
+|---|---|---|
+| Visual do site (não perguntado; pedido espontâneo do dono ao ver o site) | "Está o design muito sério. É um jornal escolar, deve ser visualmente atrativo aos alunos. Replaneje movimentos, cores, modernização, logo, favicon etc. Você é o profissional." | Redesign na Fase 3b (R1–R5) com a direção "Pátio": fonte de display nova, acento mais vivo, cores de área saturadas em blocos, marca nova (avião de papel de jornal), favicons completos, animações de entrada e microinterações (todas desligadas com `prefers-reduced-motion`). Revoga do [09](09-design-system.md) as regras "nada de animação de entrada", "sem gradientes" e "sem sombras pesadas". Mantém: sem infantilização, contraste AA, nome da escola em lugar nenhum. → [09](09-design-system.md), [26](26-plano-de-desenvolvimento.md) |
+| Carregamento da página | "Enquanto carrega eu vejo um emoji e uma página toda quebrada até ela se reconstruir; fica feia e demora." | Causa: no modo dev o Vite injeta o CSS por JavaScript, então o HTML aparece sem estilo até o script rodar. Correção na R1: CSS como entrada própria carregada por `<link>` antes do JS, preload das fontes e fallbacks com métricas. → [09](09-design-system.md) |
+
 ## Decisões que continuam abertas
 
 Nenhuma. Tudo o que não foi decidido tem um padrão definido e pode mudar depois sem impacto estrutural.
@@ -88,3 +95,4 @@ Nenhuma. Tudo o que não foi decidido tem um padrão definido e pode mudar depoi
 - 2026-09-12: respostas recebidas e incorporadas; documento reescrito como registro.
 - 2026-09-12: segunda rodada de respostas incorporada; guias 31 e 32 criados.
 - 2026-09-12: terceira rodada: Microsoft adiada, termo redigido pelo projeto (33).
+- 2026-09-15: quarta rodada: redesign visual e carregamento sem salto.

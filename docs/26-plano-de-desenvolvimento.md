@@ -76,6 +76,18 @@ Convenção de commits: um commit por etapa, mensagem `E07: taxonomia e seed`. A
 | E42 | Clima "Hoje na escola" com Open-Meteo e cache | [29](29-clima.md) | Widget some se a API falhar |
 | E43 | "Leia também"; feed RSS; página de tópico | [11](11-pagina-publicacao.md) | Feed valida |
 
+## Fase 3b — Redesign visual (→ v1.2.0)
+
+Pedido do dono do projeto em 2026-09-15 ([27](27-decisoes-pendentes-e-perguntas.md), quarta rodada): o site estava "muito sério" para um público de alunos do ensino médio. Direção "Pátio" (jovem, colorida, com movimento, ainda editorial e legível) descrita em [09](09-design-system.md). Entra antes da E43 porque muda templates que a E43 e a Fase 4 vão tocar.
+
+| # | Etapa | Referência | Aceite |
+|---|---|---|---|
+| R1 | Fundações: fontes novas, tokens (acento, `sun`, cores `bright` por área), marca nova (glifo, wordmark, favicons, manifest, imagem de compartilhamento), carregamento sem salto (CSS como entrada própria do Vite, preload de fontes, fallback com métricas), docs/09 reescrito | [09](09-design-system.md) | Primeiro paint já estilizado em dev e em produção; contraste AA medido |
+| R2 | Masthead, rodapé e componentes base (botões, chips, etiquetas, byline, estado vazio, toast, campos, paginação, clima, sino, compartilhar, filtros) | [09](09-design-system.md) | Vitrine `/dev/components/` com tudo no visual novo |
+| R3 | Home e páginas de navegação (área, disciplina, tipo, agenda, busca, quem escreve, perfil) e as quatro variantes de card | [10](10-pagina-inicial.md), [12](12-paginas-de-navegacao.md), [13](13-perfil-publico-professor.md) | Home em 1280 e 390 px sem salto de layout |
+| R4 | Página da publicação (cabeçalho, corpo, reações, comentários, compartilhar, 410), páginas institucionais, 404, 500, login e link de acesso | [11](11-pagina-publicacao.md) | Corpo de leitura continua AAA |
+| R5 | Movimento (entrada escalonada, masthead ao rolar, view transitions, reações, toasts), painel e editor conferidos, Lighthouse, docs 10/11/12 atualizados | [09](09-design-system.md) | Lighthouse a11y ≥ 95; `prefers-reduced-motion` desliga tudo |
+
 ## Fase 4 — Curadoria (→ v1.3.0)
 
 | # | Etapa | Referência | Aceite |
@@ -114,3 +126,4 @@ Etapas E50 a E55 permanecem descritas na versão anterior deste documento (hist�
 - 2026-09-14: E31 feita: tela de revisão (texto, decisões, conferência, histórico) e "Revisões" no painel com contador. Sugerir alterações sem comentário é bloqueado na tela e no serviço; a nota faz o papel do comentário até a E32.
 - 2026-09-14: E32 feita: comentários gerais e ancorados (trecho + contexto, reencontrado a cada leitura), respostas, resolver e reabrir, marcas no texto e botão flutuante no celular. "Sugerir alterações" exige comentário aberto. Detalhes em [17](17-tela-de-revisao.md).
 - 2026-09-14: E33 feita: visão geral com contadores e alertas (revisão parada, comentários da revisão sem resposta, alunos e imagens sem autorização), todas as publicações com filtros e ações em massa (arquivar, trocar revisor), menu "Editorial" agrupando Destaques e Páginas. O aviso automático "revisão parada há mais de 5 dias" ao revisor e ao autor (docs/04) precisa de tarefa agendada e fica para quando houver cron (Fase 3); por ora aparece como alerta no painel. Detalhes em [18](18-painel-administrativo.md).
+- 2026-09-15: E35–E42 feitas (busca, filtros, reações, leituras, comentários, moderação, clima). Dono pediu redesign visual mais atraente para alunos e reclamou do carregamento com a página "quebrada" no dev: Fase 3b (R1–R5) inserida antes da E43; v1.2.0 passa a fechar depois da E43.
