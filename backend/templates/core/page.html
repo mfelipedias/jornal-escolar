@@ -1,14 +1,25 @@
 {% extends "layouts/public.html" %}
 {% block title %}{{ page.title }} · {{ jornal.name }}{% endblock title %}
 {% block content %}
-  <article class="site-container py-12 sm:py-16">
-    <div class="mx-auto max-w-reading">
-      <h1 class="font-display text-h1 font-semibold text-balance">{{ page.title }}</h1>
-      {% if page.lead %}<p class="mt-4 font-serif text-lead text-ink-2">{{ page.lead }}</p>{% endif %}
-      <div class="article-body mt-10">{{ page.body_html|safe }}</div>
-      <p class="mt-12 border-t border-line pt-4 text-meta text-ink-3">
-        Atualizada em {{ page.updated_at|date:"j \d\e F \d\e Y"|lower }}
-      </p>
+  <article aria-labelledby="page-title">
+    <header class="page-header bg-linear-to-b from-accent-soft to-paper">
+      <div class="site-container">
+        <div class="mx-auto max-w-reading">
+          <h1 id="page-title"
+              class="font-display text-h1 font-extrabold tracking-tight text-balance sm:text-display">
+            {{ page.title }}
+          </h1>
+          {% if page.lead %}<p class="mt-4 font-serif text-lead text-ink-2">{{ page.lead }}</p>{% endif %}
+        </div>
+      </div>
+    </header>
+    <div class="site-container pb-16">
+      <div class="mx-auto max-w-reading">
+        <div class="article-body mt-4">{{ page.body_html|safe }}</div>
+        <p class="mt-12 inline-flex rounded-pill bg-paper-2 px-3 py-1 text-meta text-ink-2">
+          Atualizada em {{ page.updated_at|date:"j \d\e F \d\e Y"|lower }}
+        </p>
+      </div>
     </div>
   </article>
 {% endblock content %}

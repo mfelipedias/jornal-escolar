@@ -99,7 +99,7 @@ def test_aprovado_aparece_na_pagina_com_contagem(client, article):
 
     assert 'id="comentarios"' in html
     assert "Comentários" in html
-    assert "(1)" in html
+    assert 'text-ui font-bold text-ink-2">1</span>' in html  # contador em pílula (R4)
     assert "Mariana" in html
     assert "Dá para fazer na escola?" in html
     assert "Este ainda espera" not in html

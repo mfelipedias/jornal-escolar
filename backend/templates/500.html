@@ -1,0 +1,33 @@
+{% load static assets %}
+{% comment %}
+  Erro no servidor (docs/09, "Feedback e erros"). O Django renderiza este template sem
+  request e sem context processors: nada de banco, configurações do site ou {{ jornal }}.
+  Por isso o texto não cita o nome do jornal (editável no admin) e o CSS vem por uma tag que
+  não quebra se o build faltar.
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Algo deu errado</title>
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+    {% stylesheet_url_or_empty as stylesheet %}
+    {% if stylesheet %}<link rel="stylesheet" href="{{ stylesheet }}">{% endif %}
+  </head>
+  <body class="min-h-screen bg-paper text-ink">
+    <main class="auth-backdrop flex min-h-screen items-center justify-center px-4 py-16">
+      <div class="panel w-full max-w-md text-center shadow-popover">
+        <div class="flex justify-center">{% include "components/sticker.html" with size="lg" %}</div>
+        <h1 class="mt-6 font-display text-h1 font-extrabold tracking-tight text-balance">Algo deu errado</h1>
+        <p class="mt-3 font-serif text-lead text-ink-2">
+          O jornal teve um problema ao abrir esta página. Tente de novo em alguns minutos.
+        </p>
+        <p class="mt-8">
+          <a href="/" class="btn-primary">Ir para a página inicial</a>
+        </p>
+      </div>
+    </main>
+  </body>
+</html>

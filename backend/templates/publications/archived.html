@@ -4,16 +4,17 @@
   <meta name="robots" content="noindex">
 {% endblock head %}
 {% block content %}
-  <section class="site-container py-20">
-    <div class="mx-auto max-w-reading text-center">
-      <h1 class="font-display text-h1 font-semibold">Esta publicação foi retirada do ar</h1>
-      <p class="mt-3 font-serif text-lead text-ink-2">O conteúdo não está mais disponível no jornal.</p>
-      <p class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-ui">
-        {% if area %}
-          <a href="{{ area.get_absolute_url }}" class="text-accent hover:underline">Ver mais em {{ area.name }}</a>
-        {% endif %}
-        <a href="{% url 'core:home' %}" class="text-accent hover:underline">Ver as publicações mais recentes</a>
-      </p>
+  <section class="page-header bg-linear-to-b from-paper-2 to-paper pb-20">
+    <div class="site-container">
+      <div class="mx-auto max-w-[48rem]">
+        {% include "components/status_hero.html" with code="" title="Esta publicação foi retirada do ar" text="O conteúdo não está mais disponível no jornal." %}
+        <p class="mt-8 flex flex-wrap justify-center gap-3">
+          {% if area %}
+            <a href="{{ area.get_absolute_url }}" class="btn-secondary">Ver mais em {{ area.name }}</a>
+          {% endif %}
+          <a href="{% url 'core:home' %}" class="btn-primary">Ver as publicações mais recentes</a>
+        </p>
+      </div>
     </div>
   </section>
 {% endblock content %}

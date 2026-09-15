@@ -1,0 +1,8 @@
+{% comment %}
+  "Adesivo" (docs/09): círculo sun-soft inclinado com o glifo em accent. Decorativo.
+  Parâmetro: size ("sm" 64px, "md" 80px, padrão; "lg" 112px).
+{% endcomment %}
+<span class="flex {% if size == 'sm' %}size-16{% elif size == 'lg' %}size-28{% else %}size-20{% endif %} shrink-0 -rotate-6 items-center justify-center rounded-full bg-sun-soft text-accent"
+      aria-hidden="true">
+  {% include "components/glyph.html" with class="size-1/2" %}
+</span>

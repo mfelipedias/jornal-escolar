@@ -13,7 +13,7 @@ Leitura confortável, crédito claro a quem fez, e caminhos para continuar lendo
 │ MASTHEAD                                                     │
 ├──────────────────────────────────────────────────────────────┤
 │              [ÁREA] [TIPO]              ← etiquetas          │
-│              Título (h1, Newsreader 36px)                    │
+│              Título (h1, Bricolage 800, display)             │
 │              Linha fina (lead, ink-2)                        │
 │              ● ● Por Carla Souza e Rafael S. · 12 set 2026   │
 │              6 min de leitura · Física, Matemática           │
@@ -102,10 +102,11 @@ Leitura confortável, crédito claro a quem fez, e caminhos para continuar lendo
 ## Tipografia do corpo
 
 - Largura de 68 caracteres. Parágrafos em Newsreader 18px/1.6; primeiro parágrafo sem capitular (evitar afetação).
-- `h2` 28px com espaço de 48px acima; `h3` 22px.
-- Citações: filete esquerdo 3px na cor da área, itálico, `ink-2`.
+- `h2` 32px em Bricolage 800 com espaço acima; `h3` 22px em Bricolage 700.
+- Citações: barra esquerda de 4px em `accent`, aspas grandes decorativas em `accent-soft`, itálico, `ink-2`.
+- Separador: filete curto (64px) em `sun`, centralizado.
 - Imagens no corpo: largura da coluna; opção "larga" (até 900px) marcada no editor.
-- Links sublinhados na cor de acento.
+- Links em `accent-2` (8,0:1, AAA) com sublinhado de 2px em `accent`; hover com fundo `sun-soft`.
 - Vídeos incorporados (Evolução): `iframe` do YouTube com `loading="lazy"` e fachada de clique para não carregar antes.
 
 ## Acessibilidade específica
@@ -126,3 +127,4 @@ Leitura confortável, crédito claro a quem fez, e caminhos para continuar lendo
   - `og:image` = variante 1600 da capa (WebP) com largura, altura e `alt`; sem capa, a imagem padrão `static/img/og-default.png` (1200×630, glifo sem texto, para não fixar o nome do jornal).
   - Pré-visualização: `noindex`, sem canônico e sem JSON-LD.
   - Compartilhar virou o componente Alpine `share` (`frontend/src/js/app.js`): cópia pela Clipboard API com plano B (campo com o link selecionado) fora de HTTPS; WhatsApp funciona sem JavaScript.
+- 2026-09-15: **R4 (redesign "Pátio", [09](09-design-system.md))**: cabeçalho em faixa com o gradiente suave da área (sem área, `accent-soft`), etiquetas pílula, título display em Bricolage, byline e data na mesma linha no desktop, disciplinas como etiquetas, evento com bloco de calendário; capa com cantos de 24px. Reações, contador de leituras e compartilhar ficam num cartão branco logo depois do texto (e das fontes); "Quem fez" em cartão branco com duas colunas no desktop; comentários como cartões, resposta da equipe com barra em `accent`, contador em pílula, formulário em cartão; "Leia também" em faixa `paper-2`. "Editar" para quem pode editar vira botão pequeno. Publicação retirada (410) com adesivo e botões. Estrutura e ordem dos blocos não mudaram.

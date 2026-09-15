@@ -1,15 +1,21 @@
 {% comment %}
   Estado vazio (docs/09): "adesivo" com o glifo, título curto, uma frase e uma ação opcional.
-  Parâmetros: title, text, action_url, action_label; compact=True para usar dentro de painéis.
+  Parâmetros: title, text, action_url, action_label; compact=True para usar dentro de painéis;
+  heading="h1" quando o estado vazio é a página inteira (410).
   Textos de referência na tabela "Estados vazios" do docs/09.
 {% endcomment %}
 <div class="mx-auto flex max-w-md flex-col items-center text-center
             {% if compact %}py-8{% else %}py-16{% endif %}">
-  <span class="flex {% if compact %}size-16{% else %}size-20{% endif %} -rotate-6 items-center justify-center rounded-full bg-sun-soft text-accent"
-        aria-hidden="true">
-    {% include "components/glyph.html" with class="size-1/2" %}
-  </span>
-  <h2 class="mt-5 font-display text-h3 font-bold text-balance text-ink">{{ title }}</h2>
+  {% if compact %}
+    {% include "components/sticker.html" with size="sm" %}
+  {% else %}
+    {% include "components/sticker.html" %}
+  {% endif %}
+  {% if heading == "h1" %}
+    <h1 class="mt-5 font-display text-h1 font-extrabold text-balance text-ink">{{ title }}</h1>
+  {% else %}
+    <h2 class="mt-5 font-display text-h3 font-bold text-balance text-ink">{{ title }}</h2>
+  {% endif %}
   {% if text %}<p class="mt-2 text-ui text-ink-2">{{ text }}</p>{% endif %}
   {% if action_url and action_label %}
     <a href="{{ action_url }}" class="btn-secondary mt-6">{{ action_label }}</a>

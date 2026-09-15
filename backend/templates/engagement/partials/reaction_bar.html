@@ -8,13 +8,15 @@
          class="scroll-mt-36"
          aria-labelledby="reactions-title"
          data-reaction-bar>
-  <h2 id="reactions-title" class="text-meta text-ink-3">O que você achou?</h2>
+  <h2 id="reactions-title" class="font-display text-h3 font-extrabold text-ink">
+    <span class="title-marker">O que você achou?</span>
+  </h2>
   <form method="post"
         action="{% url 'engagement:react' reaction_bar.article_id %}"
         hx-post="{% url 'engagement:react' reaction_bar.article_id %}"
         hx-target="#reacoes"
         hx-swap="outerHTML"
-        class="mt-2 flex flex-wrap gap-2">
+        class="mt-4 flex flex-wrap gap-2">
     {% csrf_token %}
     {% for button in reaction_bar.buttons %}
       <button type="submit"

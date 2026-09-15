@@ -2,7 +2,7 @@
 {% load socialaccount %}
 {% block title %}Entrar · {{ jornal.name }}{% endblock title %}
 {% block auth_content %}
-  <h1 class="text-center font-display text-h2 font-semibold">Entrar</h1>
+  <h1 class="text-center font-display text-h2 font-extrabold tracking-tight">Entrar</h1>
   <p class="mt-2 text-center text-ui text-ink-2">Acesso para professores e equipe da escola.</p>
   {% if microsoft_login_enabled %}
     <form method="post"
@@ -15,7 +15,7 @@
                value="{{ redirect_field_value }}">
       {% endif %}
       <button type="submit"
-              class="flex w-full items-center justify-center gap-3 rounded-field bg-accent px-4 py-3 text-ui font-medium text-white transition hover:bg-accent-2">
+              class="btn-primary w-full gap-3 py-3">
         <svg class="size-4" viewBox="0 0 21 21" aria-hidden="true">
           <path fill="#f25022" d="M1 1h9v9H1z" />
           <path fill="#7fba00" d="M11 1h9v9h-9z" />
@@ -25,7 +25,7 @@
         Entrar com a conta da escola
       </button>
     </form>
-    <div class="my-8 flex items-center gap-3 text-meta text-ink-3">
+    <div class="my-7 flex items-center gap-3 text-meta text-ink-3">
       <span class="h-px flex-1 bg-line"></span>
       ou com senha
       <span class="h-px flex-1 bg-line"></span>
@@ -38,7 +38,7 @@
         novalidate>
     {% csrf_token %}
     {% if form.non_field_errors %}
-      <div class="rounded-field border border-danger/30 bg-danger/5 px-4 py-3 text-ui text-danger"
+      <div class="rounded-field border border-danger/30 bg-danger/5 px-4 py-3 text-ui font-medium text-danger"
            role="alert">
         {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
       </div>
@@ -51,11 +51,11 @@
              value="{{ redirect_field_value }}">
     {% endif %}
     <button type="submit"
-            class="w-full rounded-field border border-ink px-4 py-3 text-ui font-medium text-ink transition hover:bg-ink hover:text-paper">
+            class="{% if microsoft_login_enabled %}btn-secondary{% else %}btn-primary{% endif %} w-full py-3">
       Entrar com senha
     </button>
   </form>
-  <p class="mt-8 text-center text-meta text-ink-3">
+  <p class="mt-7 rounded-field bg-paper-2 px-4 py-3 text-center text-meta text-ink-2">
     Esqueceu a senha ou ainda não tem acesso? Fale com o administrador do jornal.
   </p>
 {% endblock auth_content %}

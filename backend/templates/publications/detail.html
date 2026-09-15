@@ -9,173 +9,194 @@
       </p>
     </div>
   {% endif %}
-  <article class="site-container pt-10 pb-16 sm:pt-14"
-           aria-labelledby="article-title">
-    <header class="mx-auto max-w-reading">
-      <div class="flex flex-wrap items-center gap-2">
-        {% if area %}
-          {% include "components/tag.html" with kind="area" area=area label="" url=area.get_absolute_url %}
-        {% endif %}
-        {% if article.type %}
-          {% include "components/tag.html" with kind="type" label=article.type.name area=None url=article.type.get_absolute_url %}
-        {% endif %}
-        {% can "edit" article as can_edit %}
-        {% if can_edit %}
-          <a href="{% url 'publications:edit' article.pk %}"
-             class="ml-auto text-meta text-ink-3 underline-offset-2 hover:text-accent hover:underline">Editar</a>
-        {% endif %}
+  <article aria-labelledby="article-title">
+    {# Cabeçalho em faixa com a cor suave da área (docs/11, R4). Sem área, accent-soft. #}
+    <header class="page-header bg-linear-to-b {{ area.color_classes.from_soft|default:'from-accent-soft' }} to-paper">
+      <div class="site-container">
+        <div class="mx-auto max-w-reading">
+          <div class="flex flex-wrap items-center gap-2">
+            {% if area %}
+              {% include "components/tag.html" with kind="area" area=area label="" url=area.get_absolute_url size="md" %}
+            {% endif %}
+            {% if article.type %}
+              {% include "components/tag.html" with kind="type" label=article.type.name area=None url=article.type.get_absolute_url size="md" %}
+            {% endif %}
+            {% can "edit" article as can_edit %}
+            {% if can_edit %}
+              <a href="{% url 'publications:edit' article.pk %}"
+                 class="btn-secondary btn-sm ml-auto">Editar</a>
+            {% endif %}
+          </div>
+          <h1 id="article-title"
+              class="mt-5 font-display text-h1 font-extrabold tracking-tight text-balance text-ink sm:text-display">
+            {{ article.title }}
+          </h1>
+          {% if article.subtitle %}
+            <p class="mt-4 font-serif text-lead text-ink-2">{{ article.subtitle }}</p>
+          {% endif %}
+          <div class="mt-7 flex flex-col gap-3 text-ui text-ink-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            {% include "components/byline.html" with people=byline_people names=byline avatars=True size="md" %}
+            <p class="flex flex-wrap items-center gap-x-2 text-meta text-ink-3">
+              {% if article.published_at %}
+                <time datetime="{{ article.published_at|date:'c' }}">{{ article.published_at|date:"j \d\e F \d\e Y"|lower }}</time>
+                <span aria-hidden="true">·</span>
+              {% endif %}
+              <span>{{ article.reading_minutes }} min de leitura</span>
+              {% if was_updated %}
+                <span aria-hidden="true">·</span>
+                <span>atualizado em
+                  <time datetime="{{ article.updated_at|date:'c' }}">{{ article.updated_at|date:"d/m/Y" }}</time>
+                </span>
+              {% endif %}
+            </p>
+          </div>
+          {% if article.disciplines.all %}
+            <ul class="mt-4 flex flex-wrap gap-2" aria-label="Disciplinas">
+              {% for discipline in article.disciplines.all %}
+                <li>
+                  {% include "components/tag.html" with kind="discipline" label=discipline.name area=None url=discipline.get_absolute_url %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+          {% if article.event_at %}
+            <div class="panel panel--flush mt-6 flex items-center gap-4">
+              <span class="flex size-14 shrink-0 flex-col items-center justify-center rounded-field bg-sun-soft text-ink"
+                    aria-hidden="true">
+                <span class="font-display text-h3 leading-none font-extrabold">{{ article.event_at|date:"j" }}</span>
+                <span class="text-[0.6875rem] font-semibold tracking-wide uppercase">{{ article.event_at|date:"M"|lower }}</span>
+              </span>
+              <div>
+                <p class="text-meta font-semibold tracking-wide text-accent-2 uppercase">Evento</p>
+                <p class="mt-0.5 font-display text-lg leading-snug font-bold">
+                  <time datetime="{{ article.event_at|date:'c' }}">{{ article.event_at|date:"l, j \d\e F \d\e Y, H\hi"|lower }}</time>
+                </p>
+                {% if article.event_location %}<p class="text-ui text-ink-2">{{ article.event_location }}</p>{% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
       </div>
-      <h1 id="article-title"
-          class="mt-4 font-display text-h1 font-semibold text-balance sm:text-[2.5rem] sm:leading-[1.12]">
-        {{ article.title }}
-      </h1>
-      {% if article.subtitle %}<p class="mt-4 font-serif text-lead text-ink-2">{{ article.subtitle }}</p>{% endif %}
-      <div class="mt-6 border-t border-line pt-4 text-ui text-ink-2">
-        {% include "components/byline.html" with people=byline_people names=byline avatars=True size="md" %}
-        <p class="mt-2 flex flex-wrap gap-x-2 text-meta text-ink-3">
-          {% if article.published_at %}
-            <time datetime="{{ article.published_at|date:'c' }}">{{ article.published_at|date:"j \d\e F \d\e Y"|lower }}</time>
-            <span aria-hidden="true">·</span>
+    </header>
+    <div class="site-container pb-16">
+      {% if article.cover %}
+        <figure class="mx-auto max-w-[56rem]">
+          <img src="{{ article.cover.variant_urls.w960|default:article.cover.url }}"
+               srcset="{{ article.cover.srcset }}"
+               sizes="(min-width: 960px) 896px,
+               100vw"
+               alt="{% if not article.cover.is_decorative %}{{ article.cover.alt_text }}{% endif %}"
+               width="{{ article.cover.width }}"
+               height="{{ article.cover.height }}"
+               fetchpriority="high"
+               class="aspect-[3/2] w-full rounded-hero bg-paper-2 object-cover">
+          {% if article.cover_caption or article.cover.credit %}
+            <figcaption class="mx-auto mt-3 max-w-reading text-meta text-ink-2">
+              {{ article.cover_caption }}
+              {% if article.cover.credit %}<span class="ml-1 text-ink-3">{{ article.cover.credit }}</span>{% endif %}
+            </figcaption>
           {% endif %}
-          <span>{{ article.reading_minutes }} min de leitura</span>
-          {% if was_updated %}
-            <span aria-hidden="true">·</span>
-            <span>atualizado em
-              <time datetime="{{ article.updated_at|date:'c' }}">{{ article.updated_at|date:"d/m/Y" }}</time>
-            </span>
-          {% endif %}
-        </p>
-        {% if article.disciplines.all %}
-          <p class="mt-1 text-meta text-ink-3">
-            {% for discipline in article.disciplines.all %}
-              <a href="{{ discipline.get_absolute_url }}"
-                 class="underline decoration-line underline-offset-2 hover:text-accent hover:decoration-accent">{{ discipline.name }}</a>
-              {% if not forloop.last %},{% endif %}
+        </figure>
+      {% endif %}
+      <div class="article-body mx-auto max-w-reading {% if article.cover %}mt-10{% else %}mt-4{% endif %}"
+           data-article-body>{{ article.body_html|safe }}</div>
+      {% if article.sources %}
+        <section class="mx-auto mt-12 max-w-reading rounded-card bg-paper-2 p-5 sm:p-6"
+                 aria-labelledby="sources-title">
+          <h2 id="sources-title"
+              class="text-meta font-bold tracking-wide text-ink-2 uppercase">Fontes e referências</h2>
+          <ol class="mt-3 list-decimal space-y-1.5 pl-5 text-ui text-ink-2">
+            {% for source in article.sources %}
+              <li>
+                {% if source.url %}
+                  <a href="{{ source.url }}"
+                     rel="noopener noreferrer"
+                     target="_blank"
+                     class="font-medium text-accent-2 underline decoration-accent decoration-2 underline-offset-2 hover:bg-sun-soft">{{ source.title }}</a>
+                {% else %}
+                  {{ source.title }}
+                {% endif %}
+                {% if source.publisher %}— {{ source.publisher }}{% endif %}
+              </li>
             {% endfor %}
-          </p>
-        {% endif %}
-      </div>
-      {% if article.event_at %}
-        <div class="mt-6 rounded-card border border-line bg-white p-4">
-          <p class="text-meta font-semibold tracking-wide text-accent uppercase">Evento</p>
-          <p class="mt-1 font-display text-h3 font-semibold">
-            <time datetime="{{ article.event_at|date:'c' }}">{{ article.event_at|date:"l, j \d\e F \d\e Y, H\hi"|lower }}</time>
-          </p>
-          {% if article.event_location %}<p class="mt-0.5 text-ui text-ink-2">{{ article.event_location }}</p>{% endif %}
+          </ol>
+        </section>
+      {% endif %}
+      {# Reações, leituras e compartilhar num cartão só, logo depois do texto. #}
+      {% if reaction_bar or show_reads or not preview %}
+        <div class="panel mx-auto mt-12 max-w-reading">
+          {% if reaction_bar %}
+            {% include "engagement/partials/reaction_bar.html" %}
+          {% endif %}
+          {% if show_reads %}
+            <p class="mt-1 text-meta text-ink-3" data-reads-count>
+              {{ article.reads_count|intcomma }} leitura{{ article.reads_count|pluralize }}
+            </p>
+          {% endif %}
+          {% if not preview %}
+            {# Contador de leituras (docs/20): frontend/src/js/read-beacon.js #}
+            <div data-read-beacon
+                 data-url="{% url 'engagement:read' article.pk %}"
+                 data-min-seconds="{{ reads_min_seconds }}"
+                 hidden>{% csrf_token %}</div>
+            <div class="{% if reaction_bar or show_reads %}mt-5 border-t border-line pt-5{% endif %}">
+              {% include "components/share.html" with url=share_url title=article.title %}
+            </div>
+          {% endif %}
         </div>
       {% endif %}
-    </header>
-    {% if article.cover %}
-      <figure class="mx-auto mt-10 max-w-[56rem]">
-        <img src="{{ article.cover.variant_urls.w960|default:article.cover.url }}"
-             srcset="{{ article.cover.srcset }}"
-             sizes="(min-width: 960px) 896px,
-             100vw"
-             alt="{% if not article.cover.is_decorative %}{{ article.cover.alt_text }}{% endif %}"
-             width="{{ article.cover.width }}"
-             height="{{ article.cover.height }}"
-             fetchpriority="high"
-             class="aspect-[3/2] w-full rounded-card bg-paper-2 object-cover">
-        {% if article.cover_caption or article.cover.credit %}
-          <figcaption class="mx-auto mt-2 max-w-reading text-meta text-ink-2">
-            {{ article.cover_caption }}
-            {% if article.cover.credit %}<span class="ml-1 text-ink-3">{{ article.cover.credit }}</span>{% endif %}
-          </figcaption>
-        {% endif %}
-      </figure>
-    {% endif %}
-    <div class="article-body mx-auto mt-10 max-w-reading" data-article-body>{{ article.body_html|safe }}</div>
-    {% if article.sources %}
-      <section class="mx-auto mt-12 max-w-reading border-t border-line pt-6"
-               aria-labelledby="sources-title">
-        <h2 id="sources-title"
-            class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Fontes e referências</h2>
-        <ol class="mt-3 list-decimal space-y-1.5 pl-5 text-ui text-ink-2">
-          {% for source in article.sources %}
-            <li>
-              {% if source.url %}
-                <a href="{{ source.url }}"
-                   rel="noopener noreferrer"
-                   target="_blank"
-                   class="text-accent underline underline-offset-2">{{ source.title }}</a>
-              {% else %}
-                {{ source.title }}
-              {% endif %}
-              {% if source.publisher %}— {{ source.publisher }}{% endif %}
-            </li>
-          {% endfor %}
-        </ol>
-      </section>
-    {% endif %}
-    {% if reaction_bar or show_reads %}
-      <div class="mx-auto mt-10 max-w-reading">
-        {% if reaction_bar %}
-          {% include "engagement/partials/reaction_bar.html" %}
-        {% endif %}
-        {% if show_reads %}
-          <p class="mt-1 text-meta text-ink-3" data-reads-count>
-            {{ article.reads_count|intcomma }} leitura{{ article.reads_count|pluralize }}
-          </p>
-        {% endif %}
-      </div>
-    {% endif %}
-    {% if not preview %}
-      {# Contador de leituras (docs/20): frontend/src/js/read-beacon.js #}
-      <div data-read-beacon
-           data-url="{% url 'engagement:read' article.pk %}"
-           data-min-seconds="{{ reads_min_seconds }}"
-           hidden>{% csrf_token %}</div>
-      <div class="mx-auto mt-8 max-w-reading">
-        {% include "components/share.html" with url=share_url title=article.title %}
-      </div>
-    {% endif %}
-    {% if credit_groups %}
-      <section class="mx-auto mt-12 max-w-reading rounded-card bg-paper-2 p-5 sm:p-6"
-               aria-labelledby="credits-title">
-        <h2 id="credits-title" class="font-display text-h3 font-semibold">Quem fez</h2>
-        <dl class="mt-4 space-y-4">
-          {% for heading, credits in credit_groups %}
-            <div>
-              <dt class="text-meta font-semibold tracking-wide text-ink-3 uppercase">{{ heading }}</dt>
-              {% for credit in credits %}
-                <dd class="mt-2 flex items-center gap-3">
-                  {% if credit.avatar_url %}
-                    <img src="{{ credit.avatar_url }}"
-                         alt=""
-                         width="40"
-                         height="40"
-                         class="size-10 rounded-full object-cover">
-                  {% else %}
-                    <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white font-serif text-ui font-semibold text-ink-2"
-                          aria-hidden="true">{{ credit.initials }}</span>
-                  {% endif %}
-                  <span>
-                    {% if credit.url %}
-                      <a href="{{ credit.url }}"
-                         class="block text-ui font-medium text-ink underline-offset-2 hover:text-accent hover:underline">{{ credit.name }}</a>
+      {% if credit_groups %}
+        <section class="panel mx-auto mt-8 max-w-reading"
+                 aria-labelledby="credits-title">
+          <h2 id="credits-title" class="font-display text-h3 font-extrabold">
+            <span class="title-marker">Quem fez</span>
+          </h2>
+          <dl class="mt-5 grid gap-5 sm:grid-cols-2">
+            {% for heading, credits in credit_groups %}
+              <div>
+                <dt class="text-meta font-bold tracking-wide text-ink-3 uppercase">{{ heading }}</dt>
+                {% for credit in credits %}
+                  <dd class="mt-2.5 flex items-center gap-3">
+                    {% if credit.avatar_url %}
+                      <img src="{{ credit.avatar_url }}"
+                           alt=""
+                           width="44"
+                           height="44"
+                           class="size-11 rounded-full object-cover ring-2 ring-sun-soft">
                     {% else %}
-                      <span class="block text-ui font-medium text-ink">{{ credit.name }}</span>
+                      <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-sun-soft font-display text-ui font-bold text-ink"
+                            aria-hidden="true">{{ credit.initials }}</span>
                     {% endif %}
-                    {% if credit.detail %}<span class="block text-meta text-ink-2">{{ credit.detail }}</span>{% endif %}
-                  </span>
-                </dd>
-              {% endfor %}
-            </div>
-          {% endfor %}
-        </dl>
-      </section>
-    {% endif %}
-    {# Comentários depois de "Quem fez", antes de "Leia também" (docs/11). #}
-    {% if comments %}
-      {% include "engagement/partials/comments.html" %}
-    {% endif %}
+                    <span class="min-w-0">
+                      {% if credit.url %}
+                        <a href="{{ credit.url }}"
+                           class="block text-ui font-semibold text-ink underline-offset-2 hover:text-accent-2 hover:underline">{{ credit.name }}</a>
+                      {% else %}
+                        <span class="block text-ui font-semibold text-ink">{{ credit.name }}</span>
+                      {% endif %}
+                      {% if credit.detail %}<span class="block text-meta text-ink-2">{{ credit.detail }}</span>{% endif %}
+                    </span>
+                  </dd>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </dl>
+        </section>
+      {% endif %}
+      {# Comentários depois de "Quem fez", antes de "Leia também" (docs/11). #}
+      {% if comments %}
+        {% include "engagement/partials/comments.html" %}
+      {% endif %}
+    </div>
   </article>
   {% if related %}
-    <section class="border-t border-line bg-paper-2/50 py-12"
+    <section class="band bg-linear-to-b from-paper-2 to-paper"
              aria-labelledby="related-title">
       <div class="site-container">
-        <h2 id="related-title" class="font-display text-h2 font-semibold">Leia também</h2>
-        <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <h2 id="related-title" class="font-display text-h2 font-extrabold">
+          <span class="title-marker">Leia também</span>
+        </h2>
+        <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {% for item in related %}
             <li>{% include "components/card.html" with card=item variant="standard" %}</li>
           {% endfor %}

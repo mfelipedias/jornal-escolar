@@ -38,3 +38,15 @@ def font_preloads() -> str:
         '<link rel="preload" href="{}" as="font" type="font/woff2" crossorigin>',
         ((static(path),) for path in _font_files()),
     )
+
+
+@register.simple_tag
+def stylesheet_url_or_empty(path: str = "src/css/app.css") -> str:
+    """URL do CSS do Vite, ou "" se o manifest falhar. Usada só pela página 500, que precisa
+    renderizar mesmo quando o próprio erro veio de arquivos do build."""
+    from django_vite.templatetags.django_vite import vite_asset_url
+
+    try:
+        return vite_asset_url(path)
+    except Exception:
+        return ""

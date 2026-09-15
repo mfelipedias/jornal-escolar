@@ -170,16 +170,16 @@ Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celula
 | `status-badge` | Estado editorial: rascunho (cinza), em revisão (ocre), alterações (terracota), aprovado (azul), publicado (verde), arquivado (grafite) | |
 | `filter-bar` | Chips de filtro ativos + botão "Filtrar" (pílula) que abre painel; no celular é uma folha inferior com cantos `radius-hero` | |
 | `pagination` | "Carregar mais" (pílula) via HTMX no público; numeração no painel | |
-| `empty-state` | "Adesivo" (círculo `sun-soft` com o glifo), título curto em Bricolage, uma frase, uma ação | |
+| `empty-state` | "Adesivo" (`components/sticker.html`: círculo `sun-soft` com o glifo), título curto em Bricolage, uma frase, uma ação | `compact`; `heading="h1"` quando é a página inteira |
 | `toast` | Feedback de ação no canto inferior, com borda esquerda na cor do nível; entra deslizando de baixo; some em 4s; acessível via `aria-live` | sucesso, erro, aviso, info |
 | `dialog` | Confirmações (arquivar, publicar); `<dialog>` nativo | |
 | `form-field` | Rótulo acima, ajuda abaixo, erro em `danger`, contador de caracteres quando há limite; campo com `radius-field` | |
 | `button` | Pílulas (`.btn-*`): `primary` (accent, texto branco), `secondary` (contorno), `ghost` (texto), `danger`; levantam 1px no hover e encolhem a 97% ao pressionar. `.icon-btn`: botão redondo só com ícone | tamanhos `sm`/`md` |
-| `reaction-bar` | Quatro pílulas com emoji e contagem; ativa com fundo `accent-soft`; bounce ao pressionar | |
+| `reaction-bar` | Título "O que você achou?" com marca-texto e quatro pílulas com emoji e contagem; ativa com fundo `accent-soft`; bounce ao pressionar (R5). Na publicação, fica num `.panel` junto com leituras e compartilhar | |
 | `editor-toolbar` | Botões do TipTap: parágrafo/títulos, negrito, itálico, link, lista, citação, imagem, separador, desfazer | |
 | `comment-thread` | Comentário editorial com trecho citado, respostas, botão resolver | |
-| `public-comment` | Comentário de leitor: nome, data, texto, resposta da equipe destacada com barra no acento | público, moderação (com botões) |
-| `comment-form` | Nome + texto + honeypot + aviso de moderação | |
+| `public-comment` | Comentário de leitor em `.panel--flush` (cartão branco): inicial em `sun-soft`, nome em Bricolage, data, texto; resposta da equipe em `.comment-reply` (barra de 4px `accent`, fundo rosado claro, nome de quem respondeu em `accent-2`); contador de aprovados em pílula `paper-2` ao lado do título | público, moderação (com botões) |
+| `comment-form` | Cartão `.panel`: título em Bricolage, aviso de moderação logo abaixo, nome + texto (`.field`) + honeypot, botão primário "Enviar comentário" | |
 | `weather` | Cartãozinho com fundo `area-azul-soft`, ícone em `accent`, temperatura em Bricolage, condição, mín/máx e chance de chuva; no celular, uma pílula em linha | `aside`, `line` |
 | `notification-bell` | Ícone com contador; lista suspensa | |
 | `timeline` | Eventos editoriais em lista vertical com data | |
@@ -199,6 +199,10 @@ Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celula
 | `.card`, `.card-media`, `.card-media--blank`, `.card-row`, `.card-row--mini` | Cards (ver `card` acima) |
 | `.btn-sm` | Botão pequeno ("ver todas", "ver tudo") |
 | `.link-arrow` | Link em acento com seta que desliza no hover ("Ver agenda completa", "Ver toda a equipe") |
+| `.panel`, `.panel--flush` | Cartão branco com contorno `line` (R4): `radius-hero` e padding generoso; `--flush` com `radius-card` e padding menor. Créditos, reações, formulário de comentário, comentários, telas de entrada e 500 |
+| `.comment-reply` | Resposta da equipe a um comentário (R4) |
+| `.status-code` | Código de erro gigante e decorativo (`aria-hidden`), em accent a 14% (R4) |
+| `.auth-backdrop` | Gradiente suave `accent-soft` → `sun-soft` → `paper` das telas de entrada e do 500 (R4) |
 
 Classes por área usadas nesses blocos ficam escritas por extenso em `AREA_COLOR_CLASSES` (`apps/taxonomy/models.py`), porque o Tailwind só gera o que encontra no código: `text`, `soft_bg`, `solid_bg`, `border`, `bright_bg`, `from_soft` (início do gradiente) e `on_bright`.
 
@@ -219,9 +223,10 @@ Classes por área usadas nesses blocos ficam escritas por extenso em `AREA_COLOR
 
 - Toda ação com POST devolve um toast ou uma mudança visível no fragmento (ex.: botão de reação muda de estado).
 - Erros de validação aparecem ao lado do campo, e o primeiro recebe foco.
-- Erros de servidor: página 500 com o nome do jornal e um link para a home; nada de stack trace.
-- 404 com busca embutida.
-- Publicações arquivadas respondem 410 com mensagem "Esta publicação foi retirada do ar".
+- Erros de servidor: página 500 (`templates/500.html`) independente do resto: o Django a renderiza sem request e sem context processors, então ela não consulta o banco, não usa `{{ jornal }}` (por isso não cita o nome do jornal, que é editável) e carrega o CSS pela tag `{% stylesheet_url_or_empty %}`, que devolve vazio se o build do Vite faltar. Cartão branco sobre `.auth-backdrop`, adesivo, "Algo deu errado" e botão para a home; nada de stack trace.
+- 404 e 403 (`components/status_hero.html`): faixa colorida, código gigante decorativo (`.status-code`), adesivo por cima, título display; 404 com busca embutida e botão para a home.
+- Publicações arquivadas respondem 410 com o mesmo topo, sem código, "Esta publicação foi retirada do ar" e botões para a área e para as mais recentes.
+- Telas de entrada (login, sair, link de acesso, avisos do allauth, 429): `layouts/auth.html` com `.auth-backdrop`, marca acima e o conteúdo num `.panel` com `shadow-popover`; botão principal largo. Com o login Microsoft ligado, ele é o primário e "Entrar com senha" fica secundário.
 
 ## Responsividade
 
@@ -262,3 +267,4 @@ Fora do escopo por decisão do dono do projeto. Preparação sem custo: todas as
 - 2026-09-15: **R1 (Fase 3b, redesign "Pátio")**, a pedido do dono ([27](27-decisoes-pendentes-e-perguntas.md), quarta rodada; plano em [26](26-plano-de-desenvolvimento.md)). Direção visual reescrita; revogadas as regras "nada de animação de entrada", "sem gradientes" e "sem sombras pesadas". Tipografia: Bricolage Grotesque para display e interface (Inter removida), Newsreader continua na leitura; classe `font-display` nos títulos; escala com display 52px e h2 32px. Tokens: `paper` mais claro, `paper-3` novo, acento framboesa `#C41260` (o `#D6156A` do briefing falhava AA sobre `paper-3` e `accent-soft`), `sun`/`sun-soft`, cores vivas `area-x-bright` com `on_bright` medido, raios 12/16/24 e pílula, `shadow-card-hover`, `--ease-snappy`. Marca nova: avião de papel de jornal (glifo, favicon SVG/ICO, ícones PNG, manifest, `og-default.png` e `logo.png` gerados por `scripts/brand.py`); wordmark com marca-texto. Carregamento sem salto: CSS como entrada própria do Vite carregada por `<link>` antes do JS, preload das fontes (`{% font_preloads %}`), fallbacks com métricas. `theme-color` passa a `#FFFDF7`.
 - 2026-09-15: **R2**: masthead fixo e translúcido com barra de chips (`.nav-chip`), botões de ícone (`.icon-btn`), busca em pílula; rodapé em faixa escura com marca, tagline e links; botões, chips, campos, etiquetas, selos e paginação em pílulas com hover que levanta e `active` que encolhe; reação ativa em `accent-soft`; toast com borda colorida deslizando de baixo; estado vazio com "adesivo" (`sun-soft` + glifo); avatares maiores com iniciais em `sun-soft`; clima como cartão `area-azul-soft`; `scroll-margin-top` em todo `id`. Vitrine `/dev/components/` com seção de tokens (cores, áreas soft/bright, tipografia), botões, chips, campos, agenda, clima, números e compartilhar.
 - 2026-09-15: **R3**: cards sem filete superior (cor da área na etiqueta e, nas listas, numa barra lateral), `standard` como cartão branco que levanta com zoom na imagem e bloco com o glifo quando não há capa; `hero` com `radius-hero`. Utilitários `.page-header`, `.band`, `.title-marker`, `.card*`, `.btn-sm`, `.link-arrow`; `from_soft` em `AREA_COLOR_CLASSES`. Títulos de seção passam de caixa alta pequena para Bricolage 800 com marca-texto.
+- 2026-09-15: **R4**: página da publicação com cabeçalho em faixa (gradiente `soft` da área → `paper`, alinhado à coluna de leitura), título display, disciplinas como etiquetas, evento com bloco de calendário, capa com `radius-hero`; reações, leituras e compartilhar num `.panel`; "Quem fez" em `.panel` com marca-texto; comentários e formulário em cartões (`.panel--flush`, `.comment-reply`); "Leia também" em `.band`. Corpo: intertítulos em Bricolage, links em `accent-2` (8,0:1, AAA) com sublinhado `accent` e hover `sun-soft`, citação com barra `accent` de 4px e aspas grandes em `accent-soft`, separador como filete curto `sun`. Corpo continua AAA: `ink` 17,7:1, `ink-2` (citações) 9,3:1 sobre `paper`. Institucionais com `.page-header` em `accent-soft`. 404/403/410 com `status_hero`, 500 independente (`stylesheet_url_or_empty`), telas de entrada com `.auth-backdrop` e `.panel`. Adesivo extraído para `components/sticker.html`.
