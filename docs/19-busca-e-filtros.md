@@ -56,8 +56,9 @@ Parâmetros de querystring aceitos por `/publicacoes/`, páginas de área/discip
 | `tipo` | slug, repetível | vários (OR) |
 | `topico` | slug, repetível | vários (OR) |
 | `professor` | slug | um |
-| `de`, `ate` | `AAAA-MM-DD` | |
-| `ordem` | `recentes` (padrão), `lidas` | `lidas` usa `reads_count` |
+| `periodo` | `30-dias`, `semestre`, `ano` | relativo a hoje; ignorado se houver `de` ou `ate` |
+| `de`, `ate` | `AAAA-MM-DD` | inclusivos; invertidos são trocados |
+| `ordem` | `recentes` (padrão), `lidas`; na busca `relevancia` (padrão) e `recentes` | `lidas` usa `reads_count` (a partir da E39) |
 | `pagina` | inteiro | 12 por página |
 
 - Filtros combinados com AND entre parâmetros diferentes.
@@ -81,3 +82,4 @@ Parâmetros de querystring aceitos por `/publicacoes/`, páginas de área/discip
 - 2026-09-12: versão inicial.
 - 2026-09-14 (E35): o vetor usa `pt_unaccent`, não `portuguese` (com configurações diferentes, "fisica" não encontraria "Física"); `search_meta` virou campo; lista dos pontos que atualizam o índice e o comando `reindex_search`.
 - 2026-09-14 (E36): página `/busca/`. Trecho com `SearchHeadline` usando marcas de uso privado do Unicode no lugar de `<mark>`; o HTML é montado em Python depois de escapar o texto (`search.highlight`), porque o PostgreSQL devolve o corpo como está (tags não reconhecidas, como `<img src=x onerror=...>`, passam). Fallback de títulos: além de `TrigramSimilarity > 0.3` no título inteiro, `TrigramWordSimilarity > 0.5` (um erro de digitação numa palavra de título longo não passava de 0.3); ambos sem acento (`f_unaccent`). Pessoas: nome com similaridade > 0.25 ou similaridade de palavra > 0.5, apresentação curta com similaridade de palavra > 0.5 (a similaridade do texto inteiro de "Professora de Biologia" com "biologia" fica abaixo de 0.25) ou disciplina do perfil que contenha o termo; só perfis públicos de contas ativas, até 5. Grupo de taxonomia também traz áreas; tópico (sem página própria) leva à busca pelo nome dele. Termo com até 100 caracteres; limite de 60 buscas por minuto por IP (`SEARCHES_PER_MINUTE`). Cache de 60s por filtros fica para a E37, com os demais filtros.
+- 2026-09-14 (E37): filtros `professor` (endereço do perfil; conta créditos visíveis, como a aba "Todas" do perfil, só perfis públicos de contas ativas), `periodo` (predefinidos relativos a hoje, para a URL compartilhada continuar valendo; semestre = janeiro a junho ou julho a dezembro), `de`/`ate` e `ordem`. "Mais lidas" fica fora até a E39; na busca a ordem padrão é relevância. Cache de 60s implementado em `publications/listing.py`: a chave usa a página, os filtros já normalizados (não a querystring crua, então parâmetros repetidos, fora de ordem ou desconhecidos caem na mesma chave), o termo e o número da página, com a versão de `publications/cache.py`; guarda o total e os cards montados.

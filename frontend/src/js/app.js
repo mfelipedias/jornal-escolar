@@ -13,6 +13,51 @@ window.Alpine = Alpine;
 // Content-Security-Policy (docs/23). O projeto não usa a classe htmx-indicator.
 htmx.config.includeIndicatorStyles = false;
 
+// Barra de filtros das listas (docs/12, components/filter_bar.html). Sem JavaScript tudo
+// funciona por GET; aqui só o que melhora com JavaScript.
+let keepFilterPanelOpen = false;
+
+document.addEventListener("htmx:configRequest", (event) => {
+  const { elt, formData, triggeringEvent } = event.detail;
+  const panel = elt.closest?.("[data-filter-panel]");
+  // Mudar um campo mantém o painel aberto depois da troca; "Aplicar filtros" fecha.
+  keepFilterPanelOpen = Boolean(panel?.open) && triggeringEvent?.type !== "submit";
+  if (!elt.matches?.("[data-filter-form]")) return;
+  // URL limpa no histórico: sem area=&de=&ate= vazios.
+  for (const key of [...new Set(formData.keys())]) {
+    const values = formData.getAll(key).filter((value) => value !== "");
+    formData.delete(key);
+    values.forEach((value) => formData.append(key, value));
+  }
+});
+
+document.addEventListener("htmx:afterSettle", () => {
+  if (keepFilterPanelOpen) document.querySelector("[data-filter-panel]")?.setAttribute("open", "");
+  keepFilterPanelOpen = false;
+});
+
+// Período predefinido e datas escritas à mão não valem juntos.
+document.addEventListener("change", (event) => {
+  const field = event.target;
+  const form = field.closest?.("[data-filter-form]");
+  if (!form) return;
+  if (field.name === "periodo" && field.value) {
+    form.querySelectorAll("input[name=de], input[name=ate]").forEach((input) => {
+      input.value = "";
+    });
+  } else if ((field.name === "de" || field.name === "ate") && field.value) {
+    const anyDate = form.querySelector("input[name=periodo][value='']");
+    if (anyDate) anyDate.checked = true;
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const close = event.target.closest?.("[data-filter-close]");
+  if (!close) return;
+  event.preventDefault();
+  close.closest("[data-filter-panel]").open = false;
+});
+
 // Toast (docs/09): sucesso e informação somem em 4s; erro e aviso ficam até a pessoa fechar.
 // Passar o mouse ou o foco por cima pausa a contagem.
 const TOAST_MS = 4000;

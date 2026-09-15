@@ -17,7 +17,9 @@
             {% endfor %}
           </ul>
         {% endif %}
-        <p class="mt-4 text-meta text-ink-2">{% include "publications/partials/list_count.html" %}</p>
+        <p id="listing-count"
+           class="mt-4 text-meta text-ink-2"
+           aria-live="polite">{% include "publications/partials/list_count.html" %}</p>
       </div>
     </header>
   {% endwith %}

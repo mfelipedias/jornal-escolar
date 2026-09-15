@@ -8,10 +8,10 @@ Sem nenhum resultado exato, tenta títulos parecidos (erro de digitação).
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.core.paginator import Page, Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET
 
 from apps.core import seo
@@ -22,15 +22,19 @@ from apps.taxonomy.models import KnowledgeArea
 from . import listing, presentation, search, selectors
 
 
-def _cards(page_obj: Page, *, fuzzy: bool) -> list[presentation.ArticleCard]:
+def _card_builder(query: str, *, fuzzy: bool):
     """Cards da página; na busca exata, com o trecho do corpo onde o termo aparece."""
-    cards = []
-    for article in page_obj:
-        card = presentation.card(article)
-        if not fuzzy:
-            card.snippet = search.highlight(article.headline, article.body_text)
-        cards.append(card)
-    return cards
+
+    def build(articles: list) -> list[presentation.ArticleCard]:
+        cards = []
+        for article in articles:
+            card = presentation.card(article)
+            if not fuzzy:
+                card.snippet = search.highlight(article.headline, article.body_text)
+            cards.append(card)
+        return cards
+
+    return build
 
 
 @require_GET
@@ -53,26 +57,33 @@ def results(request: HttpRequest) -> HttpResponse:
         context["rate_limited"] = True
         return render(request, "search/results.html", context, status=429)
 
-    filters = listing.parse(request.GET)
+    filters = listing.parse(request.GET, orders=listing.SEARCH_ORDERS)
+    key = listing.cache_key(request, filters, f"q={query}")
     articles = listing.apply(selectors.search_published(query), filters)
-    fuzzy = not articles.exists()
+    # Sem resultado exato, títulos parecidos (erro de digitação). Guardado junto com a lista.
+    fuzzy = listing.cached(f"{key}|parecidos", lambda: not articles.exists())
     if fuzzy:
         articles = listing.apply(selectors.search_published_similar_titles(query), filters)
     else:
         articles = selectors.with_headlines(articles, query)
-    page_obj = Paginator(selectors.for_cards(articles), listing.PER_PAGE).get_page(
-        request.GET.get("pagina")
+    page_obj, cards = listing.cached_page(
+        key,
+        articles,
+        request.GET.get("pagina"),
+        make_cards=_card_builder(query, fuzzy=fuzzy),
     )
     context.update(
         {
             "fuzzy": fuzzy,
             "filters": filters,
             "page_obj": page_obj,
-            "cards": _cards(page_obj, fuzzy=fuzzy),
+            "cards": cards,
         }
     )
-    if request.headers.get("HX-Request") == "true" and "pagina" in request.GET:
-        return render(request, "search/partials/more.html", context)
+    if listing.is_load_more(request):
+        response = render(request, "search/partials/more.html", context)
+        patch_vary_headers(response, ["HX-Request"])
+        return response
 
     people = selectors.search_people(query)
     taxonomy = selectors.search_taxonomy(query)
@@ -81,11 +92,11 @@ def results(request: HttpRequest) -> HttpResponse:
         {
             "people": [presentation.writer(user) for user in people],
             "taxonomy": taxonomy,
-            "chips": listing.chips(filters, request.GET),
-            "options": listing.options(filters),
-            "selected": listing.selected(filters),
+            **listing.filter_context(request, filters),
             "clear_url": "?" + urlencode({"q": query}),
             "areas": [] if has_results else list(KnowledgeArea.objects.filter(is_active=True)),
         }
     )
-    return render(request, "search/results.html", context)
+    response = render(request, "search/results.html", context)
+    patch_vary_headers(response, ["HX-Request"])
+    return response

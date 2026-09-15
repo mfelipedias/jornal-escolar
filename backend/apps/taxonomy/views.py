@@ -24,16 +24,19 @@ def area(request: HttpRequest, slug: str) -> HttpResponse:
         is_active=True,
     )
     filters = listing.parse(request.GET, fixed_area=area)
+
     # Destaque: a mais recente da área, se tiver capa (docs/12), só na lista sem filtros.
     # Calculado também no "Carregar mais", para as páginas seguintes não repetirem cards.
+    def build_hero() -> tuple[int, presentation.ArticleCard] | None:
+        latest = selectors.for_cards(listing.apply(selectors.published(), filters)).first()
+        return (latest.pk, presentation.card(latest)) if latest and latest.cover_id else None
+
     hero = None
     if not filters.has_user_filters:
-        latest = selectors.for_cards(listing.apply(selectors.published(), filters)).first()
-        if latest and latest.cover_id:
-            hero = latest
+        hero = listing.cached(f"{request.path}|destaque|{filters.cache_token()}", build_hero)
     context = {
         "area": area,
-        "hero": presentation.card(hero) if hero else None,
+        "hero": hero[1] if hero else None,
         "writers": [presentation.writer(u) for u in selectors.writers_about(area)],
         "seo": seo.PageMeta(
             title=area.name,
@@ -45,7 +48,7 @@ def area(request: HttpRequest, slug: str) -> HttpResponse:
         request,
         "taxonomy/area.html",
         filters,
-        exclude_ids=[hero.pk] if hero else None,
+        exclude_ids=[hero[0]] if hero else None,
         context=context,
     )
 

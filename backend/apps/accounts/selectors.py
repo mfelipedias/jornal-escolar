@@ -67,6 +67,25 @@ def profile_articles(profile: TeacherProfile, tab: str) -> QuerySet[Article]:
     return publication_selectors.published().filter(pk__in=article_ids)
 
 
+def credited_profiles() -> list[TeacherProfile]:
+    """Perfis públicos de contas ativas com crédito visível em alguma publicação no ar.
+
+    São as opções do filtro "Quem escreveu" das listas (docs/19), em ordem alfabética.
+    """
+    not_reviewer = [role for role in Role.values if role != Role.REVIEWER]
+    # Tudo num filter() só: as condições valem para o mesmo crédito.
+    visible = Q(
+        user__contributions__show_in_credits=True,
+        user__contributions__article__status=Article.Status.PUBLISHED,
+    ) & (Q(user__contributions__role__in=not_reviewer) | Q(show_reviewer_credit=True))
+    profiles = (
+        TeacherProfile.objects.filter(visible, is_public=True, user__is_active=True)
+        .select_related("user")
+        .distinct()
+    )
+    return sorted(profiles, key=lambda p: p.user.public_name.lower())
+
+
 def profile_tab_counts(profile: TeacherProfile) -> dict[str, int]:
     return {tab: profile_articles(profile, tab).count() for tab in TAB_ROLES}
 
