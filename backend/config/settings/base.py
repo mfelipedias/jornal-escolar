@@ -237,6 +237,13 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = MEDIA_MAX_UPLOAD_BYTES + 1024 * 1024
 # Busca pública (docs/19, docs/23): consultas por IP por minuto.
 SEARCHES_PER_MINUTE = 60
 
+# Clima "Hoje na escola" (docs/29): Open-Meteo, sem chave. Coordenadas de Osasco, SP.
+# WEATHER_API_BASE vazio desliga a consulta (os testes usam isso para nunca tocar a rede).
+WEATHER_API_BASE = env.str("WEATHER_API_BASE", default="https://api.open-meteo.com")
+WEATHER_LAT = env.float("WEATHER_LAT", default=-23.5329)
+WEATHER_LON = env.float("WEATHER_LON", default=-46.7918)
+WEATHER_TIMEZONE = "America/Sao_Paulo"
+
 # Reações (docs/20, docs/23): por IP e por pessoa (usuário ou cookie anônimo), por minuto.
 REACTIONS_PER_MINUTE_PER_IP = 30
 REACTIONS_PER_MINUTE_PER_KEY = 10

@@ -9,3 +9,6 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # Os testes não dependem do build do frontend: só geram as tags apontando para o Vite.
 DJANGO_VITE["default"]["dev_mode"] = True
+
+# Os testes nunca chamam a API de clima; quem precisa do bloco simula a resposta.
+WEATHER_API_BASE = ""

@@ -1,4 +1,5 @@
 {% extends "layouts/public.html" %}
+{% load weather %}
 {% block title %}{{ jornal.name }} · {{ jornal.tagline }}{% endblock title %}
 {% block content %}
   {% if not blocks.has_content %}
@@ -26,6 +27,8 @@
           </ul>
         {% endif %}
       </section>
+      {# Hoje na escola, em uma linha: só no celular; no desktop fica na coluna lateral #}
+      {% weather_widget variant="line" css="mt-10 lg:hidden" %}
       <div class="mt-16 grid gap-14 border-t border-line pt-10 lg:grid-cols-3 lg:gap-12">
         {# Últimas publicações #}
         <section class="lg:col-span-2" aria-labelledby="latest-title">
@@ -46,6 +49,8 @@
           {% endif %}
         </section>
         <div class="space-y-12">
+          {# Hoje na escola (docs/29) #}
+          {% weather_widget css="hidden lg:block" %}
           {# Agenda #}
           {% if blocks.events %}
             <section aria-labelledby="agenda-title">
