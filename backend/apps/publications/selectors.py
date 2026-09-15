@@ -1,5 +1,6 @@
 """Consultas usadas pelas telas de publicações."""
 
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db.models import F, Max, Prefetch, Q, QuerySet
 from django.utils import timezone
 
@@ -7,6 +8,7 @@ from apps.accounts.models import User
 from apps.taxonomy.models import ArticleType, Discipline, KnowledgeArea, Topic
 
 from .models import Article, ArticleContributor
+from .search import SEARCH_CONFIG
 
 
 def active_types() -> QuerySet[ArticleType]:
@@ -71,6 +73,27 @@ def related_articles(article: Article, limit: int = 3) -> list[Article]:
 
 def published() -> QuerySet[Article]:
     return Article.objects.filter(status=Article.Status.PUBLISHED).order_by("-published_at")
+
+
+# Pesos de SearchRank na ordem D, C, B, A (docs/19): título vale 10 vezes o corpo.
+SEARCH_RANK_WEIGHTS = [0.1, 0.2, 0.4, 1.0]
+
+
+def search_published(query: str) -> QuerySet[Article]:
+    """Busca pública: só publicadas, sem acento, por radical, da mais relevante à menos.
+
+    Aceita a sintaxe de buscador (websearch): "entre aspas" para frase e -palavra para excluir.
+    Cada resultado vem com `rank`; empate vai para a publicação mais recente.
+    """
+    query = " ".join((query or "").split())
+    if not query:
+        return Article.objects.none()
+    search = SearchQuery(query, config=SEARCH_CONFIG, search_type="websearch")
+    return (
+        Article.objects.filter(status=Article.Status.PUBLISHED, search_vector=search)
+        .annotate(rank=SearchRank(F("search_vector"), search, weights=SEARCH_RANK_WEIGHTS))
+        .order_by("-rank", "-published_at")
+    )
 
 
 def featured_articles(limit: int = 3) -> list[Article]:

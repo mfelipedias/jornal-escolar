@@ -7,7 +7,7 @@ from django.utils.html import format_html
 
 from apps.core import audit
 
-from . import services
+from . import search, services
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
 
 
@@ -68,6 +68,11 @@ class ArticleAdmin(admin.ModelAdmin):
     raw_id_fields = ("cover",)
     inlines = [ArticleContributorInline, ArticleRevisionInline]
     actions = ["archive_articles"]
+
+    def save_related(self, request: HttpRequest, form, formsets, change: bool) -> None:
+        """Correção no admin (título, disciplinas, créditos) também atualiza a busca."""
+        super().save_related(request, form, formsets, change)
+        search.update_search_vector(form.instance)
 
     @admin.action(description="Arquivar (tirar do ar)")
     def archive_articles(self, request: HttpRequest, queryset: QuerySet[Article]) -> None:

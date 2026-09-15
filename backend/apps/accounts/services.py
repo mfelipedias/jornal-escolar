@@ -220,6 +220,7 @@ def update_past_credits(user: User) -> int:
     """
     from apps.editorial import events
     from apps.publications.models import ArticleContributor
+    from apps.publications.search import update_search_vectors
 
     credits = (
         ArticleContributor.objects.filter(user=user, is_student=False)
@@ -240,6 +241,7 @@ def update_past_credits(user: User) -> int:
             events.Kind.CONTRIBUTOR_CHANGED,
             note=f"Nome no crédito atualizado para {user.public_name}.",
         )
+    update_search_vectors(articles)  # o nome novo também vale na busca
     return changed
 
 

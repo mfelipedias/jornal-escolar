@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models import Q
@@ -86,13 +88,21 @@ class Article(TimeStampedModel):
     reads_count = models.PositiveIntegerField("leituras", default=0)
     reactions_count = models.JSONField("reações", default=dict, blank=True)
     comments_count = models.PositiveIntegerField("comentários aprovados", default=0)
+    search_meta = models.TextField(
+        "nomes para a busca",
+        blank=True,
+        editable=False,
+        help_text="Disciplinas, tópicos e créditos concatenados (apps/publications/search.py).",
+    )
+    search_vector = SearchVectorField("índice de busca", null=True, editable=False)
 
     class Meta:
         verbose_name = "publicação"
         verbose_name_plural = "publicações"
         ordering = ["-published_at", "-created_at"]
         indexes = [
-            models.Index(fields=["status", "-published_at"], name="article_status_published")
+            models.Index(fields=["status", "-published_at"], name="article_status_published"),
+            GinIndex(fields=["search_vector"], name="article_search_vector"),
         ]
 
     def __str__(self) -> str:

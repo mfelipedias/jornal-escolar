@@ -24,10 +24,12 @@ Só publicações `published` entram na busca pública. O painel tem busca próp
 
 ### Índice
 
-- Campo `search_vector` (`SearchVectorField`) em `Article`, com índice GIN.
-- Atualizado no `save()` do service de publicação (não por sinal), montando `SearchVector('title', weight='A', config='portuguese') + ... `.
+- Campos `search_vector` (`SearchVectorField`, índice GIN) e `search_meta` (texto) em `Article`. Código em `apps/publications/search.py`.
+- Atualizado pelos services (não por sinal) sempre que muda algo que entra no vetor: criar, duplicar, editar título/linha fina/corpo, metadados, créditos, revisor, publicar, anonimizar crédito ou conta, atualizar nome nos créditos e correção pelo admin. Monta `SearchVector('title', weight='A', config='pt_unaccent') + ...`. Única exceção por sinal: disciplina ou tópico renomeado reindexa as publicações ligadas.
+- Todas as publicações têm vetor (qualquer estado); a consulta pública filtra `published`.
+- `manage.py reindex_search` refaz tudo e é idempotente (após restaurar backup ou mudar a configuração).
 - Extensões: `unaccent` (função imutável `f_unaccent` para poder indexar), `pg_trgm`.
-- Configuração de texto: `portuguese` com `unaccent` encadeado (dicionário criado por migração: `CREATE TEXT SEARCH CONFIGURATION pt_unaccent (COPY = portuguese); ALTER ... MAPPING ... WITH unaccent, portuguese_stem`).
+- Configuração de texto: `portuguese` com `unaccent` encadeado (dicionário criado por migração: `CREATE TEXT SEARCH CONFIGURATION pt_unaccent (COPY = portuguese); ALTER ... MAPPING ... WITH unaccent, portuguese_stem`). Vetor e consulta usam a mesma configuração `pt_unaccent`.
 
 ### Consulta
 
@@ -77,3 +79,4 @@ Parâmetros de querystring aceitos por `/publicacoes/`, páginas de área/discip
 ## Histórico
 
 - 2026-09-12: versão inicial.
+- 2026-09-14 (E35): o vetor usa `pt_unaccent`, não `portuguese` (com configurações diferentes, "fisica" não encontraria "Física"); `search_meta` virou campo; lista dos pontos que atualizam o índice e o comando `reindex_search`.

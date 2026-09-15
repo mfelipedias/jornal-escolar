@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.sitemaps",
+    "django.contrib.postgres",  # busca: SearchVector, unaccent, trigramas (docs/19)
     "django_vite",
     "allauth",
     "allauth.account",

@@ -292,6 +292,7 @@ def anonymize_user(actor: User | None, person: User, *, request: HttpRequest | N
     from apps.editorial import permissions
     from apps.editorial.models import EditorialEvent, Notification
     from apps.publications.models import ArticleContributor
+    from apps.publications.search import update_search_vectors
 
     if actor is not None and not permissions.can_anonymize(actor):
         raise PermissionDenied
@@ -310,9 +311,12 @@ def anonymize_user(actor: User | None, person: User, *, request: HttpRequest | N
     old_role = person.role
 
     # Créditos: o nome some, a publicação continua no ar e não aponta para perfil nenhum.
+    credited_articles = set()
     for credit in ArticleContributor.objects.filter(user=person):
         credit.display_name = ANONYMIZED_CREDIT
         credit.save(update_fields=["display_name"])  # o sinal renova o cache público
+        credited_articles.add(credit.article_id)
+    update_search_vectors(credited_articles)  # o nome sai também do índice de busca
 
     # Eventos e avisos de outras pessoas ficam, com o nome trocado.
     mentions = Q()

@@ -26,6 +26,7 @@ from .cache import invalidate_public_content
 from .credits import generic_student_name, student_name_error
 from .media import copy_asset
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
+from .search import update_search_vector
 
 Status = Article.Status
 EventKind = events.Kind
@@ -65,6 +66,10 @@ class ChecklistError(Exception):
         super().__init__("; ".join(item.message for item in items))
 
 
+# Campos editáveis que entram no índice de busca (apps/publications/search.py).
+SEARCHABLE_FIELDS = {"title", "subtitle", "body_json"}
+
+
 # --- criação e edição ---
 
 
@@ -83,6 +88,7 @@ def create_article(user: User, **fields: Any) -> Article:
         display_name=user.public_name,
         role=ArticleContributor.Role.AUTHOR,
     )
+    update_search_vector(article)
     return article
 
 
@@ -161,6 +167,7 @@ def duplicate_article(user: User, article: Article) -> Article:
             anonymized_at=credit.anonymized_at,
             order=credit.order + 1,
         )
+    update_search_vector(duplicate)
     return duplicate
 
 
@@ -212,6 +219,8 @@ def update_article(
         columns += ["body_html", "body_text", "reading_minutes"]
     current.last_edited_by = user
     current.save(update_fields=[*columns, "last_edited_by", "updated_at"])
+    if SEARCHABLE_FIELDS & set(fields):
+        update_search_vector(current)
     if current.status == Status.PUBLISHED:
         record_edit_revision(current, user)
         events.record_edit(current, user, EventKind.EDITED_AFTER_PUBLISH)
@@ -297,6 +306,7 @@ def add_staff_credit(
     )
     if created:
         _credit_event(article, user, contributor, "adicionado")
+        update_search_vector(article)
     return contributor
 
 
@@ -341,6 +351,7 @@ def add_student_credit(
         order=_next_order(article),
     )
     _credit_event(article, user, credit, "adicionado")
+    update_search_vector(article)
     return credit
 
 
@@ -370,6 +381,7 @@ def add_guest_credit(
         order=_next_order(article),
     )
     _credit_event(article, user, credit, "adicionado")
+    update_search_vector(article)
     return credit
 
 
@@ -391,6 +403,7 @@ def remove_credit(user: User, article: Article, contributor: ArticleContributor)
     notifications.article_edited_by_other(article, user)
     _credit_event(article, user, contributor, "removido")
     contributor.delete()
+    update_search_vector(article)
 
 
 @transaction.atomic
@@ -416,6 +429,7 @@ def anonymize_student_credit(
     contributor.class_group = ""
     contributor.anonymized_at = timezone.now()
     contributor.save(update_fields=["display_name", "class_group", "anonymized_at"])
+    update_search_vector(contributor.article_id)  # o nome do aluno sai também do índice
     events.record(
         contributor.article,
         user,
@@ -472,6 +486,7 @@ def set_metadata(
     )
     current.disciplines.set(Discipline.objects.filter(pk__in=discipline_ids, is_active=True))
     current.topics.set(Topic.objects.filter(pk__in=topic_ids, is_active=True))
+    update_search_vector(current)
     _after_edit(current, user)
     _sync(article, current, ["type_id", "event_at", "event_location", "sources", "updated_at"])
     return current
@@ -616,6 +631,7 @@ def _publish_locked(user: User, current: Article) -> list[str]:
     current.archived_at = None
     fields = ["slug", "published_at", "archived_at"]
     _set_status(current, user, Status.PUBLISHED, fields)
+    update_search_vector(current)
     create_revision(current, user, ArticleRevision.Reason.PUBLISHED)
     notifications.article_published(current, user)
     return ["status", *fields, "updated_at"]
@@ -692,6 +708,7 @@ def request_review(
     if credit.can_publish != can_publish:
         credit.can_publish = can_publish
         credit.save(update_fields=["can_publish"])
+    update_search_vector(current)
 
     current.submitted_at = timezone.now()
     _set_status(current, user, Status.IN_REVIEW, ["submitted_at"], note)
@@ -714,6 +731,7 @@ def _remove_reviewer(current: Article, user: User, reason: str) -> User | None:
     )
     reviewer = credit.user
     credit.delete()
+    update_search_vector(current)
     return reviewer
 
 
@@ -740,6 +758,7 @@ def reassign_reviewer(user: User, article: Article, reviewer: User, note: str = 
         display_name=reviewer.public_name,
         order=_next_order(current),
     )
+    update_search_vector(current)
     events.record(
         current,
         user,
