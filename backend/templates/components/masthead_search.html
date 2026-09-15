@@ -1,0 +1,48 @@
+{% comment %}
+  Busca do masthead (docs/09): ícone que abre um campo logo abaixo da linha da marca
+  (o contêiner do masthead é o `relative`), em qualquer largura.
+  Sem JavaScript o ícone é só um link para /busca/, que tem o campo grande.
+{% endcomment %}
+{% url 'search:results' as search_url %}
+<div x-data="{ open: false }"
+     @keydown.escape.window="open = false"
+     @click.outside="open = false">
+  <a href="{{ search_url }}"
+     class="flex size-9 items-center justify-center rounded-full text-ink-2 hover:bg-paper-2 hover:text-ink"
+     :aria-expanded="open"
+     aria-controls="masthead-search"
+     @click.prevent="open = !open; if (open) $nextTick(() => $refs.q.focus())"
+     {% if request.path == search_url %}aria-current="page"{% endif %}>
+    <svg class="size-5"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.8"
+         stroke-linecap="round"
+         aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+    <span class="sr-only">Buscar</span>
+  </a>
+  <form id="masthead-search"
+        role="search"
+        method="get"
+        action="{{ search_url }}"
+        x-show="open"
+        x-cloak
+        class="absolute inset-x-4 top-full z-50 -mt-1 flex gap-2 sm:right-8 sm:left-auto sm:w-96 lg:right-12 rounded-card border border-line bg-white p-2 shadow-popover">
+    <label for="masthead-search-q" class="sr-only">Buscar no {{ jornal.name }}</label>
+    <input id="masthead-search-q"
+           x-ref="q"
+           type="search"
+           name="q"
+           maxlength="100"
+           autocomplete="off"
+           enterkeyhint="search"
+           required
+           placeholder="Assunto, disciplina ou pessoa"
+           class="field min-h-10 min-w-0 flex-1">
+    <button type="submit" class="btn-primary min-h-10">Buscar</button>
+  </form>
+</div>

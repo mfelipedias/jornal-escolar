@@ -390,6 +390,15 @@
     }
   }
 
+  /* Termo encontrado no trecho da busca (docs/19). */
+  .search-snippet mark {
+    border-radius: 2px;
+    background-color: var(--color-accent-soft);
+    padding-inline: 1px;
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+
   .chip {
     display: inline-flex;
     cursor: pointer;

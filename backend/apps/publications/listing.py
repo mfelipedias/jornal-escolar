@@ -174,9 +174,14 @@ def render_listing(
         return render(request, "publications/partials/list_more.html", full_context)
     full_context["chips"] = chips(filters, request.GET)
     full_context["options"] = options(filters)
-    full_context["selected"] = {
+    full_context["selected"] = selected(filters)
+    return render(request, template, full_context)
+
+
+def selected(filters: ListingFilters) -> dict:
+    """O que vem marcado no formulário de filtros."""
+    return {
         "area": filters.area.slug if filters.area else "",
         "disciplinas": {d.slug for d in filters.disciplines},
         "tipos": {t.slug for t in filters.types},
     }
-    return render(request, template, full_context)

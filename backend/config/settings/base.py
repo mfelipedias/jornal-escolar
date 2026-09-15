@@ -232,3 +232,6 @@ MEDIA_UPLOADS_PER_HOUR = 60
 EDITOR_MAX_BODY_BYTES = 1_000_000  # autosave do editor (docs/16)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2_621_440  # corpo não-arquivo (padrão do Django)
 FILE_UPLOAD_MAX_MEMORY_SIZE = MEDIA_MAX_UPLOAD_BYTES + 1024 * 1024
+
+# Busca pública (docs/19, docs/23): consultas por IP por minuto.
+SEARCHES_PER_MINUTE = 60

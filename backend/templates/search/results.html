@@ -1,0 +1,94 @@
+{% extends "layouts/public.html" %}
+{% comment %}
+  Busca (docs/12, docs/19). Grupos: publicações (com trecho), pessoas da equipe e
+  disciplinas, áreas e tópicos. Filtros da lista de publicações valem sobre a busca.
+{% endcomment %}
+{% block title %}
+  {% if query %}Busca: {{ query }}{% else %}Buscar{% endif %}
+  · {{ jornal.name }}
+{% endblock title %}
+{% block content %}
+  <div class="site-container pt-10 pb-16 sm:pt-14">
+    <header class="max-w-reading">
+      <h1 class="font-serif text-h1 font-semibold">Buscar</h1>
+      <div class="mt-5">{% include "components/search_form.html" with query=query autofocus=query|yesno:",True" %}</div>
+    </header>
+    {% if rate_limited %}
+      {% include "components/empty_state.html" with title="Muitas buscas em pouco tempo" text="Aguarde um minuto e tente de novo." %}
+    {% elif not query %}
+      <p class="mt-4 text-ui text-ink-2">
+        Dica: use aspas para buscar uma frase exata e um sinal de menos para excluir uma palavra (<span class="font-medium">horta -escola</span>).
+      </p>
+      {% include "search/partials/areas.html" with title="Ou navegue por área" %}
+    {% else %}
+      <div class="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
+        <section aria-labelledby="search-articles-title" class="min-w-0">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line pb-2">
+            <h2 id="search-articles-title"
+                class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Publicações</h2>
+            <p class="text-meta text-ink-3" aria-live="polite">
+              {% include "publications/partials/list_count.html" %}
+            </p>
+          </div>
+          {% if cards or filters.has_user_filters %}
+            <div class="mt-4">{% include "components/filter_bar.html" %}</div>
+          {% endif %}
+          {% if cards %}
+            {% if fuzzy %}
+              <p class="mt-6 rounded-card bg-paper-2 px-4 py-3 text-ui text-ink-2">
+                Nenhuma publicação tem exatamente “{{ query }}”. Mostrando títulos parecidos.
+              </p>
+            {% endif %}
+            <ul id="search-results" class="mt-6 grid gap-y-8">
+              {% for card in cards %}
+                <li>{% include "components/card.html" with card=card variant="compact" %}</li>
+              {% endfor %}
+            </ul>
+            {% include "components/pagination.html" with page_obj=page_obj mode="more" %}
+          {% elif filters.has_user_filters %}
+            {% include "components/empty_state.html" with title="Nenhuma publicação com esses filtros" text="Tente tirar um dos filtros." action_url=clear_url action_label="Limpar filtros" compact=True %}
+          {% elif people or taxonomy %}
+            <p class="mt-6 text-ui text-ink-2">Nenhuma publicação encontrada para “{{ query }}”.</p>
+          {% else %}
+            <div class="mx-auto max-w-md py-12 text-center">
+              <h3 class="font-serif text-h3 font-semibold text-balance text-ink">Nada encontrado para “{{ query }}”</h3>
+              <p class="mt-2 text-ui text-ink-2">Tente termos mais gerais ou navegue por área.</p>
+            </div>
+            {% include "search/partials/areas.html" with title="Áreas do conhecimento" %}
+          {% endif %}
+        </section>
+        {% if people or taxonomy %}
+          <div class="space-y-10">
+            {% include "taxonomy/partials/writers_aside.html" with writers=people title="Pessoas da equipe" more_url="" %}
+            {% if taxonomy %}
+              <section aria-labelledby="search-taxonomy-title">
+                <h2 id="search-taxonomy-title"
+                    class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
+                  Disciplinas e tópicos
+                </h2>
+                <ul class="mt-4 flex flex-wrap gap-2">
+                  {% for area in taxonomy.areas %}
+                    <li>{% include "components/tag.html" with kind="area" area=area label="" url=area.get_absolute_url size="md" %}</li>
+                  {% endfor %}
+                  {% for discipline in taxonomy.disciplines %}
+                    <li>
+                      {% include "components/tag.html" with kind="discipline" label=discipline.name area=None url=discipline.get_absolute_url size="md" %}
+                    </li>
+                  {% endfor %}
+                  {% url 'search:results' as search_url %}
+                  {% for topic in taxonomy.topics %}
+                    {% with q=topic.name|urlencode %}
+                      <li class="flex items-center">
+                        {% include "components/tag.html" with kind="topic" label=topic.name area=None url=search_url|add:"?q="|add:q size="md" %}
+                      </li>
+                    {% endwith %}
+                  {% endfor %}
+                </ul>
+              </section>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock content %}

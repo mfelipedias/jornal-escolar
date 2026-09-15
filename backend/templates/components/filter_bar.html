@@ -1,7 +1,8 @@
 {% comment %}
   Barra de filtros (docs/09 "filter-bar", docs/12). Funciona sem JavaScript: formulário GET.
   Parâmetros: chips (listing.Chip), options (listing.FilterOptions), selected (dict com
-  area, disciplinas, tipos), filters (listing.ListingFilters).
+  area, disciplinas, tipos), filters (listing.ListingFilters). Na busca: query (termo, vai
+  junto como campo oculto) e clear_url (limpa os filtros sem perder o termo).
   Painel com HTMX, período, professor e ordem chegam na E37.
 {% endcomment %}
 <div class="flex flex-wrap items-center gap-2">
@@ -23,6 +24,7 @@
     </summary>
     <form method="get"
           class="mt-3 grid gap-6 rounded-card border border-line bg-white p-4 sm:p-6 md:grid-cols-3">
+      {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
       {% if options.areas %}
         <fieldset>
           <legend class="editor-panel-title">Área</legend>
@@ -88,7 +90,7 @@
       <div class="flex flex-wrap items-center gap-3 md:col-span-3">
         <button type="submit" class="btn-primary min-h-11 px-5">Aplicar filtros</button>
         {% if filters.has_user_filters %}
-          <a href="{{ request.path }}" class="btn-ghost min-h-11">Limpar filtros</a>
+          <a href="{{ clear_url|default:request.path }}" class="btn-ghost min-h-11">Limpar filtros</a>
         {% endif %}
       </div>
     </form>

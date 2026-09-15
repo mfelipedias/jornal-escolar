@@ -15,6 +15,7 @@ from typing import Any
 
 from django.conf import settings
 from django.templatetags.static import static
+from django.urls import reverse
 from django.utils.safestring import SafeString, mark_safe
 
 from .site_settings import get_setting
@@ -97,7 +98,8 @@ def organization() -> dict[str, Any]:
 
 
 def website() -> dict[str, Any]:
-    """JSON-LD da home. O SearchAction entra quando existir a busca (/busca/, Fase 3)."""
+    """JSON-LD da home, com o SearchAction que aponta para a busca (/busca/?q=)."""
+    search_url = absolute_url(reverse("search:results"))
     return {
         "@context": SCHEMA_CONTEXT,
         "@type": "WebSite",
@@ -106,6 +108,14 @@ def website() -> dict[str, Any]:
         "description": home_description(),
         "inLanguage": "pt-BR",
         "publisher": organization(),
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": f"{search_url}?q={{search_term_string}}",
+            },
+            "query-input": "required name=search_term_string",
+        },
     }
 
 

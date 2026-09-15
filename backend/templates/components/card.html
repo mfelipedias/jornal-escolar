@@ -2,7 +2,8 @@
   Card de publicação (docs/09). Parâmetros:
     card: presentation.ArticleCard (monte com presentation.card(article))
     variant: "hero" (imagem grande, título display), "standard" (imagem 3:2 acima, padrão),
-             "compact" (sem imagem, para listas) ou "mini" (título e data, para barras laterais)
+             "compact" (sem imagem, para listas; mostra card.snippet da busca no lugar da
+             linha fina) ou "mini" (título e data, para barras laterais)
   O título é o link; o card inteiro fica clicável. Títulos: h2 no hero, h3 nos demais.
 {% endcomment %}
 {% with border=card.area.color_classes.border|default:"border-line" %}
@@ -36,7 +37,11 @@
         <a href="{{ card.url }}"
            class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
       </h3>
-      {% if card.subtitle %}<p class="mt-1.5 line-clamp-2 text-ui text-ink-2">{{ card.subtitle }}</p>{% endif %}
+      {% if card.snippet %}
+        <p class="search-snippet mt-1.5 text-ui text-ink-2">{{ card.snippet }}</p>
+      {% elif card.subtitle %}
+        <p class="mt-1.5 line-clamp-2 text-ui text-ink-2">{{ card.subtitle }}</p>
+      {% endif %}
       <div class="mt-3">{% include "components/byline.html" with people=card.people names=card.byline size="sm" %}</div>
       {% include "components/card_meta.html" %}
     </article>

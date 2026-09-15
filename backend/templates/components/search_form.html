@@ -1,0 +1,33 @@
+{% comment %}
+  Campo de busca grande (docs/12: página /busca/ e 404). Funciona sem JavaScript: GET para
+  /busca/. Parâmetros: query (termo atual, opcional), autofocus (True para focar ao abrir).
+{% endcomment %}
+<form role="search"
+      method="get"
+      action="{% url 'search:results' %}"
+      class="flex w-full gap-2">
+  <label for="search-page-q" class="sr-only">Buscar no {{ jornal.name }}</label>
+  <div class="relative min-w-0 flex-1">
+    <svg class="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-ink-3"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.8"
+         stroke-linecap="round"
+         aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+    <input id="search-page-q"
+           type="search"
+           name="q"
+           value="{{ query|default:'' }}"
+           maxlength="100"
+           autocomplete="off"
+           enterkeyhint="search"
+           placeholder="Assunto, disciplina ou pessoa"
+           {% if autofocus %}autofocus{% endif %}
+           class="block min-h-12 w-full rounded-field border border-line bg-white py-2.5 pr-3 pl-11 text-lead text-ink placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none">
+  </div>
+  <button type="submit" class="btn-primary min-h-12 px-5">Buscar</button>
+</form>

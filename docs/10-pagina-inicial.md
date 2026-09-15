@@ -129,3 +129,4 @@ Editores não editam a home "in place"; usam o painel editorial. Isso mantém a 
   - No celular, "Quem escreve" vem logo depois da agenda (antes das faixas), e o 2º e o 3º destaques usam o card `standard`.
   - `<title>` = nome · tagline; `h1` visualmente oculto com o nome do jornal. Lighthouse acessibilidade 100.
 - 2026-09-14: E26: meta description vem da nova configuração `site.description` (se vazia, a tagline). JSON-LD `WebSite` sem `SearchAction` por enquanto: a busca (`/busca/`) só existe na Fase 3, e apontar para uma URL inexistente seria erro. Acrescentar o `SearchAction` junto com a busca. Open Graph com `static/img/og-default.png`.
+- 2026-09-14: E36: JSON-LD `WebSite` ganhou o `SearchAction` (`/busca/?q={search_term_string}`).

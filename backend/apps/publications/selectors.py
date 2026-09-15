@@ -1,12 +1,22 @@
 """Consultas usadas pelas telas de publicações."""
 
-from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.db.models import F, Max, Prefetch, Q, QuerySet
+from dataclasses import dataclass
+
+from django.contrib.postgres.search import (
+    SearchHeadline,
+    SearchQuery,
+    SearchRank,
+    TrigramSimilarity,
+    TrigramWordSimilarity,
+)
+from django.db.models import F, Max, Prefetch, Q, QuerySet, Value
+from django.db.models.functions import Coalesce, Greatest, NullIf
 from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.taxonomy.models import ArticleType, Discipline, KnowledgeArea, Topic
 
+from . import search
 from .models import Article, ArticleContributor
 from .search import SEARCH_CONFIG
 
@@ -85,14 +95,126 @@ def search_published(query: str) -> QuerySet[Article]:
     Aceita a sintaxe de buscador (websearch): "entre aspas" para frase e -palavra para excluir.
     Cada resultado vem com `rank`; empate vai para a publicação mais recente.
     """
-    query = " ".join((query or "").split())
+    query = search.clean_query(query)
     if not query:
         return Article.objects.none()
-    search = SearchQuery(query, config=SEARCH_CONFIG, search_type="websearch")
+    search_query = SearchQuery(query, config=SEARCH_CONFIG, search_type="websearch")
     return (
-        Article.objects.filter(status=Article.Status.PUBLISHED, search_vector=search)
-        .annotate(rank=SearchRank(F("search_vector"), search, weights=SEARCH_RANK_WEIGHTS))
+        Article.objects.filter(status=Article.Status.PUBLISHED, search_vector=search_query)
+        .annotate(rank=SearchRank(F("search_vector"), search_query, weights=SEARCH_RANK_WEIGHTS))
         .order_by("-rank", "-published_at")
+    )
+
+
+# Fallback por trigramas no título (docs/19): parecido com o título inteiro (> 0.3) ou com
+# algum trecho dele (> 0.5), para tolerar erro de digitação numa palavra de um título longo.
+TITLE_SIMILARITY = 0.3
+TITLE_WORD_SIMILARITY = 0.5
+
+
+def search_published_similar_titles(query: str) -> QuerySet[Article]:
+    """Publicadas com título parecido com o termo, sem acento, da mais parecida à menos."""
+    words = search.plain_words(search.clean_query(query))
+    if len(words) < 3:
+        return Article.objects.none()
+    term = search.Unaccent(Value(words))
+    title = search.Unaccent("title")
+    return (
+        Article.objects.filter(status=Article.Status.PUBLISHED)
+        .annotate(
+            title_similarity=TrigramSimilarity(title, term),
+            title_word_similarity=TrigramWordSimilarity(term, title),
+        )
+        .filter(
+            Q(title_similarity__gt=TITLE_SIMILARITY)
+            | Q(title_word_similarity__gt=TITLE_WORD_SIMILARITY)
+        )
+        .order_by(Greatest("title_similarity", "title_word_similarity").desc(), "-published_at")
+    )
+
+
+def with_headlines(queryset: QuerySet[Article], query: str) -> QuerySet[Article]:
+    """Acrescenta `headline`: trecho do corpo com os termos entre as marcas de search.py."""
+    search_query = SearchQuery(
+        search.clean_query(query), config=search.SEARCH_CONFIG, search_type="websearch"
+    )
+    return queryset.annotate(
+        headline=SearchHeadline(
+            "body_text",
+            search_query,
+            config=search.SEARCH_CONFIG,
+            start_sel=search.MARK_START,
+            stop_sel=search.MARK_STOP,
+            min_words=25,
+            max_words=40,
+        )
+    )
+
+
+# Pessoas (docs/19): nome parecido (> 0.25) ou contido; apresentação curta ou disciplina que
+# contenha o termo, com tolerância a erro de digitação.
+PERSON_SIMILARITY = 0.25
+PERSON_WORD_SIMILARITY = 0.5
+PEOPLE_LIMIT = 5
+
+
+def search_people(query: str, limit: int = PEOPLE_LIMIT) -> list[User]:
+    """Equipe com perfil público que combina com o termo (nome, apresentação, disciplinas)."""
+    words = search.plain_words(search.clean_query(query))
+    if len(words) < 2:
+        return []
+    term = search.Unaccent(Value(words))
+    name = search.Unaccent(Coalesce(NullIf("display_name", Value("")), "full_name"))
+    headline = search.Unaccent(Coalesce("profile__headline", Value("")))
+    by_discipline = User.objects.filter(
+        profile__disciplines__is_active=True,
+        profile__disciplines__name__unaccent__icontains=words,
+    ).values("pk")
+    people = writers(limit=None).annotate(
+        name_similarity=TrigramSimilarity(name, term),
+        name_word_similarity=TrigramWordSimilarity(term, name),
+        headline_similarity=TrigramWordSimilarity(term, headline),
+    )
+    return list(
+        people.filter(
+            Q(name_similarity__gt=PERSON_SIMILARITY)
+            | Q(name_word_similarity__gt=PERSON_WORD_SIMILARITY)
+            | Q(headline_similarity__gt=PERSON_WORD_SIMILARITY)
+            | Q(pk__in=by_discipline)
+        ).order_by(
+            Greatest("name_similarity", "name_word_similarity", "headline_similarity").desc(),
+            F("last_published").desc(nulls_last=True),
+            "full_name",
+        )[:limit]
+    )
+
+
+@dataclass
+class TaxonomyMatches:
+    areas: list[KnowledgeArea]
+    disciplines: list[Discipline]
+    topics: list[Topic]
+
+    def __bool__(self) -> bool:
+        return bool(self.areas or self.disciplines or self.topics)
+
+
+def search_taxonomy(query: str, limit: int = 12) -> TaxonomyMatches:
+    """Áreas, disciplinas e tópicos ativos cujo nome contém o termo, sem acento (docs/19)."""
+    words = search.plain_words(search.clean_query(query))
+    if len(words) < 2:
+        return TaxonomyMatches([], [], [])
+    areas = KnowledgeArea.objects.filter(is_active=True).filter(
+        Q(name__unaccent__icontains=words) | Q(short_name__unaccent__icontains=words)
+    )
+    disciplines = Discipline.objects.filter(
+        is_active=True, area__is_active=True, name__unaccent__icontains=words
+    ).select_related("area")
+    topics = Topic.objects.filter(is_active=True, name__unaccent__icontains=words)
+    return TaxonomyMatches(
+        areas=list(areas[:limit]),
+        disciplines=list(disciplines[:limit]),
+        topics=list(topics[:limit]),
     )
 
 

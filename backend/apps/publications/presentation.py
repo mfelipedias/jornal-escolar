@@ -3,6 +3,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from django.utils.safestring import SafeString
+
 from apps.taxonomy.models import KnowledgeArea
 
 from .models import Article, ArticleContributor
@@ -168,6 +170,7 @@ class ArticleCard:
     published_at: datetime | None = None
     reading_minutes: int = 0
     image: CardImage | None = None
+    snippet: SafeString | str = ""  # trecho destacado da busca (HTML seguro de search.highlight)
 
     @property
     def byline(self) -> str:

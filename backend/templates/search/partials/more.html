@@ -1,0 +1,7 @@
+{% comment %}"Carregar mais" da busca: resultados no fim da lista e botão da página seguinte.{% endcomment %}
+<ul hx-swap-oob="beforeend:#search-results">
+  {% for card in cards %}
+    <li>{% include "components/card.html" with card=card variant="compact" %}</li>
+  {% endfor %}
+</ul>
+{% include "components/pagination.html" with page_obj=page_obj mode="more" %}

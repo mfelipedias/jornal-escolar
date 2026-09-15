@@ -128,6 +128,11 @@ def test_home_has_website_json_ld_and_default_image(client):
     assert data["url"] == f"{SITE}/"
     assert data["publisher"]["@type"] == "NewsMediaOrganization"
     assert data["publisher"]["name"] == "Jornal Escolar"
+    assert data["potentialAction"] == {
+        "@type": "SearchAction",
+        "target": {"@type": "EntryPoint", "urlTemplate": f"{SITE}/busca/?q={{search_term_string}}"},
+        "query-input": "required name=search_term_string",
+    }
     assert f'<link rel="canonical" href="{SITE}/">' in html
     assert f'<meta property="og:image" content="{SITE}/static/img/og-default.png">' in html
 
