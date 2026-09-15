@@ -54,6 +54,8 @@ def _detail(contributor: ArticleContributor) -> str:
     if contributor.is_student:
         return f"Aluno, {contributor.class_group}" if contributor.class_group else "Aluno"
     if contributor.user_id:
+        if contributor.user.is_anonymized:
+            return ""
         profile = getattr(contributor.user, "profile", None)
         headline = profile.headline if profile else ""
         return headline or contributor.user.get_staff_kind_display()

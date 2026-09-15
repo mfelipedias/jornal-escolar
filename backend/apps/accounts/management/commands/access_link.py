@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from apps.accounts import services
 from apps.accounts.models import AccessLink
+from apps.core import audit
 
 
 class Command(BaseCommand):
@@ -26,6 +27,9 @@ class Command(BaseCommand):
             link = services.create_access_link(user, purpose=options["purpose"])
         except services.AccessLinkError as exc:
             raise CommandError(str(exc)) from exc
+        audit.record(
+            audit.Action.ACCESS_LINK_CREATED, target=user, changes={"purpose": link.purpose}
+        )
         self.stdout.write(f"{link.get_purpose_display()} para {user.public_name}:")
         self.stdout.write(self.style.SUCCESS(services.access_link_url(link)))
         expires = timezone.localtime(link.expires_at)

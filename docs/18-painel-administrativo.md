@@ -81,7 +81,7 @@ Tópicos iniciais (30, com palavras-chave): Inteligência Artificial, Programaç
 - Configuração de provedor e modelos via variáveis de ambiente, não pelo admin (evita expor chaves).
 
 ### Auditoria
-- `AuditLog`: somente leitura, filtros por ação e ator.
+- `AuditLog`: somente leitura, filtros por ação e ator (E34: também por data; o alvo aparece como `app.modelo #id`).
 - `EditorialEvent`: somente leitura.
 
 ## Operação
@@ -111,3 +111,4 @@ Comandos de gerenciamento para o admin:
   - Contadores: rascunhos, em revisão, alterações sugeridas, publicados nos últimos 30 dias, arquivados e comentários da revisão abertos (fora dos arquivados). "Rascunhos (com autor)" virou a lista "Rascunhos por autor", com link para a lista filtrada. Comentários públicos pendentes entram na Fase 3.
   - Alertas calculados na hora (somem quando a condição deixa de valer), em `apps/editorial/alerts.py`, onde novas fontes entram numa lista: alunos sem autorização e imagens de pessoas sem autorização em publicações no ar (a checklist impede; indica dado antigo); revisão parada (em revisão há mais de 5 dias sem nenhum evento: comentário, edição, troca de revisor); comentários da revisão sem resposta há mais de 3 dias em textos em revisão ou com alterações sugeridas, que substitui até a Fase 3 o alerta de comentários públicos pendentes. O início do painel mostra ao editor quantos alertas há.
   - Todas as publicações: filtros por título, estado, tipo, área, autor, revisor e período (última atualização em 7, 30, 90 ou 365 dias). O título leva à tela de revisão; cada linha tem Revisar, Editar e Ver no jornal. Ações em massa: arquivar (motivo sempre obrigatório, vai no aviso) e trocar o revisor (só textos em revisão; o novo revisor não herda o "pode publicar por mim"; avisa o novo revisor, o antigo e os autores).
+- 2026-09-14: E34. "Anonimizar crédito de aluno em um clique" ficou só com o admin, como na matriz de docs/02 ("Configurações, auditoria, anonimização") e em docs/23: botão "Anonimizar" nos créditos de aluno do editor e em cada crédito do alerta "Alunos sem autorização" (sem mostrar o nome). Em Usuários, "Exportar dados" baixa o JSON de uma conta ou um ZIP com um JSON por conta; "Anonimizar" pede confirmação numa página própria; conta anonimizada não pode ser reativada. Comandos `export_user_data <email> [--zip --output arquivo]` e `anonymize_user <email> [--yes]`.

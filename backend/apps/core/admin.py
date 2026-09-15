@@ -6,8 +6,8 @@ from django.http import HttpRequest, HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
 
-from . import site_settings
-from .models import SiteSetting, StaticPage
+from . import audit, site_settings
+from .models import AuditLog, SiteSetting, StaticPage
 
 
 def build_value_field(spec: site_settings.SettingSpec) -> forms.Field:
@@ -67,6 +67,18 @@ class SiteSettingAdmin(admin.ModelAdmin):
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False  # As chaves são fixas no código (site_settings.REGISTRY).
 
+    def save_model(self, request: HttpRequest, obj: SiteSetting, form: Any, change: bool) -> None:
+        before = SiteSetting.objects.filter(pk=obj.pk).values_list("value", flat=True).first()
+        super().save_model(request, obj, form, change)
+        if before != obj.value:
+            audit.record(
+                audit.Action.SETTING_CHANGED,
+                actor=request.user,
+                target=obj,
+                changes={"key": obj.key, "value": [before, obj.value]},
+                request=request,
+            )
+
     def has_delete_permission(self, request: HttpRequest, obj: SiteSetting | None = None) -> bool:
         return False
 
@@ -96,5 +108,56 @@ class StaticPageAdmin(admin.ModelAdmin):
         )
 
     def save_model(self, request: HttpRequest, obj: StaticPage, form: Any, change: bool) -> None:
+        was_published = (
+            StaticPage.objects.filter(pk=obj.pk).values_list("is_published", flat=True).first()
+        )
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
+        if was_published is not None and was_published != obj.is_published:
+            action = (
+                audit.Action.PAGE_PUBLISHED if obj.is_published else audit.Action.PAGE_UNPUBLISHED
+            )
+            audit.record(
+                action,
+                actor=request.user,
+                target=obj,
+                changes={"slug": obj.slug},
+                request=request,
+            )
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    """Auditoria só para leitura, com filtros por ação e por quem fez (docs/18)."""
+
+    list_display = ("created_at", "action", "actor", "target", "short_changes", "short_ip")
+    list_filter = ("action", ("actor", admin.RelatedOnlyFieldListFilter), "created_at")
+    search_fields = ("target_id", "actor__email", "actor__full_name")
+    list_select_related = ("actor",)
+    date_hierarchy = "created_at"
+    fields = ("created_at", "action", "actor", "target", "changes", "ip_hash")
+    readonly_fields = fields
+
+    @admin.display(description="alvo")
+    def target(self, obj: AuditLog) -> str:
+        if not obj.target_type:
+            return "—"
+        return f"{obj.target_type} #{obj.target_id}"
+
+    @admin.display(description="detalhes")
+    def short_changes(self, obj: AuditLog) -> str:
+        text = ", ".join(f"{key}: {value}" for key, value in obj.changes.items())
+        return text if len(text) <= 80 else text[:77] + "…"
+
+    @admin.display(description="IP (hash)")
+    def short_ip(self, obj: AuditLog) -> str:
+        return obj.ip_hash[:10]
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj: AuditLog | None = None) -> bool:
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj: AuditLog | None = None) -> bool:
+        return False

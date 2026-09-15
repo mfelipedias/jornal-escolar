@@ -40,6 +40,7 @@ Modelo customizado desde a primeira migração. Login por e-mail institucional (
 | avatar | FK MediaAsset nullable | |
 | last_login, date_joined | timestamp | |
 | deactivated_at | timestamp nullable | |
+| anonymized_at | timestamp nullable | Dados pessoais apagados (E34); a conta não volta a ser ativada |
 
 Índices: `email` único; `role`.
 
@@ -169,6 +170,7 @@ Substitui convite por e-mail. Gerado pelo admin e entregue manualmente.
 | can_publish | bool | Para `reviewer`: "pode publicar por mim" |
 | order | smallint | |
 | show_in_credits | bool | |
+| anonymized_at | timestamp nullable | Crédito de aluno trocado por um nome genérico (E34); dispensa autorização |
 
 Restrição: `(article, user, role)` único quando `user` não nulo; `is_student` implica `user` nulo. Índice `(user, role)`.
 
@@ -271,6 +273,8 @@ Sem e-mail para o admin, erros 500 ficam em tabela: `path`, `method`, `exception
 
 `actor nullable`, `action`, `target_type`, `target_id`, `changes` (JSONB), `ip_hash`, `created_at`.
 
+Implementação (E34): `target_type` é o `app.modelo` do alvo (ex.: `accounts.user`) e `target_id` o id em texto. `changes` guarda só códigos e ids, nunca nome ou e-mail, para a anonimização não precisar mexer na auditoria. `ip_hash` é SHA-256 de `SECRET_KEY` + ano-mês + IP. Ações em `AuditLog.Action`; gravação por `apps/core/audit.py`.
+
 ### curation.* (Fase 4)
 
 Inalteradas em relação ao desenho original: `NewsSource` (nome, feed, `kind`, idioma, `trust_level`, tópicos e disciplinas padrão, intervalo, último erro, ativo), `NewsItem` (fonte, título, URL, URL canônica, `url_hash` único, `title_hash`, resumo ≤ 600, `image_url`, datas, idioma, oculto), `NewsItemClassification` (item, tópico/disciplina, score, método), `NewsRecommendation` (usuário, item, score, status, pauta, datas; único por usuário e item), `StoryIdea` (título, notas, proposto por, item, disciplinas, tópicos, status, atribuído a, publicação).
@@ -331,3 +335,4 @@ erDiagram
 - 2026-09-14: E25: `StaticPage` troca o texto simples `body` por `body_json` e `body_html` (a migração converte os parágrafos) e mantém `lead` e `is_published`.
 - 2026-09-14: E29: `EditorialEvent` criado, com os tipos `reviewer_removed` (pedido cancelado ou revisão recusada) e `approved` (docs/04 e docs/17 já citavam o evento de aprovação). `Article.status` ganha `in_review` e `changes_requested`.
 - 2026-09-14: E32: `EditorialComment` criado com `anchor_prefix` e `anchor_suffix` (até 40 caracteres de contexto), além dos campos previstos; `anchor_from`/`anchor_to` são posições no texto da âncora (docs/17). `EditorialEvent` ganha `comment_added`, `comment_replied`, `comment_resolved`, `comment_reopened`; `Notification.kind` ganha `review_comment`.
+- 2026-09-14: E34: `AuditLog` criado (detalhes na seção); `User.anonymized_at` e `ArticleContributor.anonymized_at`.

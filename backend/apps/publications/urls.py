@@ -25,6 +25,11 @@ urlpatterns = [
         name="remove_contributor",
     ),
     path(
+        "x/articles/<int:pk>/contributors/<int:cid>/anonymize/",
+        editor_views.anonymize_contributor,
+        name="anonymize_contributor",
+    ),
+    path(
         "x/articles/<int:pk>/transition/<slug:action>/",
         editor_views.transition,
         name="transition",

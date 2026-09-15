@@ -23,7 +23,7 @@ from apps.taxonomy.models import ArticleType, Discipline, Topic
 
 from . import rendering
 from .cache import invalidate_public_content
-from .credits import student_name_error
+from .credits import generic_student_name, student_name_error
 from .media import copy_asset
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
 
@@ -158,6 +158,7 @@ def duplicate_article(user: User, article: Article) -> Article:
             consent_ok=credit.consent_ok,
             contribution_note=credit.contribution_note,
             show_in_credits=credit.show_in_credits,
+            anonymized_at=credit.anonymized_at,
             order=credit.order + 1,
         )
     return duplicate
@@ -393,6 +394,45 @@ def remove_credit(user: User, article: Article, contributor: ArticleContributor)
 
 
 @transaction.atomic
+def anonymize_student_credit(
+    user: User, contributor: ArticleContributor, *, request: Any = None
+) -> ArticleContributor:
+    """Troca o nome do aluno por um crédito genérico, sem despublicar (docs/23, docs/18).
+
+    Para quando a família pede a retirada do nome ou revoga a autorização. A turma sai; fica
+    só a série ("Aluno da 2ª série"). Um crédito anonimizado não identifica ninguém, então
+    deixa de exigir autorização na checklist e nos alertas. Não dá para desfazer.
+    """
+    from apps.core import audit
+
+    if not permissions.can_anonymize(user):
+        raise PermissionDenied
+    contributor = ArticleContributor.objects.select_for_update().get(pk=contributor.pk)
+    if not contributor.is_student:
+        raise ValidationError("Só créditos de aluno são anonimizados aqui.")
+    if contributor.anonymized_at is not None:
+        return contributor
+    contributor.display_name = generic_student_name(contributor.class_group)
+    contributor.class_group = ""
+    contributor.anonymized_at = timezone.now()
+    contributor.save(update_fields=["display_name", "class_group", "anonymized_at"])
+    events.record(
+        contributor.article,
+        user,
+        EventKind.CREDIT_ANONYMIZED,
+        note=f"Crédito de aluno ({contributor.get_role_display()}) anonimizado.",
+    )
+    audit.record(
+        audit.Action.CREDIT_ANONYMIZED,
+        actor=user,
+        target=contributor,
+        changes={"article": contributor.article_id},
+        request=request,
+    )
+    return contributor
+
+
+@transaction.atomic
 def set_metadata(
     user: User,
     article: Article,
@@ -527,7 +567,9 @@ def checklist(article: Article) -> list[ChecklistItem]:
     body = rendering.render(article.body_json)
     if body.is_empty:
         add("body_empty", "Escreva o texto da publicação.")
-    if article.contributors.filter(is_student=True, consent_ok=False).exists():
+    if article.contributors.filter(
+        is_student=True, consent_ok=False, anonymized_at__isnull=True
+    ).exists():
         add("student_consent_missing", "Marque a autorização de todos os alunos creditados.")
 
     asset_ids = set(body.asset_ids)

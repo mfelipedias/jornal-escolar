@@ -32,9 +32,9 @@ Regras no sistema:
 
 | Direito | Como o sistema atende |
 |---|---|
-| Acesso | `export_user_data` gera JSON com tudo de um usuário da equipe; disponível em "Conta" (Fase 2) |
+| Acesso | `export_user_data` gera JSON com tudo de um usuário da equipe; disponível em "Conta" (Fase 2). E34: a própria pessoa baixa em JSON ou ZIP (JSON e foto de perfil) em `/painel/conta/`; o admin exporta pela ação do admin ou pelo comando |
 | Correção | Edição de perfil; crédito de aluno editado pelo professor ou admin |
-| Exclusão/anonimização | `anonymize_user` para equipe; para aluno, edição do crédito; para comentário, exclusão pelo moderador |
+| Exclusão/anonimização | `anonymize_user` para equipe; para aluno, edição do crédito; para comentário, exclusão pelo moderador. E34: "Pedir exclusão" em "Conta" avisa os administradores no painel; o admin anonimiza (ação com confirmação ou comando). Crédito de aluno: botão "Anonimizar" (só admin) no editor e no alerta "Alunos sem autorização" |
 | Revogação de autorização | Admin ou professor edita o crédito e remove/troca a foto; registrado em `EditorialEvent` |
 | Informação | Página "Privacidade" editável: dados, cookies, comentários, contato (`marcossilva06@professor.educacao.sp.gov.br`, também no rodapé) |
 
@@ -89,6 +89,12 @@ Cookies `Secure`, `HttpOnly`, `SameSite=Lax`; expiração em 14 dias de inativid
 
 `AuditLog`: login, mudança de papel, criação/desativação/anonimização de usuário, geração de link de acesso, alteração de `SiteSetting`, exclusão de mídia, exportação de dados, moderação de comentário. IP como hash com sal mensal.
 
+Implementação (E34), em `apps/core/audit.py`:
+
+- Registrado: entrada no sistema (qualquer forma), conta criada, papel alterado, conta desativada ou reativada (ação ou caixa no admin), anonimização, exportação de dados, pedido de exclusão, link de acesso gerado (admin e comando), configuração alterada, imagem apagada no admin, crédito de aluno anonimizado e, além da lista acima, as ações em massa do painel editorial (arquivar, trocar o revisor), mudança nos destaques da home e página institucional posta no ar ou tirada do ar (painel e admin). Moderação de comentário entra com os comentários públicos (Fase 3).
+- Sem nome nem e-mail nos detalhes: só ids e códigos. O IP é SHA-256 de `SECRET_KEY` + mês + IP, com o mesmo IP real usado no limite de login.
+- Leitura só no Django Admin ("Auditoria"), com filtros por ação, pessoa e data; ninguém cria, altera ou apaga registros por lá.
+
 ## Moderação
 
 - Comentários: invisíveis até aprovação ([20](20-reacoes-leituras-comentarios.md)).
@@ -129,3 +135,4 @@ Revisada na E28. `[x]` = feito e verificado no código (teste automático quando
 - 2026-09-12: reescrito para alunos sem conta, login Microsoft, sem e-mail, comentários públicos, Cloudflare.
 - 2026-09-12: modelo do termo de autorização criado em [33](33-termo-de-autorizacao.md).
 - 2026-09-14: E28: checklist marcada; CSP com `'unsafe-eval'` por causa do Alpine e sem nonce (não há script inline); HSTS sem subdomínios nem preload; logs sem IP do visitante em vez de retenção de 14 dias; texto da página de privacidade escrito, aguardando a direção.
+- 2026-09-14: E34: `AuditLog` com a lista do que é registrado (inclui ações em massa, destaques e páginas); exportação em JSON ou ZIP; pedido de exclusão vira aviso aos administradores. Anonimizar conta: nome "Usuário removido", e-mail `removido-<id>@anonimo.invalid`, créditos "Ex-membro da equipe" (sem link nem cargo), perfil fora do ar e sem dados, foto apagada, sem senha, sem conta Microsoft ligada, sem links e sem sessões; eventos, comentários da revisão e auditoria mantidos, apontando para a conta anonimizada, e o nome antigo é trocado nos textos de eventos e avisos. Anonimizar crédito de aluno é só do admin (linha "anonimização" da matriz em docs/02): o nome vira "Aluno da 2ª série" (só a série ou o ano; sem turma, "Aluno"), a turma é apagada e o crédito deixa de exigir autorização na checklist e nos alertas.

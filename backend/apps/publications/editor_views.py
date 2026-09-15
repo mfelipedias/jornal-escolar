@@ -73,6 +73,7 @@ def sidebar_context(request: HttpRequest, article: Article, **extra: Any) -> dic
         "can_publish": permissions.can_publish(request.user, article),
         "can_archive": permissions.can_archive(request.user, article),
         "can_restore": permissions.can_restore(request.user, article),
+        "can_anonymize": permissions.can_anonymize(request.user),
         "archive_requires_note": permissions.archive_requires_note(request.user, article),
         **review_context(request, article),
         "event_at_local": (
@@ -358,6 +359,40 @@ def remove_contributor(request: HttpRequest, pk: int, cid: int) -> HttpResponse:
     return _with_updated_at(
         render(request, "publications/partials/credits_response.html", context), article
     )
+
+
+@require_POST
+@login_required
+def anonymize_contributor(request: HttpRequest, pk: int, cid: int) -> HttpResponse:
+    """POST /x/articles/<id>/contributors/<cid>/anonymize/: só admin (docs/23, docs/18).
+
+    Do editor (HTMX) devolve os créditos atualizados; do alerta "Alunos sem autorização" no
+    painel editorial (formulário comum) volta para a página de origem com um aviso.
+    """
+    article = get_object_or_404(Article, pk=pk)
+    contributor = get_object_or_404(ArticleContributor, pk=cid, article=article)
+    if not permissions.can_anonymize(request.user):
+        raise PermissionDenied
+    error = ""
+    try:
+        services.anonymize_student_credit(request.user, contributor, request=request)
+    except ValidationError as exc:
+        error = " ".join(exc.messages)
+    if request.headers.get("HX-Request") == "true":
+        context = sidebar_context(request, article, credit_error=error)
+        return _with_updated_at(
+            render(request, "publications/partials/credits_response.html", context), article
+        )
+    if error:
+        messages.error(request, error)
+    else:
+        messages.success(request, f"Crédito de aluno anonimizado em “{article.title}”.")
+    target = request.POST.get("next", "")
+    if not url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        target = reverse("publications:edit", args=[article.pk])
+    return redirect(target)
 
 
 @require_GET

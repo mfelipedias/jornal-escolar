@@ -125,6 +125,8 @@ def deactivate_user(user: User) -> None:
 
 
 def reactivate_user(user: User) -> None:
+    if user.anonymized_at is not None:
+        raise AccessLinkError("Conta anonimizada: não pode ser reativada.")
     user.is_active = True
     user.deactivated_at = None
     user.save(update_fields=["is_active", "deactivated_at"])

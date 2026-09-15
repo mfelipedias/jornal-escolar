@@ -40,8 +40,24 @@
                     <p class="font-medium text-ink">{{ alert.article.title }}</p>
                     <p class="text-meta text-ink-2">{{ alert.message }}</p>
                   </div>
-                  <a href="{{ alert.url }}"
-                     class="btn-secondary shrink-0 self-start sm:self-auto">{{ alert.action }}</a>
+                  <div class="flex shrink-0 flex-wrap gap-2 self-start sm:self-auto">
+                    {% if alert.credits and can_anonymize %}
+                      {# Um botão por crédito, sem o nome do aluno na tela (docs/23). #}
+                      {% for credit in alert.credits %}
+                        <form method="post"
+                              action="{% url 'publications:anonymize_contributor' alert.article.pk credit.pk %}"
+                              data-anonymize-credit="{{ credit.pk }}"
+                              @submit="if (!confirm('Trocar o nome deste aluno por um crédito genérico, como Aluno da 2ª série? Não dá para desfazer.')) $event.preventDefault()">
+                          {% csrf_token %}
+                          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                          <button type="submit" class="btn-secondary">
+                            Anonimizar crédito{% if alert.credits|length > 1 %} {{ forloop.counter }}{% endif %}
+                          </button>
+                        </form>
+                      {% endfor %}
+                    {% endif %}
+                    <a href="{{ alert.url }}" class="btn-secondary">{{ alert.action }}</a>
+                  </div>
                 </li>
               {% endfor %}
             </ul>

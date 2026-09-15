@@ -14,10 +14,11 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
+from apps.core.http import attachment
 from apps.publications.media import MediaError
 from apps.publications.presentation import initials
 
-from . import selectors, services
+from . import privacy, selectors, services
 from .forms import (
     PHOTO_ACCEPT,
     AccountPasswordForm,
@@ -241,7 +242,8 @@ def _ids(source: Any, key: str) -> set[int]:
 @sensitive_post_parameters("old_password", "new_password1", "new_password2")
 @require_http_methods(["GET", "POST"])
 def account_settings(request: HttpRequest) -> HttpResponse:
-    """/painel/conta/: forma de entrar, senha e sessões ativas (docs/14, "Conta")."""
+    """/painel/conta/: forma de entrar, senha, sessões, baixar meus dados e pedir exclusão
+    (docs/14, "Conta"; docs/23, "Direitos dos titulares")."""
     user = request.user
     has_password = user.has_usable_password()
     action = request.POST.get("action") if request.method == "POST" else None
@@ -263,6 +265,20 @@ def account_settings(request: HttpRequest) -> HttpResponse:
         else:
             messages.info(request, "Não havia outras sessões abertas.")
         return redirect("accounts:account_settings")
+    elif action == "export":
+        fmt = "zip" if request.POST.get("formato") == "zip" else "json"
+        return attachment(*privacy.export_for(user, user, fmt=fmt, request=request))
+    elif action == "request_deletion":
+        if request.POST.get("confirmar") != "sim":
+            messages.error(request, "Marque a confirmação para enviar o pedido de exclusão.")
+            return redirect(reverse("accounts:account_settings") + "#sec-exclusao")
+        privacy.request_deletion(user, request=request)
+        messages.success(
+            request,
+            "Pedido de exclusão enviado ao administrador. Sua conta continua funcionando até"
+            " ele concluir.",
+        )
+        return redirect("accounts:account_settings")
 
     current_key = request.session.session_key
     sessions = [
@@ -277,5 +293,6 @@ def account_settings(request: HttpRequest) -> HttpResponse:
         "sessions": sessions,
         "other_sessions": sum(1 for s in sessions if not s["is_current"]),
         "profile_edit_url": reverse("accounts:profile_edit"),
+        "deletion_request": privacy.last_deletion_request(user),
     }
     return render(request, "accounts/account_settings.html", context)

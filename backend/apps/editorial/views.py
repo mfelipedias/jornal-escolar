@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.core import audit
 from apps.core.templatetags.ui import PAGE_PARAM
 from apps.publications import presentation, selectors, services
 from apps.publications.models import Article
@@ -122,6 +123,7 @@ def feature(request: HttpRequest, pk: int) -> HttpResponse:
     article = get_object_or_404(Article, pk=pk)
     action = request.POST.get("acao", "")
     error = ""
+    before = services.featured_ids()
     try:
         if action == "adicionar":
             services.feature(request.user, article)
@@ -133,6 +135,15 @@ def feature(request: HttpRequest, pk: int) -> HttpResponse:
             error = "Ação inválida."
     except ValidationError as exc:
         error = " ".join(exc.messages)
+    after = services.featured_ids()
+    if after != before:
+        audit.record(
+            audit.Action.FEATURED_CHANGED,
+            actor=request.user,
+            target=article,
+            changes={"action": action, "featured": [before, after]},
+            request=request,
+        )
     if request.headers.get("HX-Request") != "true":
         return redirect("editorial:featured")
     return render(

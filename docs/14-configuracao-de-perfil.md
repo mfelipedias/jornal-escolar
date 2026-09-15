@@ -96,3 +96,4 @@ Uma página com seções, um botão salvar. Sem abas.
 - 2026-09-12: reescrito. Sem contas de aluno; contas criadas pelo admin; login Microsoft; link de primeiro acesso manual; campo cargo.
 - 2026-09-14: E23. Rota e regra de exibição do assistente (`onboarded_at`); cargo só para leitura no passo 1; links aceitam `http` e `https`, como a página pública já fazia; troca de endereço com aviso; detalhes de foto e sessões. "Atualizar créditos anteriores" já atualiza os créditos; o registro em `EditorialEvent` fica para a E29, quando o modelo existir.
 - 2026-09-14: E29: "atualizar créditos anteriores" grava um `EditorialEvent` `contributor_changed` em cada publicação alterada.
+- 2026-09-14: E34: "Conta" ganha "Seus dados" (baixar em JSON ou em ZIP com a foto de perfil) e "Excluir a conta" (caixa de confirmação; o pedido vira um aviso no painel de cada administrador e a tela mostra a data do último pedido). A conta continua ativa até o admin anonimizá-la.

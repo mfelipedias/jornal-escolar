@@ -111,7 +111,7 @@ def page_publish(request: HttpRequest, slug: str) -> HttpResponse:
     _require_editor(request)
     page = get_object_or_404(StaticPage, slug=slug)
     published = request.POST.get("publicada") == "1"
-    services.set_page_published(request.user, page, published)
+    services.set_page_published(request.user, page, published, request=request)
     if published:
         messages.success(request, f"“{page.title}” está no ar.")
     else:

@@ -37,6 +37,8 @@ class Alert:
     url: str
     action: str
     since: datetime | None = None
+    # Créditos de aluno envolvidos (só no alerta de autorização): o admin anonimiza daqui.
+    credits: tuple[ArticleContributor, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -142,7 +144,10 @@ def student_consent(now: datetime | None = None) -> AlertGroup:
     """Publicadas com crédito de aluno sem autorização: a checklist impede, então é dado antigo
     ou alterado por fora do fluxo."""
     credits = ArticleContributor.objects.filter(
-        article__status=Status.PUBLISHED, is_student=True, consent_ok=False
+        article__status=Status.PUBLISHED,
+        is_student=True,
+        consent_ok=False,
+        anonymized_at__isnull=True,
     ).select_related("article")
     by_article: dict[int, list[ArticleContributor]] = {}
     for credit in credits.order_by("article__published_at", "article_id"):
@@ -155,6 +160,7 @@ def student_consent(now: datetime | None = None) -> AlertGroup:
             + " sem autorização marcada.",
             url=reverse("publications:edit", args=[group[0].article_id]),
             action="Abrir no editor",
+            credits=tuple(group),
         )
         for group in by_article.values()
     ]

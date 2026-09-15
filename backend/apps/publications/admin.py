@@ -5,6 +5,8 @@ from django.http import HttpRequest
 from django.template.defaultfilters import filesizeformat
 from django.utils.html import format_html
 
+from apps.core import audit
+
 from . import services
 from .models import Article, ArticleContributor, ArticleRevision, MediaAsset
 
@@ -123,6 +125,25 @@ class MediaAssetAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request) -> bool:
         return False  # Imagens entram pelo editor, que processa e gera as variantes.
+
+    def _audit_delete(self, request: HttpRequest, assets: list[MediaAsset]) -> None:
+        for asset in assets:
+            audit.record(
+                audit.Action.MEDIA_DELETED,
+                actor=request.user,
+                target=asset,
+                changes={"file": asset.file.name, "article": asset.article_id},
+                request=request,
+            )
+
+    def delete_model(self, request: HttpRequest, obj: MediaAsset) -> None:
+        self._audit_delete(request, [obj])
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request: HttpRequest, queryset: QuerySet[MediaAsset]) -> None:
+        self._audit_delete(request, list(queryset))
+        for asset in queryset:  # um por um: o sinal apaga os arquivos
+            asset.delete()
 
     @admin.display(description="")
     def thumbnail(self, obj: MediaAsset) -> str:

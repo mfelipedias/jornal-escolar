@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% comment %}
+  Confirmação da ação "Anonimizar" em Usuários (docs/18, docs/23). Reenvia a ação com confirmar=sim.
+{% endcomment %}
+{% load i18n admin_urls %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Início</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › Anonimizar
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <p>
+    Anonimizar apaga os dados pessoais e <strong>não dá para desfazer</strong>. Se a pessoa pediu os dados,
+    exporte antes (ação “Exportar dados”).
+  </p>
+  <ul>
+    <li>O nome vira “{{ anonymized_name }}” e o e-mail é apagado.</li>
+    <li>Os créditos nas publicações passam a mostrar “{{ credit_name }}”; as publicações continuam no ar.</li>
+    <li>O perfil público sai do ar; foto, apresentação, biografia, formação e links são apagados.</li>
+    <li>A conta é desativada: sem senha, sem conta Microsoft ligada, sem links de acesso e sem sessões.</li>
+    <li>Eventos editoriais, comentários da revisão e auditoria continuam, apontando para a conta anonimizada.</li>
+  </ul>
+  <p>Contas selecionadas:</p>
+  <ul>
+    {% for person in people %}
+      <li>
+        {{ person.full_name }} &lt;{{ person.email }}&gt;
+        {% if person.is_anonymized %}(já anonimizada){% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  <form method="post">
+    {% csrf_token %}
+    {% for person in people %}
+      <input type="hidden" name="{{ action_checkbox_name }}" value="{{ person.pk }}">
+    {% endfor %}
+    <input type="hidden" name="action" value="anonymize_users">
+    <input type="hidden" name="confirmar" value="sim">
+    <input type="submit" value="Sim, anonimizar">
+    <a href="{% url opts|admin_urlname:'changelist' %}" class="button cancel-link">Cancelar</a>
+  </form>
+{% endblock content %}

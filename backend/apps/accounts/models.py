@@ -106,6 +106,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     date_joined = models.DateTimeField("cadastrado em", default=timezone.now)
     deactivated_at = models.DateTimeField("desativado em", null=True, blank=True)
+    anonymized_at = models.DateTimeField(
+        "anonimizado em",
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Dados pessoais apagados (docs/23). A conta não pode ser reativada.",
+    )
 
     objects = UserManager()
 
@@ -134,6 +141,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def clean(self) -> None:
         super().clean()
         self.email = normalize_email(self.email)
+
+    @property
+    def is_anonymized(self) -> bool:
+        return self.anonymized_at is not None
 
     @property
     def public_name(self) -> str:

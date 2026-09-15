@@ -160,6 +160,13 @@ class ArticleContributor(models.Model):
     can_publish = models.BooleanField("pode publicar pelo autor", default=False)
     order = models.PositiveSmallIntegerField("ordem", default=0)
     show_in_credits = models.BooleanField("mostrar nos créditos", default=True)
+    anonymized_at = models.DateTimeField(
+        "anonimizado em",
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Nome do aluno trocado por crédito genérico (docs/23).",
+    )
 
     class Meta:
         verbose_name = "crédito"

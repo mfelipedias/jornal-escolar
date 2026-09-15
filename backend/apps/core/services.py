@@ -256,10 +256,18 @@ def update_page(
     return current
 
 
-def set_page_published(user: User, page: StaticPage, published: bool) -> StaticPage:
+def set_page_published(
+    user: User, page: StaticPage, published: bool, *, request: Any = None
+) -> StaticPage:
+    from . import audit
+
     if not permissions.can_edit_pages(user):
         raise PermissionDenied
+    changed = page.is_published != published
     page.is_published = published
     page.updated_by = user
     page.save(update_fields=["is_published", "updated_by", "updated_at"])
+    if changed:
+        action = audit.Action.PAGE_PUBLISHED if published else audit.Action.PAGE_UNPUBLISHED
+        audit.record(action, actor=user, target=page, changes={"slug": page.slug}, request=request)
     return page

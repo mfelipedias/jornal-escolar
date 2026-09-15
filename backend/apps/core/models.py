@@ -103,3 +103,59 @@ class StaticPage(TimeStampedModel):
         result = super().delete(*args, **kwargs)
         clear_footer_pages_cache()
         return result
+
+
+class AuditLog(models.Model):
+    """Registro de ações sensíveis (docs/23, "Auditoria"; docs/06). Só leitura no admin.
+
+    Não guarda nomes nem e-mails: o alvo é identificado por tipo e id, e o IP vira um hash com
+    sal mensal (apps/core/audit.py). Assim a anonimização de uma pessoa não precisa apagar a
+    auditoria, que continua apontando para a conta já anonimizada.
+    """
+
+    class Action(models.TextChoices):
+        LOGIN = "login", "Entrada no sistema"
+        USER_CREATED = "user_created", "Conta criada"
+        ROLE_CHANGED = "role_changed", "Papel alterado"
+        USER_DEACTIVATED = "user_deactivated", "Conta desativada"
+        USER_REACTIVATED = "user_reactivated", "Conta reativada"
+        USER_ANONYMIZED = "user_anonymized", "Conta anonimizada"
+        DATA_EXPORTED = "data_exported", "Dados exportados"
+        DELETION_REQUESTED = "deletion_requested", "Exclusão pedida"
+        ACCESS_LINK_CREATED = "access_link_created", "Link de acesso gerado"
+        SETTING_CHANGED = "setting_changed", "Configuração alterada"
+        MEDIA_DELETED = "media_deleted", "Imagem apagada"
+        CREDIT_ANONYMIZED = "credit_anonymized", "Crédito de aluno anonimizado"
+        ARTICLES_ARCHIVED = "articles_archived", "Publicações arquivadas em massa"
+        REVIEWER_REASSIGNED = "reviewer_reassigned", "Revisor trocado em massa"
+        FEATURED_CHANGED = "featured_changed", "Destaques da home alterados"
+        PAGE_PUBLISHED = "page_published", "Página institucional posta no ar"
+        PAGE_UNPUBLISHED = "page_unpublished", "Página institucional tirada do ar"
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="quem fez",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+        help_text="Vazio quando a ação veio de um comando no servidor.",
+    )
+    action = models.CharField("ação", max_length=24, choices=Action.choices, db_index=True)
+    target_type = models.CharField("tipo do alvo", max_length=40, blank=True)
+    target_id = models.CharField("id do alvo", max_length=64, blank=True)
+    changes = models.JSONField("detalhes", default=dict, blank=True)
+    ip_hash = models.CharField("IP (hash)", max_length=64, blank=True)
+    created_at = models.DateTimeField("quando", auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "registro de auditoria"
+        verbose_name_plural = "auditoria"
+        ordering = ["-created_at", "-pk"]
+        indexes = [
+            models.Index(fields=["actor", "created_at"]),
+            models.Index(fields=["target_type", "target_id"]),
+        ]
+
+    def __str__(self) -> str:
+        return self.get_action_display()

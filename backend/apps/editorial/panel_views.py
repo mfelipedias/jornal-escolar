@@ -13,6 +13,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.accounts.models import User
+from apps.core import audit
 from apps.core.templatetags.ui import PAGE_PARAM
 from apps.publications import presentation, services
 from apps.publications.models import Article, ArticleContributor
@@ -49,6 +50,7 @@ def overview(request: HttpRequest) -> HttpResponse:
         "draft_authors": selectors.draft_authors(),
         "alert_groups": groups,
         "alert_total": alerts.alert_count(groups),
+        "can_anonymize": permissions.can_anonymize(request.user),
     }
     return render(request, "editorial/overview.html", context)
 
@@ -148,7 +150,7 @@ def bulk_action(request: HttpRequest) -> HttpResponse:
             messages.error(request, "Escolha o colega que vai revisar.")
             return redirect(back)
 
-    done, failed = 0, []
+    done, failed, done_ids = 0, [], []
     for article in Article.objects.filter(pk__in=ids).order_by("pk"):
         try:
             if action == "arquivar":
@@ -160,9 +162,21 @@ def bulk_action(request: HttpRequest) -> HttpResponse:
                     raise ValidationError("não está em revisão.")
                 services.reassign_reviewer(request.user, article, reviewer, note=note)
             done += 1
+            done_ids.append(article.pk)
         except (PermissionDenied, ValidationError) as exc:
             failed.append(f"“{article.title}”: {_error_text(exc)}")
     if done:
+        changes = {"articles": done_ids}
+        if reviewer is not None:
+            changes["reviewer"] = reviewer.pk
+        audit.record(
+            audit.Action.ARTICLES_ARCHIVED
+            if action == "arquivar"
+            else audit.Action.REVIEWER_REASSIGNED,
+            actor=request.user,
+            changes=changes,
+            request=request,
+        )
         one, many = BULK_ACTIONS[action]
         messages.success(request, f"{done} {one if done == 1 else many}.")
     if failed:

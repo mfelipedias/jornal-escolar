@@ -57,6 +57,21 @@ def can_access_admin(user: AnyUser) -> bool:
     return is_admin(user)
 
 
+def can_anonymize(user: AnyUser) -> bool:
+    """Anonimizar uma conta da equipe ou o crédito de um aluno (docs/23): só o administrador.
+
+    Mesma linha da matriz que configurações e auditoria.
+    """
+    return is_admin(user)
+
+
+def can_export_user_data(user: AnyUser, person: User) -> bool:
+    """Baixar os dados de uma conta (docs/23, "Acesso"): a própria pessoa ou o administrador."""
+    if not is_staff_member(user):
+        return False
+    return user.pk == person.pk or is_admin(user)
+
+
 def is_editor(user: AnyUser) -> bool:
     """Editor ou admin: papéis são hierárquicos (admin ⊃ editor ⊃ staff)."""
     return is_staff_member(user) and user.role in (User.Role.EDITOR, User.Role.ADMIN)

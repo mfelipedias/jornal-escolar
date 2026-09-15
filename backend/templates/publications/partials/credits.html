@@ -21,13 +21,26 @@
             {{ c.get_role_display }}
             {% if c.is_student %}
               · aluno{% if c.class_group %}, {{ c.class_group }}{% endif %}
-              {% if not c.consent_ok %}<span class="text-danger">· sem autorização</span>{% endif %}
+              {% if c.anonymized_at %}
+                · anonimizado
+              {% elif not c.consent_ok %}
+                <span class="text-danger">· sem autorização</span>
+              {% endif %}
             {% elif not c.user_id %}
               · sem conta
             {% endif %}
             {% if c.contribution_note %}· {{ c.contribution_note }}{% endif %}
           </p>
         </div>
+        {% if can_anonymize and c.is_student and not c.anonymized_at %}
+          <button type="button"
+                  class="btn-ghost shrink-0 px-2 text-meta"
+                  hx-post="{% url 'publications:anonymize_contributor' article.pk c.pk %}"
+                  hx-target="#editor-credits"
+                  hx-swap="outerHTML"
+                  hx-confirm="Trocar o nome deste aluno por um crédito genérico? Não dá para desfazer."
+                  aria-label="Anonimizar o crédito de {{ c.display_name }}">Anonimizar</button>
+        {% endif %}
         <button type="button"
                 class="btn-ghost shrink-0 px-2 text-meta"
                 hx-delete="{% url 'publications:remove_contributor' article.pk c.pk %}"
