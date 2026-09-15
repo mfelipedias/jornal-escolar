@@ -6,6 +6,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [1.1.0] - 2026-09-14
+
 ### Adicionado
 
 - Revisão por colega (E29): estados "Em revisão" e "Alterações sugeridas". No editor, o autor pede a leitura de um colega (com nota e "pode publicar por mim"), cancela o pedido ou reenvia depois das sugestões; o revisor designado, editores e admin sugerem alterações (com nota), aprovam e devolvem, aprovam e publicam (quando permitido) ou recusam a revisão. O painel lateral mostra com quem está a revisão, a nota, as alterações sugeridas e o selo "Revisado por".
