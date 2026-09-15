@@ -21,7 +21,7 @@
     </a>
     <div class="flex items-center gap-1 text-ui sm:gap-3 xl:gap-4">
       {# Data e, embaixo, o tempo agora na escola (docs/29); no tablet só ícone e temperatura #}
-      <div class="flex flex-col items-end gap-0.5 leading-tight">
+      <div class="masthead-dateline flex flex-col items-end gap-0.5 leading-tight">
         {% if jornal.show_date %}
           {% now "l, j \d\e F \d\e Y" as today %}
           <p class="hidden text-meta text-ink-3 lg:block">{{ today|lower }}</p>

@@ -1007,3 +1007,198 @@
     }
   }
 }
+
+/* Movimento e carregamento (docs/09, "Movimento", R5). Tudo desligado com
+   prefers-reduced-motion no fim deste bloco. Nada de style inline (CSP): só classes; o JS
+   de app.js liga e desliga as classes e, pelo CSSOM, a variável --progress-from. */
+@layer components {
+  /* Barra de progresso no topo: html.is-loading avança até ~85% desacelerando (8s);
+     html.is-loaded completa a partir de onde parou e some. */
+  .page-progress {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 100;
+    height: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-accent) 75%,
+      var(--color-sun)
+    );
+    box-shadow:
+      0 0 8px color-mix(in oklab, var(--color-accent) 55%, transparent),
+      0 0 2px color-mix(in oklab, var(--color-sun) 70%, transparent);
+  }
+  html.is-loading .page-progress {
+    opacity: 1;
+    animation: page-progress-run 8s cubic-bezier(0.08, 0.7, 0.2, 1) forwards;
+  }
+  html.is-loaded .page-progress {
+    animation: page-progress-done 360ms var(--ease-snappy) forwards;
+  }
+  @keyframes page-progress-run {
+    from {
+      transform: scaleX(0.02);
+    }
+    8% {
+      transform: scaleX(0.3);
+    }
+    to {
+      transform: scaleX(0.85);
+    }
+  }
+  @keyframes page-progress-done {
+    from {
+      opacity: 1;
+      transform: scaleX(var(--progress-from, 0.6));
+    }
+    55% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+    to {
+      opacity: 0;
+      transform: scaleX(1);
+    }
+  }
+
+  /* Cards e blocos entram quando rolam para dentro da tela: animação ligada à rolagem
+     (scroll-driven), só CSS, sem esconder nada antes (o que já está na tela ao abrir já passou
+     da faixa e aparece inteiro). Colunas da mesma linha entram um pouco depois da anterior.
+     Navegador sem suporte: tudo aparece direto. A versão com IntersectionObserver custava
+     ~350ms de bloqueio no celular (Lighthouse, R5). */
+  @supports (animation-timeline: view()) {
+    main .card,
+    main .card-row,
+    main [data-reveal] {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+    main li:nth-child(3n + 2) > .card {
+      animation-range: entry 8% entry 55%;
+    }
+    main li:nth-child(3n) > .card {
+      animation-range: entry 16% entry 65%;
+    }
+  }
+  @keyframes reveal-in {
+    from {
+      opacity: 0;
+      translate: 0 24px;
+    }
+  }
+
+  /* Masthead ao rolar (docs/09): a linha da marca encolhe e a data com o clima some no
+     computador. A margem de baixo cresce o mesmo tanto que o padding encolhe, então o
+     conteúdo da página não pula. */
+  .masthead {
+    transition: margin-bottom 200ms var(--ease-snappy);
+  }
+  .masthead.is-scrolled {
+    margin-bottom: 0.75rem;
+    box-shadow: 0 6px 20px rgb(23 21 31 / 0.06);
+    @media (width >= 40rem) {
+      margin-bottom: 1.5rem;
+    }
+  }
+  .masthead-dateline {
+    transition: opacity 150ms;
+  }
+  @media (width >= 64rem) {
+    .masthead.is-scrolled .masthead-dateline {
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+
+  /* Reações: pulinho no botão escolhido depois que a resposta chega (app.js põe .is-popping). */
+  .reaction-btn.is-popping {
+    animation: reaction-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .reaction-btn.is-popping > span[aria-hidden="true"] {
+    display: inline-block;
+    animation: reaction-emoji 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes reaction-pop {
+    40% {
+      transform: scale(1.15);
+    }
+  }
+  @keyframes reaction-emoji {
+    35% {
+      transform: scale(1.45) rotate(-12deg);
+    }
+    70% {
+      transform: scale(0.95) rotate(4deg);
+    }
+  }
+
+  /* Transição entre páginas (View Transitions, onde o navegador suporta): o conteúdo troca com
+     fade e um leve deslizar; o cabeçalho fica parado. Nas trocas do HTMX só o fade padrão. */
+  .masthead {
+    view-transition-name: masthead;
+  }
+  .page-progress {
+    view-transition-name: page-progress;
+  }
+}
+
+@view-transition {
+  navigation: auto;
+  types: pagina;
+}
+html:active-view-transition-type(pagina) {
+  &::view-transition-old(root) {
+    animation: vt-sai 180ms ease-in both;
+  }
+  &::view-transition-new(root) {
+    animation: vt-entra 240ms var(--ease-snappy) both;
+  }
+}
+@keyframes vt-sai {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes vt-entra {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+  html.is-loading .page-progress {
+    animation: none;
+    transform: scaleX(0.6);
+  }
+  html.is-loaded .page-progress {
+    animation: none;
+    opacity: 0;
+  }
+  main .card,
+  main .card-row,
+  main [data-reveal],
+  .reaction-btn.is-popping,
+  .reaction-btn.is-popping > span[aria-hidden="true"] {
+    animation: none;
+  }
+  .card:hover,
+  .card:hover .card-media img,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .reaction-btn:hover,
+  .masthead-logo:hover svg {
+    transform: none;
+  }
+}

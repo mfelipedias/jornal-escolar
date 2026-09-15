@@ -4,6 +4,7 @@
 import Alpine from "alpinejs";
 import htmx from "htmx.org";
 
+import { configureHtmxTransitions, startMotion } from "./motion.js";
 import { startReadBeacon } from "./read-beacon.js";
 import { registerReviewComments } from "./review-comments.js";
 
@@ -13,6 +14,10 @@ window.Alpine = Alpine;
 // O HTMX injetaria um <style> para os indicadores de carregamento, bloqueado pela
 // Content-Security-Policy (docs/23). O projeto não usa a classe htmx-indicator.
 htmx.config.includeIndicatorStyles = false;
+
+// Barra de carregamento, transições, cabeçalho ao rolar e entrada dos cards (docs/09).
+configureHtmxTransitions(htmx);
+startMotion();
 
 // Barra de filtros das listas (docs/12, components/filter_bar.html). Sem JavaScript tudo
 // funciona por GET; aqui só o que melhora com JavaScript.
