@@ -67,7 +67,6 @@ MATRIZ = [
 
 FORA_DO_ESCOPO = {
     "Buscar e filtrar": "busca e filtros completos: E35 a E37",
-    "Reagir": "reações: E38",
     "Comentar (vai para moderação)": "comentários públicos: E40",
     "Moderar comentários públicos": "moderação: E41",
     "Responder comentários como autor": "resposta do autor: E40",
@@ -90,6 +89,8 @@ class Regra:
 
 REGRAS = {
     "Ler publicações publicadas": Regra("can_view", "article", S.PUBLISHED, S.PUBLISHED),
+    # Visitante reage pelo cookie anônimo; a regra do cookie é testada em engagement/tests.
+    "Reagir": Regra("can_react", "article", S.PUBLISHED, S.PUBLISHED),
     "Ver perfil público da equipe": Regra("can_view_profile", "profile"),
     "Entrar (Microsoft ou senha)": Regra("can_log_in"),
     "Editar o próprio perfil": Regra("can_edit_profile", "person"),

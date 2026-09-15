@@ -48,8 +48,12 @@ não alugamos e não compartilhamos dados para publicidade.
 - Não é preciso criar conta nem informar dados para ler.
 - Não usamos anúncios, rastreadores de publicidade nem ferramentas de análise de terceiros.
 - O site usa só cookies técnicos: o de proteção dos formulários e, para a equipe que entra \
-no painel, o de sessão. Quando reações e contagem de leituras estiverem ligadas, um cookie \
-com um código aleatório evita contar a mesma leitura duas vezes, sem identificar quem lê.
+no painel, o de sessão.
+- Quem abre uma publicação recebe o cookie “jv”, com um código aleatório que dura um ano. Ele \
+serve só para lembrar a reação que você deixou e para não contar a mesma leitura duas vezes. \
+Não guarda nome, e-mail ou endereço IP, não identifica quem lê e não é usado para publicidade. \
+Apagar os cookies do navegador apaga esse código.
+- Quem reage não aparece em lugar nenhum: o site mostra só o total de cada reação.
 - Os registros técnicos do servidor (página pedida, horário e erros) não guardam o endereço \
 IP de quem visita e são descartados automaticamente. A Cloudflare, que protege o site contra \
 ataques, trata o endereço IP conforme a política de privacidade dela.
@@ -146,17 +150,20 @@ INITIAL_PAGES = [
     },
 ]
 
-# Primeira versão do texto (E15). Se a página ainda estiver exatamente assim, seed_site troca
-# pelo texto completo de PRIVACY_BODY; se alguém já editou, nada muda.
+# Textos padrão antigos, reconhecidos por um trecho que só eles têm: o rascunho curto da E15 e
+# o texto da E28 (antes do cookie das reações, E38). Página nunca editada por ninguém (sem
+# updated_by) com um desses trechos recebe o PRIVACY_BODY atual; se alguém já editou, nada muda.
 OLD_PRIVACY_MARKER = "RASCUNHO: revisar com a direção antes de publicar."
+E28_PRIVACY_MARKER = "Quando reações e contagem de leituras estiverem ligadas"
+OLD_PRIVACY_MARKERS = (OLD_PRIVACY_MARKER, E28_PRIVACY_MARKER)
 
 
 @transaction.atomic
 def seed_site() -> dict[str, int]:
     """Cria configurações e páginas institucionais que faltam, sem alterar as existentes.
 
-    Exceção: a Privacidade ainda com o rascunho curto da E15, nunca editada, recebe o texto
-    completo (E28). Continua despublicada até a direção aprovar.
+    Exceção: a Privacidade ainda com um texto padrão antigo (E15 ou E28), nunca editada, recebe
+    o texto atual. Publicada ou não, continua como estava.
     """
     created_pages = 0
     for data in INITIAL_PAGES:
@@ -177,7 +184,7 @@ def _is_untouched_old_privacy(page: StaticPage) -> bool:
     return (
         page.slug == StaticPage.Slug.PRIVACY
         and page.updated_by_id is None
-        and OLD_PRIVACY_MARKER in page.body_html
+        and any(marker in page.body_html for marker in OLD_PRIVACY_MARKERS)
     )
 
 

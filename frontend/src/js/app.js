@@ -36,6 +36,16 @@ document.addEventListener("htmx:afterSettle", () => {
   keepFilterPanelOpen = false;
 });
 
+// Barra de reações (docs/20): limite atingido (429) ou reação inválida (400) também trocam a
+// barra, que traz o aviso. O HTMX, por padrão, não troca conteúdo em respostas de erro.
+document.addEventListener("htmx:beforeSwap", (event) => {
+  const { elt, xhr } = event.detail;
+  if ([400, 429].includes(xhr.status) && elt.closest?.("[data-reaction-bar]")) {
+    event.detail.shouldSwap = true;
+    event.detail.isError = false;
+  }
+});
+
 // Período predefinido e datas escritas à mão não valem juntos.
 document.addEventListener("change", (event) => {
   const field = event.target;

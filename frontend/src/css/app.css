@@ -507,6 +507,40 @@
     color: white;
   }
 
+  /* Barra de reações (docs/09 reaction-bar, docs/11): toque de 44px, ativo em paper-2. */
+  .reaction-btn {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background-color: white;
+    padding: 0.35rem 0.9rem;
+    font-size: var(--text-ui);
+    color: var(--color-ink-2);
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      color 150ms;
+
+    &:hover {
+      border-color: var(--color-accent);
+      color: var(--color-ink);
+    }
+    &[aria-pressed="true"] {
+      border-color: var(--color-ink-3);
+      background-color: var(--color-paper-2);
+      color: var(--color-ink);
+      font-weight: 500;
+    }
+  }
+  .reaction-count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
   .editor-sep {
     margin-inline: 0.25rem;
     height: 1.25rem;

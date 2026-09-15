@@ -56,6 +56,7 @@ def export_user_data(user: User) -> dict[str, Any]:
     códigos de links de acesso ou hashes de IP.
     """
     from apps.editorial.models import EditorialComment, EditorialEvent, Notification
+    from apps.engagement.models import Reaction
     from apps.publications.models import Article, ArticleContributor, MediaAsset
 
     profile = TeacherProfile.objects.filter(user=user).first()
@@ -167,6 +168,17 @@ def export_user_data(user: User) -> dict[str, Any]:
             "enviada_em": _date(asset.created_at),
         }
         for asset in MediaAsset.objects.filter(uploaded_by=user).order_by("created_at")
+    ]
+    # Só as reações feitas com a conta; as do cookie anônimo não têm ligação com ninguém.
+    data["reacoes"] = [
+        {
+            "publicacao": _article_ref(reaction.article),
+            "reacao": reaction.get_kind_display(),
+            "quando": _date(reaction.created_at),
+        }
+        for reaction in Reaction.objects.filter(user=user)
+        .select_related("article")
+        .order_by("created_at")
     ]
     data["links_de_acesso"] = [
         {

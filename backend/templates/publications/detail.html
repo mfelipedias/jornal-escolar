@@ -107,8 +107,11 @@
         </ol>
       </section>
     {% endif %}
+    {% if reaction_bar %}
+      <div class="mx-auto mt-10 max-w-reading">{% include "engagement/partials/reaction_bar.html" %}</div>
+    {% endif %}
     {% if not preview %}
-      <div class="mx-auto mt-10 max-w-reading">
+      <div class="mx-auto mt-8 max-w-reading">
         {% include "components/share.html" with url=share_url title=article.title %}
       </div>
     {% endif %}

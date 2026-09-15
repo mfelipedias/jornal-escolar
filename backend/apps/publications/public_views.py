@@ -9,10 +9,23 @@ from django.views.decorators.http import require_GET
 from apps.core import seo
 from apps.core.site_settings import get_setting
 from apps.editorial import permissions
+from apps.engagement import presentation as engagement_presentation
+from apps.engagement import services as engagement_services
+from apps.engagement import visitor
 
 from . import listing, presentation, selectors
 from . import seo as article_seo
 from .models import Article
+
+
+def _reaction_bar(request: HttpRequest, article: Article):
+    """Barra de reações: só em publicada e para quem pode reagir (docs/20)."""
+    if not permissions.can_react(request.user, article):
+        return None
+    current = engagement_services.current_kind(
+        article, user=request.user, anon_key=visitor.anon_key(request)
+    )
+    return engagement_presentation.reaction_bar(article, current)
 
 
 def _render_article(request: HttpRequest, article: Article, *, preview: bool) -> HttpResponse:
@@ -28,6 +41,7 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
             if not preview
             else []
         ),
+        "reaction_bar": None if preview else _reaction_bar(request, article),
         "share_url": seo.absolute_url(article.get_absolute_url()),
         "seo": article_seo.page_meta(article, preview=preview),
         "was_updated": bool(
@@ -40,6 +54,9 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
     if preview:
         response["X-Robots-Tag"] = "noindex"
         response["Cache-Control"] = "private, no-store"
+    elif not request.user.is_authenticated:
+        # Cookie anônimo das reações (e das leituras, E39): o endpoint só aceita quem já o tem.
+        visitor.ensure_cookie(request, response)
     return response
 
 

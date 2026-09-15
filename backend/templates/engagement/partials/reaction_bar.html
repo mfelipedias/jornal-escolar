@@ -1,0 +1,37 @@
+{% comment %}
+  Barra de reações (docs/20, docs/11). Parâmetro: reaction_bar (engagement/presentation.py).
+  Com HTMX o POST troca a barra inteira; sem JavaScript o formulário volta para #reacoes.
+  Os botões mantêm o id depois da troca, e o HTMX devolve o foco ao botão clicado.
+  Contagem zero não aparece (evita "0 0 0 0").
+{% endcomment %}
+<section id="reacoes"
+         class="scroll-mt-24"
+         aria-labelledby="reactions-title"
+         data-reaction-bar>
+  <h2 id="reactions-title" class="text-meta text-ink-3">O que você achou?</h2>
+  <form method="post"
+        action="{% url 'engagement:react' reaction_bar.article_id %}"
+        hx-post="{% url 'engagement:react' reaction_bar.article_id %}"
+        hx-target="#reacoes"
+        hx-swap="outerHTML"
+        class="mt-2 flex flex-wrap gap-2">
+    {% csrf_token %}
+    {% for button in reaction_bar.buttons %}
+      <button type="submit"
+              id="reaction-{{ button.kind }}"
+              name="kind"
+              value="{{ button.kind }}"
+              aria-pressed="{% if button.pressed %}true{% else %}false{% endif %}"
+              class="reaction-btn">
+        <span aria-hidden="true">{{ button.emoji }}</span>
+        <span>{{ button.label }}</span>
+        {% if button.count %}
+          <span class="reaction-count">{{ button.count }} <span class="sr-only">{{ button.count|pluralize:"reação,reações" }}</span></span>
+        {% endif %}
+      </button>
+    {% endfor %}
+  </form>
+  <p class="mt-2 min-h-5 text-meta text-ink-2"
+     role="status"
+     aria-live="polite">{{ reaction_bar.notice }}</p>
+</section>

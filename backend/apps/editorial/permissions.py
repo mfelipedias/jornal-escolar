@@ -8,8 +8,8 @@ a função can_<acao> daqui.
 A E12 cobriu rascunho, publicado e arquivado; a E29 acrescentou a revisão por colega
 (em revisão, alterações sugeridas); a E30 fechou a matriz (perfil, entrada, administração,
 comentário interno da revisão) e a testa célula a célula em editorial/tests/test_matrix.py.
-Linhas da matriz que dependem de recursos futuros (reações, comentários públicos, busca,
-pautas, fontes) ganham função quando a etapa delas chegar.
+Linhas da matriz que dependem de recursos futuros (comentários públicos, pautas, fontes)
+ganham função quando a etapa delas chegar. Reações: can_react (E38).
 """
 
 from django.contrib.auth.models import AnonymousUser
@@ -122,6 +122,16 @@ def can_view(user: AnyUser, article: Article) -> bool:
     if article.status == Article.Status.PUBLISHED:
         return True
     return is_editor(user) or is_author(user, article) or is_designated_reviewer(user, article)
+
+
+def can_react(user: AnyUser, article: Article) -> bool:
+    """Reagir a uma publicação publicada: todo mundo, o visitante pelo cookie anônimo (docs/20).
+
+    Com a configuração reactions.require_login ligada, só quem entrou no sistema.
+    """
+    if article.status != Article.Status.PUBLISHED:
+        return False
+    return is_staff_member(user) or not get_setting("reactions.require_login")
 
 
 def can_edit(user: AnyUser, article: Article) -> bool:

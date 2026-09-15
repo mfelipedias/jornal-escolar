@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.publications",
     "apps.editorial",
     "apps.dashboard",
+    "apps.engagement",
 ]
 
 MIDDLEWARE = [
@@ -235,3 +236,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = MEDIA_MAX_UPLOAD_BYTES + 1024 * 1024
 
 # Busca pública (docs/19, docs/23): consultas por IP por minuto.
 SEARCHES_PER_MINUTE = 60
+
+# Reações (docs/20, docs/23): por IP e por pessoa (usuário ou cookie anônimo), por minuto.
+REACTIONS_PER_MINUTE_PER_IP = 30
+REACTIONS_PER_MINUTE_PER_KEY = 10

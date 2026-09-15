@@ -13,10 +13,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Busca no cabeçalho (ícone que abre o campo) e na página 404; JSON-LD da home com `SearchAction`.
 - Filtros completos nas listas e na busca (E37): "Quem escreveu" (perfis públicos com crédito visível em publicação no ar), período (últimos 30 dias, este semestre, este ano ou intervalo de datas) e ordem (na busca, "Mais relevantes" ou "Mais recentes"; "Mais lidas" chega com as leituras). Com JavaScript, mudar um filtro ou remover um chip troca só a lista e põe a URL no histórico (voltar desfaz o filtro); sem JavaScript tudo continua por GET e a mesma URL mostra o mesmo resultado. No celular o painel abre como folha inferior.
 - Cache de 60 segundos por combinação de filtros (contagem e cards de cada página) em `/publicacoes/`, áreas, disciplinas, tipos e busca, invalidado ao publicar, editar ou arquivar.
+- Reações (E38): "Interessante", "Aprendi algo", "Gostei" e "Parabéns" no fim da publicação, uma por pessoa (clicar de novo remove, outro tipo troca), sem mostrar quem reagiu e sem número quando zero. Botões com `aria-pressed`, toque de 44px e foco mantido depois da troca; com HTMX troca só a barra, sem JavaScript o formulário volta para a publicação. Visitantes reagem pelo cookie anônimo `jv` (código aleatório, 1 ano), descrito na página de Privacidade; quem entrou reage com a conta, e essas reações entram na exportação de dados. Limites de 30 reações por minuto por IP e 10 por pessoa (resposta 429). Reagir não invalida o cache da home e das listas. Linha "Reagir" da matriz de permissões testada (`can_react`, respeitando `reactions.require_login`).
 
 ### Alterado
 
 - No celular, com sessão aberta, "Escrever" e "Admin" saem do cabeçalho (ficam no painel) para a linha caber em 390px.
+- Texto padrão da página de Privacidade descreve o cookie `jv`; `seed_site` atualiza o texto da E28 se ninguém o editou.
 
 ## [1.1.0] - 2026-09-14
 

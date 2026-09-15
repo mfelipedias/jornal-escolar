@@ -3,7 +3,12 @@
 import pytest
 
 from apps.core.models import StaticPage
-from apps.core.services import OLD_PRIVACY_MARKER, seed_site, text_to_document
+from apps.core.services import (
+    E28_PRIVACY_MARKER,
+    OLD_PRIVACY_MARKER,
+    seed_site,
+    text_to_document,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -62,6 +67,43 @@ def test_seed_atualiza_rascunho_antigo_nunca_editado():
     page = StaticPage.objects.get(slug="privacidade")
     assert "<h2>Seus direitos</h2>" in page.body_html
     assert not page.is_published
+
+
+def test_privacidade_descreve_o_cookie_das_reacoes():
+    seed_site()
+
+    html = StaticPage.objects.get(slug="privacidade").body_html
+    assert "cookie “jv”" in html
+    assert "um ano" in html
+    assert E28_PRIVACY_MARKER not in html
+
+
+def test_seed_atualiza_texto_da_e28_nunca_editado():
+    StaticPage.objects.create(
+        slug="privacidade",
+        title="Privacidade",
+        body_html=f"<p>{E28_PRIVACY_MARKER}, um cookie...</p>",
+        is_published=True,
+    )
+
+    seed_site()
+
+    page = StaticPage.objects.get(slug="privacidade")
+    assert "cookie “jv”" in page.body_html
+    assert page.is_published  # a publicação da página não muda
+
+
+def test_seed_nao_mexe_em_texto_da_e28_editado(editor_user):
+    StaticPage.objects.create(
+        slug="privacidade",
+        title="Privacidade",
+        body_html=f"<p>{E28_PRIVACY_MARKER}, revisado pela direção.</p>",
+        updated_by=editor_user,
+    )
+
+    seed_site()
+
+    assert "revisado pela direção" in StaticPage.objects.get(slug="privacidade").body_html
 
 
 def test_seed_nao_mexe_em_privacidade_editada(editor_user):
