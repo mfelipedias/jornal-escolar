@@ -19,12 +19,28 @@ AREAS = [
         ],
     },
     {
+        "name": "Artes",
+        "slug": "artes",
+        "short_name": "Artes",
+        "color": "magenta",
+        "description": "Artes visuais, música, teatro e dança feitos na escola.",
+        "disciplines": ["Artes Visuais", "Música", "Teatro", "Dança"],
+    },
+    {
         "name": "Matemática e suas Tecnologias",
         "slug": "matematica",
         "short_name": "Matemática",
         "color": "azul",
         "description": "Números, formas, dados e decisões financeiras.",
         "disciplines": ["Matemática", "Educação Financeira"],
+    },
+    {
+        "name": "Tecnologia",
+        "slug": "tecnologia",
+        "short_name": "Tecnologia",
+        "color": "grafite",
+        "description": "Programação, robótica, jogos e cultura digital.",
+        "disciplines": ["Programação", "Robótica", "Cultura Digital"],
     },
     {
         "name": "Ciências da Natureza e suas Tecnologias",

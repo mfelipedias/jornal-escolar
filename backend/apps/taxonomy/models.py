@@ -16,7 +16,7 @@ class AreaColor(models.TextChoices):
     AMBAR = "ambar", "Âmbar"
     VIOLETA = "violeta", "Violeta"
     PETROLEO = "petroleo", "Petróleo"
-    MAGENTA = "magenta", "Magenta (reservada)"
+    MAGENTA = "magenta", "Magenta"
     GRAFITE = "grafite", "Grafite (geral)"
 
 

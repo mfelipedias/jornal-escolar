@@ -51,7 +51,9 @@ Seed inicial (`seed_taxonomy`), baseado na BNCC e no currículo da rede estadual
 | Área | Cor | Disciplinas |
 |---|---|---|
 | Linguagens e suas Tecnologias | coral | Língua Portuguesa, Leitura e Produção de Texto, Arte, Educação Física, Língua Inglesa |
+| Artes | magenta | Artes Visuais, Música, Teatro, Dança |
 | Matemática e suas Tecnologias | azul | Matemática, Educação Financeira |
+| Tecnologia | grafite | Programação, Robótica, Cultura Digital |
 | Ciências da Natureza e suas Tecnologias | verde | Biologia, Física, Química |
 | Ciências Humanas e Sociais Aplicadas | âmbar | História, Geografia, Filosofia, Sociologia |
 | Formação e Projetos | violeta | Projeto de Vida, Tecnologia e Inovação, Orientação de Estudos, Eletivas, Itinerários Formativos |
@@ -115,3 +117,4 @@ Comandos de gerenciamento para o admin:
 - 2026-09-14: E34. "Anonimizar crédito de aluno em um clique" ficou só com o admin, como na matriz de docs/02 ("Configurações, auditoria, anonimização") e em docs/23: botão "Anonimizar" nos créditos de aluno do editor e em cada crédito do alerta "Alunos sem autorização" (sem mostrar o nome). Em Usuários, "Exportar dados" baixa o JSON de uma conta ou um ZIP com um JSON por conta; "Anonimizar" pede confirmação numa página própria; conta anonimizada não pode ser reativada. Comandos `export_user_data <email> [--zip --output arquivo]` e `anonymize_user <email> [--yes]`.
 - 2026-09-14: E39. Comando `cleanup` criado (em `apps/core`); por enquanto apaga só os registros diários de leitura com mais de 90 dias. As outras limpezas entram com as etapas delas.
 - 2026-09-15: E41. Visão geral ganha o contador "Comentários de leitores pendentes" (link para a fila) e o alerta "Comentários de leitores pendentes" (há mais de 3 dias, um item por publicação, com link para a fila filtrada). A fila do editor é a mesma `/painel/comentarios/` da equipe, que para editores já mostra todas as publicações; não há aba "Comentários" dentro do editorial. Comando `notify_pending_comments`.
+- 2026-09-15: áreas "Artes" e "Tecnologia" no seed e no menu, a pedido do dono (a disciplina "Arte" de Linguagens e "Tecnologia e Inovação" de Projetos continuam onde estão). As cores magenta e grafite deixam de ser reservadas.

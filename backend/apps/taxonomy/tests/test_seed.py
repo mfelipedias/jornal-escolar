@@ -22,17 +22,17 @@ def counts() -> tuple[int, int, int, int]:
 def test_seed_creates_school_taxonomy():
     seed_taxonomy()
 
-    assert counts() == (6, 24, 30, 10)
-    assert EXPECTED_DISCIPLINES == 24
+    assert counts() == (8, 31, 30, 10)
+    assert EXPECTED_DISCIPLINES == 31
 
 
 def test_seed_is_idempotent():
     seed_taxonomy()
     second = seed_taxonomy()
 
-    assert counts() == (6, 24, 30, 10)
+    assert counts() == (8, 31, 30, 10)
     assert second.created == {}
-    assert second.existing == {"áreas": 6, "disciplinas": 24, "tipos": 10, "tópicos": 30}
+    assert second.existing == {"áreas": 8, "disciplinas": 31, "tipos": 10, "tópicos": 30}
 
 
 def test_seed_does_not_overwrite_admin_edits():
@@ -88,5 +88,5 @@ def test_management_command_output(capsys):
     call_command("seed_taxonomy")
 
     output = capsys.readouterr().out
-    assert "Áreas: 6 criados, 0 já existiam" in output
+    assert "Áreas: 8 criados, 0 já existiam" in output
     assert "Taxonomia pronta." in output
