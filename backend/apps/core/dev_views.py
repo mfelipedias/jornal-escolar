@@ -6,6 +6,7 @@ desenvolvimento (DEBUG) e, em produção, só para o papel admin.
 
 from datetime import timedelta
 
+from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -15,8 +16,9 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 
+from apps.core.weather import Weather
 from apps.editorial import permissions
-from apps.publications.presentation import ArticleCard, CardImage, Credit
+from apps.publications.presentation import ArticleCard, CardImage, Credit, EventItem
 from apps.taxonomy.models import AreaColor, KnowledgeArea
 
 TOAST_LEVELS = {
@@ -36,6 +38,28 @@ AREA_NAMES = {
     AreaColor.MAGENTA: "Magenta",
     AreaColor.GRAFITE: "Geral",
 }
+
+
+# Amostras dos tokens de cor base (classe de fundo e de texto que passa AA sobre ela).
+BASE_COLORS = [
+    ("paper", "bg-paper text-ink"),
+    ("paper-2", "bg-paper-2 text-ink"),
+    ("paper-3", "bg-paper-3 text-ink"),
+    ("ink", "bg-ink text-paper"),
+    ("ink-2", "bg-ink-2 text-paper"),
+    ("ink-3", "bg-ink-3 text-paper"),
+    ("line", "bg-line text-ink"),
+    ("warn", "bg-warn text-white"),
+    ("danger", "bg-danger text-white"),
+    ("ok", "bg-ok text-white"),
+]
+
+
+class DemoForm(forms.Form):
+    """Só para a vitrine mostrar o campo normal, com ajuda e com erro."""
+
+    nome = forms.CharField(label="Nome", max_length=60)
+    email = forms.EmailField(label="E-mail")
 
 
 def _can_see(request: HttpRequest) -> bool:
@@ -111,10 +135,32 @@ def components(request: HttpRequest) -> HttpResponse:
     if is_htmx:
         return render(request, "core/partials/components_more.html", {"page_obj": page_obj})
 
+    areas = [KnowledgeArea(name=name, color=color) for color, name in AREA_NAMES.items()]
+    form_errors = DemoForm(data={"nome": "", "email": "nao-e-um-email"})
+    form_errors.is_valid()
     context = {
         "cards": cards,
         "hero": cards[0],
-        "areas": [KnowledgeArea(name=name, color=color) for color, name in AREA_NAMES.items()],
+        "areas": areas,
+        "base_colors": BASE_COLORS,
+        "demo_form": DemoForm(),
+        "demo_form_errors": form_errors,
+        "weather": Weather(
+            temperature=23,
+            icon="partly",
+            label="Parcialmente nublado",
+            temp_min=17,
+            temp_max=26,
+            rain_chance=40,
+            is_day=True,
+        ),
+        "event": EventItem(
+            title="Sarau de primavera na biblioteca",
+            url="#agenda",
+            event_at=timezone.now() + timedelta(days=3),
+            location="Biblioteca",
+            area=areas[2],
+        ),
         "statuses": [
             "draft",
             "in_review",

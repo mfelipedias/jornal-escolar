@@ -138,6 +138,14 @@
     text-wrap: balance;
   }
 
+  /* Links para #âncora param abaixo do masthead fixo (duas linhas). */
+  [id] {
+    scroll-margin-top: 7.5rem;
+    @media (width >= 40rem) {
+      scroll-margin-top: 8.5rem;
+    }
+  }
+
   [x-cloak] {
     display: none !important;
   }
@@ -182,6 +190,105 @@
     border-radius: 2px;
     background-color: var(--color-sun);
     transform: skewX(-10deg) rotate(-1.5deg);
+  }
+
+  /* Wordmark sobre fundo escuro (rodapé): "Escolar" em accent-soft, marca-texto igual. */
+  .wordmark-accent--on-dark {
+    color: var(--color-accent-soft);
+  }
+  .wordmark-accent--on-dark::before {
+    opacity: 0.85;
+  }
+
+  /* Masthead (docs/09, "Cabeçalho público"): fixo no topo, translúcido; `is-scrolled` (R5)
+     encolhe a linha da marca depois que a página rola. */
+  .masthead {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background-color: color-mix(in oklab, var(--color-paper) 85%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .masthead-brand {
+    padding-block: 1rem;
+    transition: padding 200ms var(--ease-snappy);
+    @media (width >= 40rem) {
+      padding-block: 1.375rem;
+    }
+  }
+  .masthead.is-scrolled .masthead-brand {
+    padding-block: 0.625rem;
+  }
+  /* O glifo "decola" no hover da marca. */
+  .masthead-logo svg {
+    transition: transform 200ms var(--ease-snappy);
+  }
+  .masthead-logo:hover svg {
+    transform: rotate(-8deg) translateX(2px);
+  }
+  /* Linha 2: chips que rolam na horizontal no celular, com as bordas esmaecidas. */
+  .masthead-nav {
+    @media (width < 40rem) {
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 0.75rem,
+        black calc(100% - 2rem),
+        transparent
+      );
+    }
+  }
+  .masthead-nav ul {
+    scrollbar-width: none;
+  }
+  .masthead-nav ul::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: var(--radius-pill);
+    padding: 0.35rem 0.8rem;
+    font-size: var(--text-ui);
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--color-ink-2);
+    transition:
+      background-color 150ms,
+      color 150ms;
+
+    &:hover {
+      background-color: var(--color-paper-2);
+      color: var(--color-ink);
+    }
+    &[aria-current="page"] {
+      font-weight: 600;
+    }
+  }
+
+  /* Botão redondo de ícone (busca, sino). */
+  .icon-btn {
+    display: flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    color: var(--color-ink-2);
+    transition:
+      background-color 150ms,
+      color 150ms,
+      transform 200ms var(--ease-snappy);
+
+    &:hover {
+      background-color: var(--color-paper-2);
+      color: var(--color-ink);
+    }
+    &:active {
+      transform: scale(0.94);
+    }
   }
 
   /* Corpo das publicações: o mesmo no editor e na página pública (docs/09, docs/11). */
@@ -452,14 +559,20 @@
     border: 1px solid var(--color-line);
     border-radius: var(--radius-field);
     background-color: white;
-    padding: 0.45rem 0.65rem;
+    padding: 0.5rem 0.8rem;
     font-size: var(--text-ui);
     color: var(--color-ink);
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
 
+    &::placeholder {
+      color: var(--color-ink-3);
+    }
     &:focus {
       border-color: var(--color-accent);
-      outline: 2px solid color-mix(in oklab, var(--color-accent) 20%, transparent);
-      outline-offset: 0;
+      outline: none;
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 25%, transparent);
     }
   }
 
@@ -481,7 +594,7 @@
       margin: 0;
       max-height: 85dvh;
       overflow-y: auto;
-      border-radius: var(--radius-card) var(--radius-card) 0 0;
+      border-radius: var(--radius-hero) var(--radius-hero) 0 0;
       box-shadow: var(--shadow-popover);
     }
     /* bottom e margin negativos: cobrem o padding do painel (p-4), que o sticky respeita. */
@@ -510,14 +623,24 @@
   }
   .chip-label {
     border: 1px solid var(--color-line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background-color: white;
-    padding: 0.2rem 0.65rem;
+    padding: 0.3rem 0.8rem;
     font-size: var(--text-meta);
+    font-weight: 500;
     color: var(--color-ink-2);
     transition:
       background-color 150ms,
-      border-color 150ms;
+      border-color 150ms,
+      color 150ms,
+      transform 200ms var(--ease-snappy);
+  }
+  .chip:hover .chip-label {
+    border-color: var(--color-ink-3);
+    color: var(--color-ink);
+  }
+  .chip:active .chip-label {
+    transform: scale(0.96);
   }
   .chip input:checked + .chip-label {
     border-color: var(--color-accent);
@@ -529,6 +652,7 @@
     outline-offset: 2px;
   }
 
+  /* Botões (docs/09, "button"): pílulas que levantam no hover e encolhem ao pressionar. */
   .btn-primary,
   .btn-secondary,
   .btn-ghost,
@@ -537,16 +661,25 @@
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    border-radius: var(--radius-field);
-    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-pill);
+    padding: 0.5rem 1.1rem;
     font-family: var(--font-sans);
     font-size: var(--text-ui);
-    font-weight: 500;
+    font-weight: 600;
+    line-height: 1.2;
     transition:
       background-color 150ms,
       color 150ms,
-      border-color 150ms;
+      border-color 150ms,
+      box-shadow 200ms var(--ease-snappy),
+      transform 200ms var(--ease-snappy);
 
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
     &:disabled {
       cursor: not-allowed;
       opacity: 0.45;
@@ -557,6 +690,7 @@
     color: white;
     &:hover:not(:disabled) {
       background-color: var(--color-accent-2);
+      box-shadow: 0 6px 16px color-mix(in oklab, var(--color-accent) 30%, transparent);
     }
   }
   .btn-secondary {
@@ -566,6 +700,7 @@
     &:hover:not(:disabled) {
       border-color: var(--color-accent);
       color: var(--color-accent);
+      box-shadow: 0 6px 16px color-mix(in oklab, var(--color-ink) 8%, transparent);
     }
   }
   .btn-ghost {
@@ -578,16 +713,19 @@
   .btn-danger {
     background-color: var(--color-danger);
     color: white;
+    &:hover:not(:disabled) {
+      box-shadow: 0 6px 16px color-mix(in oklab, var(--color-danger) 30%, transparent);
+    }
   }
 
-  /* Barra de reações (docs/09 reaction-bar, docs/11): toque de 44px, ativo em paper-2. */
+  /* Barra de reações (docs/09 reaction-bar, docs/11): toque de 44px, ativa em accent-soft. */
   .reaction-btn {
     display: inline-flex;
     min-height: 2.75rem;
     align-items: center;
     gap: 0.4rem;
     border: 1px solid var(--color-line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background-color: white;
     padding: 0.35rem 0.9rem;
     font-size: var(--text-ui);
@@ -595,23 +733,39 @@
     transition:
       background-color 150ms,
       border-color 150ms,
-      color 150ms;
+      color 150ms,
+      transform 200ms var(--ease-snappy);
 
     &:hover {
       border-color: var(--color-accent);
       color: var(--color-ink);
+      transform: translateY(-1px);
+    }
+    &:active {
+      transform: scale(0.96);
     }
     &[aria-pressed="true"] {
-      border-color: var(--color-ink-3);
-      background-color: var(--color-paper-2);
-      color: var(--color-ink);
-      font-weight: 500;
+      border-color: var(--color-accent);
+      background-color: var(--color-accent-soft);
+      color: var(--color-accent-2);
+      font-weight: 600;
     }
   }
   .reaction-count {
     font-variant-numeric: tabular-nums;
     font-weight: 600;
     color: var(--color-ink);
+  }
+
+  /* Toast (docs/09): entra deslizando de baixo. */
+  .toast-item {
+    animation: toast-in 250ms var(--ease-snappy);
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
   }
 
   /* Armadilha para robôs no formulário de comentário (docs/20): fora da tela e fora do leitor

@@ -16,21 +16,21 @@
           {% if person.avatar_url %}
             <img src="{{ person.avatar_url }}"
                  alt=""
-                 width="32"
-                 height="32"
+                 width="36"
+                 height="36"
                  loading="lazy"
-                 class="{% if size == 'sm' %}size-6{% else %}size-8{% endif %}
+                 class="{% if size == 'sm' %}size-7{% else %}size-9{% endif %}
                         rounded-full object-cover ring-2 ring-paper">
           {% else %}
             <span class="flex
-                         {% if size == 'sm' %}size-6 text-[0.6875rem]{% else %}size-8 text-meta{% endif %}
-                         items-center justify-center rounded-full bg-paper-2 font-serif font-semibold text-ink-2 ring-2 ring-paper">{{ person.name|slice:":1" }}</span>
+                         {% if size == 'sm' %}size-7 text-[0.6875rem]{% else %}size-9 text-meta{% endif %}
+                         items-center justify-center rounded-full bg-sun-soft font-display font-bold text-ink-2 ring-2 ring-paper">{{ person.name|slice:":1" }}</span>
           {% endif %}
         {% endfor %}
       </span>
     {% endif %}
     <p>
-      Por <span class="font-medium text-ink">{{ names }}</span>
+      Por <span class="font-semibold text-ink">{{ names }}</span>
     </p>
   </div>
 {% endif %}

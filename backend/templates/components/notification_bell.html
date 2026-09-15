@@ -7,7 +7,7 @@
      x-data="{ open: false }"
      @keydown.escape.window="open = false">
   <button type="button"
-          class="relative flex size-9 items-center justify-center rounded-full text-ink-2 hover:bg-paper-2 hover:text-ink"
+          class="icon-btn relative"
           :aria-expanded="open"
           aria-controls="notification-panel"
           hx-get="{% url 'editorial:notification_dropdown' %}"
@@ -30,7 +30,7 @@
       {% if notification_unread %}({{ notification_unread }} não lidas){% endif %}
     </span>
     {% if notification_unread %}
-      <span class="absolute -top-0.5 -right-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-[0.6875rem] leading-4.5 font-semibold text-white"
+      <span class="absolute top-0.5 right-0.5 flex min-w-4.5 items-center justify-center rounded-pill bg-accent px-1 text-[0.6875rem] leading-4.5 font-bold text-white ring-2 ring-paper"
             aria-hidden="true">
         {% if notification_unread > 9 %}
           9+
@@ -46,7 +46,7 @@
        @click.outside="open = false"
        class="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-card border border-line bg-white shadow-popover">
     <div class="flex items-center justify-between border-b border-line px-4 py-2.5">
-      <p class="text-ui font-medium">Notificações</p>
+      <p class="font-display text-ui font-bold">Notificações</p>
       {% if notification_unread %}
         <button type="button"
                 class="text-meta text-accent hover:underline"

@@ -25,7 +25,7 @@ O que **não** muda (continua proibido):
 
 - **Nome:** Jornal Escolar (padrão de `site.name`, editável no painel). **Tagline:** "Jornal digital da comunidade escolar". O nome da escola não aparece em lugar nenhum do site.
 - **Wordmark:** "Jornal Escolar" em Bricolage Grotesque 800, com a última palavra em `accent` e um traço de marca-texto (`sun`) inclinado atrás dela (classe `wordmark-accent`, em `app.css`). O wordmark é texto, não imagem, para acompanhar `site.name` se o nome mudar; o context processor separa a última palavra (`wordmark_head`, `wordmark_accent`).
-- **Glifo:** um **avião de papel dobrado de uma página de jornal**, em traço único com duas linhas de "texto" na asa, monocromático, `currentColor`. Vive em `templates/components/glyph.html` (parâmetro `class` para tamanho e cor). No masthead fica em `accent`, 28 a 32px; no hover do link da marca ele inclina (R2).
+- **Glifo:** um **avião de papel dobrado de uma página de jornal**, em traço único com duas linhas de "texto" na asa, monocromático, `currentColor`. Vive em `templates/components/glyph.html` (parâmetro `class` para tamanho e cor). No masthead fica em `accent`, 28 a 32px; no hover do link da marca ele inclina (`.masthead-logo`). No rodapé, em `accent-soft`, 40px.
 - **Favicon e ícones:** `static/img/favicon.svg` (glifo branco sobre quadrado arredondado no acento), `favicon.ico` (32px), `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, `logo.png` (512, usado no JSON-LD) e `og-default.png` (1200×630, imagem padrão de compartilhamento: glifo no acento sobre papel com um traço de marca-texto). `static/manifest.json` descreve nome, cores e ícones para a tela inicial do celular. Os PNGs, o ICO e o manifest são gerados por `scripts/brand.py` (Pillow) a partir da mesma geometria do SVG: ao mudar o desenho, mudar nos três lugares (glyph.html, favicon.svg, brand.py) e rodar `uv run --directory backend python ../scripts/brand.py`.
 - **Não usar:** fotos ilustrativas na marca, o glifo em tamanho grande como ilustração de página (só em estados vazios, dentro de um "adesivo"), nem versões em outras cores além de `accent`, `ink` e branco.
 
@@ -138,16 +138,16 @@ Regras gerais (implementação na R5, exceto o que R2 a R4 já usarem):
 
 ### Cabeçalho público (masthead)
 
-Duas linhas no desktop, uma no celular. Visual novo na R2.
+Duas linhas, fixas no topo (`.masthead`: `position: sticky`, fundo `paper` a 85% com `backdrop-filter: blur(12px)`; todo elemento com `id` tem `scroll-margin-top` para âncoras não sumirem atrás dele).
 
 - **Linha 1**: glifo (avião, `accent`) + wordmark à esquerda; à direita: data por extenso (opcional via configuração), busca (ícone que abre um campo em popover), "Entrar" (pílula) ou, com sessão, "Escrever", sino, Painel, nome e Sair.
-- **Linha 2**: barra de chips: cada área do conhecimento é um chip com um ponto na cor da área, na ordem configurada; "Agenda"; "Quem escreve"; "Sobre". Chip ativo: fundo `area-x-soft` e texto `area-x` (ou `accent-soft`/`accent` para os fixos).
-- No celular: glifo + wordmark + busca + "Entrar"; a linha 2 rola na horizontal com "fade" nas bordas. Com sessão aberta, "Escrever" e "Admin" ficam só no painel para a linha 1 caber em 390px.
-- Sticky com fundo translúcido; encolhe ao rolar (R5).
+- **Linha 2**: barra de chips (`.nav-chip`): cada área do conhecimento é um chip com um ponto na cor da área (`solid_bg`), na ordem configurada; "Agenda"; "Quem escreve"; "Sobre". Hover: fundo `paper-2`. Chip ativo (`aria-current`): fundo `area-x-soft` e texto `area-x` (ou `accent-soft`/`accent-2` para os fixos), peso 600.
+- No celular: glifo + wordmark + busca + "Entrar"; a linha 2 rola na horizontal, sem barra de rolagem, com as bordas esmaecidas (`mask-image`). Busca e sino usam `.icon-btn` (40px, redondo). Com sessão aberta, "Escrever" e "Admin" ficam só no painel para a linha 1 caber em 390px.
+- Encolhe ao rolar: `.masthead.is-scrolled` reduz o padding da linha da marca (classe pronta; o JS que a liga é da R5).
 
 ### Rodapé
 
-Fundo `ink`, texto `paper`, links em `accent-soft` (R2). Conteúdo:
+Faixa escura: fundo `ink`, texto `paper` (secundário a 70%, versão a 50%), links em `accent-soft` com hover `sun`; wordmark com `.wordmark-accent--on-dark`. Conteúdo:
 
 1. Glifo grande em `accent` + wordmark + tagline.
 2. Links: Sobre · Privacidade · Como participar · RSS (a partir da E43).
@@ -168,23 +168,26 @@ Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celula
 | `byline` | Avatares empilhados (até 3) + nomes com papel: "Por Carla Souza e Rafael S." | com/sem avatar |
 | `tag` | Etiqueta de área (pílula `soft` + texto `area-x`), disciplina (contorno), tipo (pílula `paper-2`), tópico (texto com `#` discreto) | tamanho `sm`/`md` |
 | `status-badge` | Estado editorial: rascunho (cinza), em revisão (ocre), alterações (terracota), aprovado (azul), publicado (verde), arquivado (grafite) | |
-| `filter-bar` | Chips de filtro ativos + botão "Filtrar" que abre painel; no celular é uma folha inferior | |
+| `filter-bar` | Chips de filtro ativos + botão "Filtrar" (pílula) que abre painel; no celular é uma folha inferior com cantos `radius-hero` | |
 | `pagination` | "Carregar mais" (pílula) via HTMX no público; numeração no painel | |
 | `empty-state` | "Adesivo" (círculo `sun-soft` com o glifo), título curto em Bricolage, uma frase, uma ação | |
-| `toast` | Feedback de ação no canto inferior; some em 4s; acessível via `aria-live` | sucesso, erro, info |
+| `toast` | Feedback de ação no canto inferior, com borda esquerda na cor do nível; entra deslizando de baixo; some em 4s; acessível via `aria-live` | sucesso, erro, aviso, info |
 | `dialog` | Confirmações (arquivar, publicar); `<dialog>` nativo | |
 | `form-field` | Rótulo acima, ajuda abaixo, erro em `danger`, contador de caracteres quando há limite; campo com `radius-field` | |
-| `button` | Pílulas: `primary` (accent, texto branco), `secondary` (contorno), `ghost` (texto), `danger` | tamanhos `sm`/`md` |
+| `button` | Pílulas (`.btn-*`): `primary` (accent, texto branco), `secondary` (contorno), `ghost` (texto), `danger`; levantam 1px no hover e encolhem a 97% ao pressionar. `.icon-btn`: botão redondo só com ícone | tamanhos `sm`/`md` |
 | `reaction-bar` | Quatro pílulas com emoji e contagem; ativa com fundo `accent-soft`; bounce ao pressionar | |
 | `editor-toolbar` | Botões do TipTap: parágrafo/títulos, negrito, itálico, link, lista, citação, imagem, separador, desfazer | |
 | `comment-thread` | Comentário editorial com trecho citado, respostas, botão resolver | |
 | `public-comment` | Comentário de leitor: nome, data, texto, resposta da equipe destacada com barra no acento | público, moderação (com botões) |
 | `comment-form` | Nome + texto + honeypot + aviso de moderação | |
-| `weather` | Cartãozinho com fundo `area-azul-soft`, ícone em `accent`, temperatura, condição, mín/máx e chance de chuva; uma linha no celular | `aside`, `line` |
+| `weather` | Cartãozinho com fundo `area-azul-soft`, ícone em `accent`, temperatura em Bricolage, condição, mín/máx e chance de chuva; no celular, uma pílula em linha | `aside`, `line` |
 | `notification-bell` | Ícone com contador; lista suspensa | |
 | `timeline` | Eventos editoriais em lista vertical com data | |
-| `stat` | Número grande em Bricolage + rótulo, para painel | |
+| `stat` | Número grande em Bricolage 800 + rótulo, para painel; com link, levanta no hover | |
 | `glyph` | Avião de papel da marca | parâmetro `class` |
+| `event-item` | Item de agenda: dia grande em Bricolage sobre bloco `paper-2` (vira `sun-soft` no hover), mês em caixa alta, título, horário e local | `sm`, `md` |
+| `chip` | Opção de filtro (`.chip` + `.chip-label`): pílula branca; marcada em `accent-soft`; `.nav-chip` no masthead | |
+| `field` | Campo de formulário (`.field`): raio 12px, foco com anel `accent` a 25% | |
 
 ## Estados vazios (textos de referência)
 
@@ -244,3 +247,4 @@ Fora do escopo por decisão do dono do projeto. Preparação sem custo: todas as
 - 2026-09-12: E04 implementada: tokens em `frontend/src/css/app.css`; glifo em `templates/components/glyph.html` e `static/img/favicon.svg`.
 - 2026-09-14: E36: busca no masthead é um ícone que abre um campo em popover. No celular, com sessão aberta, "Escrever" e "Admin" saem da linha 1. Termo encontrado no trecho usa `<mark>` com `accent-soft`.
 - 2026-09-15: **R1 (Fase 3b, redesign "Pátio")**, a pedido do dono ([27](27-decisoes-pendentes-e-perguntas.md), quarta rodada; plano em [26](26-plano-de-desenvolvimento.md)). Direção visual reescrita; revogadas as regras "nada de animação de entrada", "sem gradientes" e "sem sombras pesadas". Tipografia: Bricolage Grotesque para display e interface (Inter removida), Newsreader continua na leitura; classe `font-display` nos títulos; escala com display 52px e h2 32px. Tokens: `paper` mais claro, `paper-3` novo, acento framboesa `#C41260` (o `#D6156A` do briefing falhava AA sobre `paper-3` e `accent-soft`), `sun`/`sun-soft`, cores vivas `area-x-bright` com `on_bright` medido, raios 12/16/24 e pílula, `shadow-card-hover`, `--ease-snappy`. Marca nova: avião de papel de jornal (glifo, favicon SVG/ICO, ícones PNG, manifest, `og-default.png` e `logo.png` gerados por `scripts/brand.py`); wordmark com marca-texto. Carregamento sem salto: CSS como entrada própria do Vite carregada por `<link>` antes do JS, preload das fontes (`{% font_preloads %}`), fallbacks com métricas. `theme-color` passa a `#FFFDF7`.
+- 2026-09-15: **R2**: masthead fixo e translúcido com barra de chips (`.nav-chip`), botões de ícone (`.icon-btn`), busca em pílula; rodapé em faixa escura com marca, tagline e links; botões, chips, campos, etiquetas, selos e paginação em pílulas com hover que levanta e `active` que encolhe; reação ativa em `accent-soft`; toast com borda colorida deslizando de baixo; estado vazio com "adesivo" (`sun-soft` + glifo); avatares maiores com iniciais em `sun-soft`; clima como cartão `area-azul-soft`; `scroll-margin-top` em todo `id`. Vitrine `/dev/components/` com seção de tokens (cores, áreas soft/bright, tipografia), botões, chips, campos, agenda, clima, números e compartilhar.

@@ -1,18 +1,19 @@
 {% comment %}
   Hoje na escola (docs/29): tempo atual e previsão do dia, do Open-Meteo, sem JavaScript.
-  Parâmetros: weather (core.weather.Weather ou None: nada é renderizado) e variant
-  ("aside", bloco lateral com título; "line", uma linha para o celular) e css (classes extras do section).
+  Parâmetros: weather (core.weather.Weather ou None: nada é renderizado), variant
+  ("aside", cartãozinho lateral com título; "line", uma pílula para o celular) e css
+  (classes extras do section). Ícones em linha, monocromáticos, no acento.
 {% endcomment %}
 {% if weather %}
   <section aria-label="Hoje na escola"
-           class="text-meta text-ink-2 {% if variant == 'line' %}flex flex-wrap items-center gap-x-3 gap-y-1{% endif %} {{ css }}">
+           class="{% if variant == 'line' %}inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-pill bg-area-azul-soft py-2 pr-4 pl-3 text-meta text-ink-2{% else %}rounded-card bg-area-azul-soft p-5 text-meta text-ink-2{% endif %} {{ css }}">
     {% if variant == "line" %}
-      <span class="font-semibold tracking-wide uppercase">Hoje na escola</span>
+      <span class="font-semibold tracking-wide text-ink uppercase">Hoje na escola</span>
     {% else %}
-      <h2 class="border-b border-line pb-2 font-semibold tracking-wide uppercase">Hoje na escola</h2>
+      <h2 class="font-semibold tracking-wide text-ink uppercase">Hoje na escola</h2>
     {% endif %}
-    <p class="{% if variant == 'line' %}flex items-center gap-1.5{% else %}mt-3 flex items-center gap-2 text-ui text-ink{% endif %}">
-      <svg class="size-5 shrink-0"
+    <p class="{% if variant == 'line' %}flex items-center gap-1.5{% else %}mt-3 flex items-center gap-2.5 font-display text-h3 font-bold text-ink{% endif %}">
+      <svg class="{% if variant == 'line' %}size-5{% else %}size-8{% endif %} shrink-0 text-accent"
            viewBox="0 0 24 24"
            fill="none"
            stroke="currentColor"
@@ -50,7 +51,7 @@
       </svg>
       <span>{{ weather.temperature }}° · {{ weather.label }}</span>
     </p>
-    <p class="{% if variant != 'line' %}mt-1{% endif %}">
+    <p class="{% if variant != 'line' %}mt-1.5{% endif %}">
       mín {{ weather.temp_min }}° · máx {{ weather.temp_max }}°{% if weather.rain_chance is not None %} · chuva {{ weather.rain_chance }}%{% endif %}
     </p>
   </section>

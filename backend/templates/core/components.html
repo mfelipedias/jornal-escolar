@@ -6,25 +6,127 @@
 {% block content %}
   <div class="site-container pt-10 pb-20 sm:pt-14">
     <header class="max-w-reading">
-      <p class="text-meta font-medium tracking-[0.08em] text-accent uppercase">Design system</p>
-      <h1 class="mt-3 font-display text-h1 font-semibold">Componentes</h1>
+      <p class="text-meta font-semibold tracking-[0.08em] text-accent uppercase">Design system</p>
+      <h1 class="mt-3 font-display text-h1 font-extrabold">Componentes</h1>
       <p class="mt-4 text-ui text-ink-2">
-        Vitrine das peças de <code>templates/components/</code> com dados de exemplo. Regras e variantes em <code>docs/09</code>.
+        Vitrine dos tokens e das peças de <code>templates/components/</code> com dados de exemplo. Regras e variantes em <code>docs/09</code>.
       </p>
       <nav class="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-ui"
            aria-label="Seções">
+        <a class="text-accent hover:underline" href="#tokens">Tokens</a>
+        <a class="text-accent hover:underline" href="#botoes">Botões e chips</a>
+        <a class="text-accent hover:underline" href="#campos">Campos</a>
         <a class="text-accent hover:underline" href="#cards">Cards</a>
         <a class="text-accent hover:underline" href="#byline">Assinatura</a>
         <a class="text-accent hover:underline" href="#tags">Etiquetas</a>
         <a class="text-accent hover:underline" href="#status">Estados</a>
+        <a class="text-accent hover:underline" href="#agenda">Agenda e clima</a>
+        <a class="text-accent hover:underline" href="#stat">Números</a>
         <a class="text-accent hover:underline" href="#vazio">Estado vazio</a>
         <a class="text-accent hover:underline" href="#paginacao">Paginação</a>
+        <a class="text-accent hover:underline" href="#compartilhar">Compartilhar</a>
         <a class="text-accent hover:underline" href="#toast">Toast</a>
       </nav>
     </header>
+    <section id="tokens" class="mt-16" aria-labelledby="tokens-title">
+      <h2 id="tokens-title"
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Tokens</h2>
+      <h3 class="mt-8 text-meta font-semibold tracking-wide text-ink-3 uppercase">cores base</h3>
+      <ul class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {% for name, classes in base_colors %}
+          <li class="flex h-20 flex-col justify-end rounded-card border border-line p-3 text-meta font-semibold {{ classes }}">{{ name }}</li>
+        {% endfor %}
+      </ul>
+      <h3 class="mt-8 text-meta font-semibold tracking-wide text-ink-3 uppercase">acento e marca-texto</h3>
+      <ul class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <li class="flex h-20 flex-col justify-end rounded-card bg-accent p-3 text-meta font-semibold text-white">accent</li>
+        <li class="flex h-20 flex-col justify-end rounded-card bg-accent-2 p-3 text-meta font-semibold text-white">accent-2</li>
+        <li class="flex h-20 flex-col justify-end rounded-card bg-accent-soft p-3 text-meta font-semibold text-accent-2">accent-soft</li>
+        <li class="flex h-20 flex-col justify-end rounded-card bg-sun p-3 text-meta font-semibold text-ink">sun</li>
+        <li class="flex h-20 flex-col justify-end rounded-card bg-sun-soft p-3 text-meta font-semibold text-ink">sun-soft</li>
+      </ul>
+      <h3 class="mt-8 text-meta font-semibold tracking-wide text-ink-3 uppercase">áreas do conhecimento · soft (texto escuro) e bright (texto medido)</h3>
+      <ul class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {% for area in areas %}
+          {% with classes=area.color_classes %}
+            <li class="overflow-hidden rounded-card border border-line">
+              <div class="flex h-16 items-end p-3 text-meta font-semibold {{ classes.soft_bg }} {{ classes.text }}">{{ area.name }}</div>
+              <div class="flex h-16 items-end p-3 text-meta font-semibold {{ classes.bright_bg }} {{ classes.on_bright }}">{{ area.color }}-bright</div>
+            </li>
+          {% endwith %}
+        {% endfor %}
+      </ul>
+      <h3 class="mt-8 text-meta font-semibold tracking-wide text-ink-3 uppercase">tipografia</h3>
+      <div class="mt-3 space-y-3 rounded-card border border-line bg-white p-6">
+        <p class="font-display text-display font-extrabold">Display: Bricolage Grotesque</p>
+        <p class="font-display text-h1 font-extrabold">Título 1 em Bricolage</p>
+        <p class="font-display text-h2 font-bold">Título 2 em Bricolage</p>
+        <p class="font-display text-h3 font-bold">Título 3 em Bricolage</p>
+        <p class="font-serif text-lead text-ink-2">Linha fina em Newsreader, confortável para ler.</p>
+        <p class="font-serif text-body">Corpo de leitura em Newsreader: as publicações usam esta fonte, com entrelinha 1,6.</p>
+        <p class="text-ui text-ink-2">Interface em Bricolage 15px: navegação, botões, formulários.</p>
+        <p class="text-meta text-ink-3">Metadados em 13px.</p>
+      </div>
+    </section>
+    <section id="botoes" class="mt-16" aria-labelledby="botoes-title">
+      <h2 id="botoes-title"
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Botões e chips</h2>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <button type="button" class="btn-primary">Publicar</button>
+        <button type="button" class="btn-secondary">Salvar rascunho</button>
+        <button type="button" class="btn-ghost">Cancelar</button>
+        <button type="button" class="btn-danger">Arquivar</button>
+        <button type="button" class="btn-primary" disabled>Desligado</button>
+        <button type="button" class="icon-btn" aria-label="Exemplo de botão de ícone">
+          {% include "components/glyph.html" with class="size-5" %}
+        </button>
+      </div>
+      <div class="mt-6 flex flex-wrap items-center gap-2">
+        <label class="chip">
+          <input type="radio" name="demo-chip" class="sr-only" checked>
+          <span class="chip-label">Marcado</span>
+        </label>
+        <label class="chip">
+          <input type="radio" name="demo-chip" class="sr-only">
+          <span class="chip-label">Opção</span>
+        </label>
+        <label class="chip">
+          <input type="radio" name="demo-chip" class="sr-only">
+          <span class="chip-label">Outra opção</span>
+        </label>
+        <span class="nav-chip bg-area-verde-soft text-area-verde" aria-current="page">
+          <span class="size-2 rounded-full bg-area-verde" aria-hidden="true"></span>Chip do masthead (ativo)
+        </span>
+        <span class="nav-chip"><span class="size-2 rounded-full bg-area-azul" aria-hidden="true"></span>Chip do masthead</span>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-2">
+        <button type="button" class="reaction-btn" aria-pressed="true"><span aria-hidden="true">💡</span><span>Aprendi algo</span><span class="reaction-count">12</span></button>
+        <button type="button" class="reaction-btn" aria-pressed="false"><span aria-hidden="true">👏</span><span>Parabéns</span><span class="reaction-count">3</span></button>
+        <button type="button" class="reaction-btn" aria-pressed="false"><span aria-hidden="true">❤️</span><span>Gostei</span></button>
+      </div>
+    </section>
+    <section id="campos" class="mt-16" aria-labelledby="campos-title">
+      <h2 id="campos-title"
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Campos</h2>
+      <div class="mt-6 grid max-w-2xl gap-5 sm:grid-cols-2">
+        {% include "components/form_field.html" with field=demo_form.nome help="Como você quer aparecer nos créditos." %}
+        {% include "components/form_field.html" with field=demo_form_errors.email type="email" %}
+        <div>
+          <label for="demo-select" class="block text-ui font-semibold text-ink">Seleção</label>
+          <select id="demo-select" class="field mt-1.5 py-2.5">
+            <option>Qualquer pessoa da equipe</option>
+            <option>Carla Souza</option>
+          </select>
+        </div>
+        <div>
+          <label for="demo-textarea" class="block text-ui font-semibold text-ink">Texto longo</label>
+          <textarea id="demo-textarea" rows="3" class="field mt-1.5" placeholder="Escreva aqui"></textarea>
+        </div>
+      </div>
+    </section>
     <section id="cards" class="mt-16" aria-labelledby="cards-title">
       <h2 id="cards-title"
-          class="border-b border-line pb-2 font-display text-h2 font-semibold">Cards</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Cards</h2>
       <h3 class="mt-8 text-meta font-semibold tracking-wide text-ink-3 uppercase">hero</h3>
       <div class="mt-4">{% include "components/card.html" with card=hero variant="hero" %}</div>
       <h3 class="mt-14 text-meta font-semibold tracking-wide text-ink-3 uppercase">standard</h3>
@@ -54,7 +156,7 @@
     </section>
     <section id="byline" class="mt-16" aria-labelledby="byline-title">
       <h2 id="byline-title"
-          class="border-b border-line pb-2 font-display text-h2 font-semibold">Assinatura</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Assinatura</h2>
       <div class="mt-6 space-y-4">
         {% with card=cards.1 %}
           {% include "components/byline.html" with people=card.people names=card.byline avatars=True size="md" %}
@@ -65,7 +167,7 @@
     </section>
     <section id="tags" class="mt-16" aria-labelledby="tags-title">
       <h2 id="tags-title"
-          class="border-b border-line pb-2 font-display text-h2 font-semibold">Etiquetas</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Etiquetas</h2>
       <h3 class="mt-6 text-meta font-semibold tracking-wide text-ink-3 uppercase">área (8 cores)</h3>
       <div class="mt-3 flex flex-wrap gap-2">
         {% for area in areas %}
@@ -85,16 +187,40 @@
     </section>
     <section id="status" class="mt-16" aria-labelledby="status-title">
       <h2 id="status-title"
-          class="border-b border-line pb-2 font-display text-h2 font-semibold">Estados editoriais</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Estados editoriais</h2>
       <div class="mt-6 flex flex-wrap gap-2">
         {% for status in statuses %}
           {% include "components/status_badge.html" with status=status label="" %}
         {% endfor %}
       </div>
     </section>
+    <section id="agenda" class="mt-16" aria-labelledby="agenda-title">
+      <h2 id="agenda-title"
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Agenda e clima</h2>
+      <div class="mt-6 grid gap-8 md:grid-cols-3">
+        <div class="space-y-4 md:col-span-2">
+          {% include "components/event_item.html" with event=event past=False show_area=True size="md" %}
+          {% include "components/event_item.html" with event=event past=True show_area=False size="sm" %}
+        </div>
+        <div class="space-y-4">
+          {% include "components/weather.html" with weather=weather variant="aside" css="" %}
+          <div>{% include "components/weather.html" with weather=weather variant="line" css="" %}</div>
+        </div>
+      </div>
+    </section>
+    <section id="stat" class="mt-16" aria-labelledby="stat-title">
+      <h2 id="stat-title"
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Números do painel</h2>
+      <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {% include "components/stat.html" with value="12" label="Publicadas" url="#stat" %}
+        {% include "components/stat.html" with value="3" label="Rascunhos" url="#stat" %}
+        {% include "components/stat.html" with value="1.430" label="Leituras em 30 dias" url="" %}
+        {% include "components/stat.html" with value="27" label="Comentários aprovados" url="" %}
+      </div>
+    </section>
     <section id="vazio" class="mt-16" aria-labelledby="vazio-title">
       <h2 id="vazio-title"
-          class="border-b border-line pb-2 font-display text-h2 font-semibold">Estado vazio</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Estado vazio</h2>
       <div class="mt-6 grid gap-6 md:grid-cols-2">
         <div class="rounded-card border border-line bg-white px-4">
           {% url 'core:components' as demo_url %}
@@ -107,7 +233,7 @@
     </section>
     <section id="paginacao" class="mt-16" aria-labelledby="paginacao-title">
       <h2 id="paginacao-title"
-          class="border-b border-line pb-2 font-display text-h2 font-semibold">Paginação</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Paginação</h2>
       <div class="mt-6 grid gap-10 md:grid-cols-2">
         <div>
           <h3 class="text-meta font-semibold tracking-wide text-ink-3 uppercase">carregar mais (público)</h3>
@@ -122,9 +248,16 @@
         </div>
       </div>
     </section>
+    <section id="compartilhar" class="mt-16" aria-labelledby="compartilhar-title">
+      <h2 id="compartilhar-title"
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Compartilhar</h2>
+      <div class="mt-6">
+        {% include "components/share.html" with url="https://exemplo.invalid/publicacoes/feira-de-ciencias/" title="Feira de Ciências" %}
+      </div>
+    </section>
     <section id="toast" class="mt-16" aria-labelledby="toast-title">
       <h2 id="toast-title"
-          class="border-b border-line pb-2 font-display text-h2 font-semibold">Toast</h2>
+          class="border-b border-line pb-2 font-display text-h2 font-bold">Toast</h2>
       <p class="mt-4 max-w-reading text-ui text-ink-2">
         Sucesso e informação somem em 4 segundos; erro e aviso ficam até fechar. Os botões pedem ao servidor uma mensagem do Django e ela chega como toast pela resposta HTMX.
       </p>

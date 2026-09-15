@@ -8,7 +8,7 @@
      @keydown.escape.window="open = false"
      @click.outside="open = false">
   <a href="{{ search_url }}"
-     class="flex size-9 items-center justify-center rounded-full text-ink-2 hover:bg-paper-2 hover:text-ink"
+     class="icon-btn"
      :aria-expanded="open"
      aria-controls="masthead-search"
      @click.prevent="open = !open; if (open) $nextTick(() => $refs.q.focus())"
@@ -31,7 +31,7 @@
         action="{{ search_url }}"
         x-show="open"
         x-cloak
-        class="absolute inset-x-4 top-full z-50 -mt-1 flex gap-2 sm:right-8 sm:left-auto sm:w-96 lg:right-12 rounded-card border border-line bg-white p-2 shadow-popover">
+        class="absolute inset-x-4 top-full z-50 -mt-1 flex gap-2 sm:right-8 sm:left-auto sm:w-96 lg:right-12 rounded-pill border border-line bg-white p-1.5 shadow-popover">
     <label for="masthead-search-q" class="sr-only">Buscar no {{ jornal.name }}</label>
     <input id="masthead-search-q"
            x-ref="q"
@@ -42,7 +42,7 @@
            enterkeyhint="search"
            required
            placeholder="Assunto, disciplina ou pessoa"
-           class="field min-h-10 min-w-0 flex-1">
+           class="field min-h-10 min-w-0 flex-1 rounded-pill border-transparent bg-paper-2 focus:bg-white">
     <button type="submit" class="btn-primary min-h-10">Buscar</button>
   </form>
 </div>

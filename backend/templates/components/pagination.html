@@ -35,7 +35,7 @@
         {% if number == page_obj.paginator.ELLIPSIS %}
           <span class="px-2 text-ink-3" aria-hidden="true">{{ number }}</span>
         {% elif number == page_obj.number %}
-          <span class="flex min-h-10 min-w-10 items-center justify-center rounded-field bg-accent-soft font-medium text-accent-2"
+          <span class="flex min-h-10 min-w-10 items-center justify-center rounded-pill bg-accent-soft font-semibold text-accent-2"
                 aria-current="page">{{ number }}</span>
         {% else %}
           <a href="{% page_url number %}"

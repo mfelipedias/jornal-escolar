@@ -4,7 +4,7 @@
 {% endcomment %}
 <div>
   <label for="{{ field.id_for_label }}"
-         class="block text-ui font-medium text-ink">{{ label|default:field.label }}</label>
+         class="block text-ui font-semibold text-ink">{{ label|default:field.label }}</label>
   <input id="{{ field.id_for_label }}"
          name="{{ field.html_name }}"
          type="{{ type|default:'text' }}"
@@ -12,11 +12,10 @@
          {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
          {% if field.field.required %}required{% endif %}
          {% if field.errors %}aria-invalid="true" aria-describedby="{{ field.id_for_label }}-erro"{% elif help %}aria-describedby="{{ field.id_for_label }}-ajuda"{% endif %}
-         class="mt-1.5 block w-full rounded-field border bg-white px-3 py-2.5 text-ui text-ink placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none
-                {% if field.errors %}border-danger{% else %}border-line{% endif %}">
+         class="field mt-1.5 py-2.5 {% if field.errors %}border-danger{% endif %}">
   {% if field.errors %}
     <p id="{{ field.id_for_label }}-erro"
-       class="mt-1.5 text-meta text-danger">{{ field.errors|join:" " }}</p>
+       class="mt-1.5 text-meta font-medium text-danger">{{ field.errors|join:" " }}</p>
   {% elif help %}
     <p id="{{ field.id_for_label }}-ajuda"
        class="mt-1.5 text-meta text-ink-3">{{ help }}</p>

@@ -1,11 +1,12 @@
 {% comment %}
   Um toast (docs/09). Parâmetros: message (mensagem do Django) ou level ("success", "error",
   "warning", "info") e text. Sucesso e informação somem em 4s; erro e aviso ficam até fechar.
+  A borda esquerda leva a cor do nível.
 {% endcomment %}
 {% firstof message.level_tag level as level %}
 {% firstof message text as text %}
-<div class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-card border bg-white py-3 pr-2 pl-4 text-ui shadow-popover
-            {% if level == 'error' %}border-danger/40{% elif level == 'warning' %}border-warn/40{% elif level == 'success' %}border-ok/40{% else %}border-line{% endif %}"
+<div class="toast-item pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-card border border-line border-l-4 bg-white py-3 pr-2 pl-4 text-ui shadow-popover
+            {% if level == 'error' %}border-l-danger{% elif level == 'warning' %}border-l-warn{% elif level == 'success' %}border-l-ok{% else %}border-l-accent{% endif %}"
      x-data="toast"
      data-level="{{ level }}"
      x-show="open"
@@ -14,9 +15,6 @@
      @mouseleave="resume"
      @focusin="pause"
      @focusout="resume">
-  <span class="mt-1.5 size-2 shrink-0 rounded-full
-               {% if level == 'error' %}bg-danger{% elif level == 'warning' %}bg-warn{% elif level == 'success' %}bg-ok{% else %}bg-ink-3{% endif %}"
-        aria-hidden="true"></span>
   <p class="flex-1
             {% if level == 'error' %}text-danger{% else %}text-ink{% endif %}">
     {% if level == "error" %}

@@ -40,7 +40,7 @@
           aria-label="Filtros"
           class="filter-sheet mt-3 grid gap-6 rounded-card border border-line bg-white p-4 sm:p-6 md:grid-cols-3">
       <div class="-mb-2 flex items-center justify-between sm:hidden">
-        <p class="font-display text-h3 font-semibold">Filtros</p>
+        <p class="font-display text-h3 font-bold">Filtros</p>
         {# Sem JavaScript o link recarrega a página (painel fechado); com JavaScript só fecha. #}
         <a href="{{ request.get_full_path }}"
            class="btn-ghost min-h-11"
@@ -207,12 +207,12 @@
           {% if chip.remove_url %}
             <a href="{{ request.path }}{{ chip.remove_url }}"
                hx-get="{{ request.path }}{{ chip.remove_url }}"
-               class="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-accent bg-accent-soft py-1 pr-2 pl-3 text-meta text-accent-2 hover:bg-white"
+               class="inline-flex min-h-8 items-center gap-1.5 rounded-pill border border-accent bg-accent-soft py-1 pr-2 pl-3 text-meta font-medium text-accent-2 transition hover:bg-white"
                aria-label="Remover filtro {{ chip.label }}">
               {{ chip.label }} <span aria-hidden="true">×</span>
             </a>
           {% else %}
-            <span class="inline-flex min-h-8 items-center rounded-full bg-paper-2 px-3 py-1 text-meta text-ink-2">{{ chip.label }}</span>
+            <span class="inline-flex min-h-8 items-center rounded-pill bg-paper-2 px-3 py-1 text-meta font-medium text-ink-2">{{ chip.label }}</span>
           {% endif %}
         </li>
       {% endfor %}

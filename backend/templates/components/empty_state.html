@@ -1,24 +1,15 @@
 {% comment %}
-  Estado vazio (docs/09): ilustração em traço, título curto, uma frase e uma ação opcional.
+  Estado vazio (docs/09): "adesivo" com o glifo, título curto, uma frase e uma ação opcional.
   Parâmetros: title, text, action_url, action_label; compact=True para usar dentro de painéis.
   Textos de referência na tabela "Estados vazios" do docs/09.
 {% endcomment %}
 <div class="mx-auto flex max-w-md flex-col items-center text-center
             {% if compact %}py-8{% else %}py-16{% endif %}">
-  <svg class="{% if compact %}size-14{% else %}size-20{% endif %}
-              text-ink-3"
-       viewBox="0 0 64 64"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="1.5"
-       stroke-linecap="round"
-       stroke-linejoin="round"
-       aria-hidden="true">
-    <path d="M14 12h30l8 8v32H14z" />
-    <path d="M44 12v8h8" />
-    <path d="M21 26h16M21 33h24M21 40h24M21 47h14" opacity=".55" />
-  </svg>
-  <h2 class="mt-5 font-display text-h3 font-semibold text-balance text-ink">{{ title }}</h2>
+  <span class="flex {% if compact %}size-16{% else %}size-20{% endif %} -rotate-6 items-center justify-center rounded-full bg-sun-soft text-accent"
+        aria-hidden="true">
+    {% include "components/glyph.html" with class="size-1/2" %}
+  </span>
+  <h2 class="mt-5 font-display text-h3 font-bold text-balance text-ink">{{ title }}</h2>
   {% if text %}<p class="mt-2 text-ui text-ink-2">{{ text }}</p>{% endif %}
   {% if action_url and action_label %}
     <a href="{{ action_url }}" class="btn-secondary mt-6">{{ action_label }}</a>

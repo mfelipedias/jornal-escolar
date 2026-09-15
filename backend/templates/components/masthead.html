@@ -1,15 +1,16 @@
 {% comment %}
-  Cabeçalho público (docs/09, "Masthead"). Linha 1: marca e conta; linha 2: áreas (nav_areas,
-  do context processor da taxonomia), Agenda, Quem escreve e Sobre. Busca: ícone que abre um
-  campo (components/masthead_search.html).
-  No celular a linha 2 rola na horizontal; "Escrever" e "Admin" ficam só no painel, para a
-  linha 1 caber em 390px.
+  Cabeçalho público (docs/09, "Masthead"). Fixo no topo e translúcido (classe .masthead).
+  Linha 1: marca e conta; linha 2: barra de chips com as áreas (nav_areas, do context
+  processor da taxonomia), Agenda, Quem escreve e Sobre. Busca: ícone que abre um campo
+  (components/masthead_search.html).
+  No celular a linha 2 rola na horizontal com as bordas esmaecidas; "Escrever" e "Admin"
+  ficam só no painel, para a linha 1 caber em 390px.
 {% endcomment %}
 {% load permissions %}
-<header class="border-b border-line">
-  <div class="site-container relative flex items-center justify-between gap-4 py-4 sm:py-6">
+<header class="masthead border-b border-line/80">
+  <div class="masthead-brand site-container relative flex items-center justify-between gap-4">
     <a href="{% url 'core:home' %}"
-       class="group flex items-center gap-2.5 text-ink sm:gap-3"
+       class="masthead-logo flex items-center gap-2.5 text-ink sm:gap-3"
        aria-label="{{ jornal.name }}, página inicial">
       {% include "components/glyph.html" with class="size-7 shrink-0 text-accent sm:size-8" %}
       <span class="font-display text-2xl leading-none font-extrabold sm:text-[1.75rem]">
@@ -17,10 +18,10 @@
         <span class="wordmark-accent">{{ jornal.wordmark_accent }}</span>
       </span>
     </a>
-    <div class="flex items-center gap-3 text-meta sm:gap-6">
+    <div class="flex items-center gap-2 text-ui sm:gap-4">
       {% if jornal.show_date %}
         {% now "l, j \d\e F \d\e Y" as today %}
-        <p class="hidden text-ink-3 md:block">{{ today|lower }}</p>
+        <p class="hidden text-meta text-ink-3 md:block">{{ today|lower }}</p>
       {% endif %}
       {% include "components/masthead_search.html" %}
       {% if user.is_authenticated %}
@@ -28,36 +29,34 @@
         {% can "access_admin" as can_admin %}
         {% if can_write %}
           <a href="{% url 'publications:create' %}"
-             class="hidden rounded-field bg-accent px-3 py-1.5 text-ui text-white hover:bg-accent-2 sm:inline-block">Escrever</a>
+             class="btn-primary hidden min-h-10 sm:inline-flex">Escrever</a>
         {% endif %}
         {% include "components/notification_bell.html" %}
         <a href="{% url 'dashboard:home' %}"
-           class="text-ink-2 hover:text-accent">Painel</a>
+           class="font-medium text-ink-2 hover:text-accent">Painel</a>
         <a href="{% url 'accounts:profile_edit' %}"
-           class="hidden text-ink-2 hover:text-accent sm:inline"
+           class="hidden font-medium text-ink-2 hover:text-accent sm:inline"
            title="Meu perfil">{{ user.public_name }}</a>
         {% if can_admin %}
           <a href="{% url 'admin:index' %}"
-             class="hidden text-ink-2 hover:text-accent sm:inline">Admin</a>
+             class="hidden font-medium text-ink-2 hover:text-accent sm:inline">Admin</a>
         {% endif %}
         <form method="post" action="{% url 'accounts:logout' %}">
           {% csrf_token %}
-          <button type="submit" class="text-ink-2 hover:text-accent">Sair</button>
+          <button type="submit" class="font-medium text-ink-2 hover:text-accent">Sair</button>
         </form>
       {% else %}
-        <a href="{% url 'accounts:login' %}"
-           class="rounded-field border border-line px-3 py-1.5 text-ui text-ink hover:border-accent hover:text-accent">Entrar</a>
+        <a href="{% url 'accounts:login' %}" class="btn-secondary min-h-10">Entrar</a>
       {% endif %}
     </div>
   </div>
-  <nav class="border-t border-line/70" aria-label="Seções do jornal">
-    <ul class="site-container flex gap-x-5 overflow-x-auto py-2.5 text-ui whitespace-nowrap sm:gap-x-6">
+  <nav class="masthead-nav border-t border-line/60" aria-label="Seções do jornal">
+    <ul class="site-container flex gap-1 overflow-x-auto py-2 whitespace-nowrap">
       {% for area in nav_areas %}
         {% url 'taxonomy:area' area.slug as area_url %}
         <li>
           <a href="{{ area_url }}"
-             class="inline-flex items-center gap-1.5 border-b-2 py-0.5 text-ink-2 hover:text-ink
-                    {% if request.path == area_url %}{{ area.color_classes.border }} text-ink{% else %}border-transparent{% endif %}"
+             class="nav-chip {% if request.path == area_url %}{{ area.color_classes.soft_bg }} {{ area.color_classes.text }}{% endif %}"
              {% if request.path == area_url %}aria-current="page"{% endif %}>
             <span class="size-2 shrink-0 rounded-full {{ area.color_classes.solid_bg }}"
                   aria-hidden="true"></span>
@@ -68,15 +67,13 @@
       {% url 'publications:agenda' as agenda_url %}
       <li>
         <a href="{{ agenda_url }}"
-           class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink
-                  {% if request.path == agenda_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
+           class="nav-chip {% if request.path == agenda_url %}bg-accent-soft text-accent-2{% endif %}"
            {% if request.path == agenda_url %}aria-current="page"{% endif %}>Agenda</a>
       </li>
       {% url 'accounts:teacher_list' as team_url %}
       <li>
         <a href="{{ team_url }}"
-           class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink
-                  {% if request.path == team_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
+           class="nav-chip {% if request.path == team_url %}bg-accent-soft text-accent-2{% endif %}"
            {% if request.path == team_url %}aria-current="page"{% endif %}>Quem escreve</a>
       </li>
       {% for item in jornal.footer_pages %}
@@ -84,8 +81,7 @@
           {% url 'core:page' slug=item.slug as about_url %}
           <li>
             <a href="{{ about_url }}"
-               class="inline-flex border-b-2 py-0.5 text-ink-2 hover:text-ink
-                      {% if request.path == about_url %}border-accent text-ink{% else %}border-transparent{% endif %}"
+               class="nav-chip {% if request.path == about_url %}bg-accent-soft text-accent-2{% endif %}"
                {% if request.path == about_url %}aria-current="page"{% endif %}>Sobre</a>
           </li>
         {% endif %}
