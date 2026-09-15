@@ -198,14 +198,14 @@ Restrição: `(article, user, role)` único quando `user` não nulo; `is_student
 
 | Campo | Tipo |
 |---|---|
-| article, author, parent nullable, body, anchor_text (≤300) nullable, anchor_from, anchor_to, status (`open`, `resolved`), resolved_by, resolved_at, created_at, updated_at | |
+| article, author, parent nullable, body, anchor_text (≤300) nullable, anchor_prefix, anchor_suffix (≤40), anchor_from, anchor_to, status (`open`, `resolved`), resolved_by, resolved_at, created_at, updated_at | |
 
 ### editorial.EditorialEvent
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | article, actor, from_status, to_status | | Nulos quando não muda estado |
-| kind | varchar | `status_change`, `reviewer_assigned`, `reviewer_removed`, `approved`, `contributor_changed`, `edited_after_publish`, `edited_by_third_party`, `credit_anonymized` |
+| kind | varchar | `status_change`, `reviewer_assigned`, `reviewer_removed`, `approved`, `contributor_changed`, `edited_after_publish`, `edited_by_third_party`, `credit_anonymized`, `comment_added`, `comment_replied`, `comment_resolved`, `comment_reopened` |
 | note | text | |
 | created_at | | |
 
@@ -216,7 +216,7 @@ Restrição: `(article, user, role)` único quando `user` não nulo; `is_student
 | Campo | Tipo | Notas |
 |---|---|---|
 | user | FK User | |
-| kind | varchar | `review_requested`, `changes_requested`, `approved`, `published_by_other`, `edited_by_other`, `archived_by_other`, `comment_pending`, `review_stale`, `system` |
+| kind | varchar | `review_requested`, `changes_requested`, `approved`, `published_by_other`, `edited_by_other`, `archived_by_other`, `comment_pending`, `review_comment`, `review_stale`, `system` |
 | article | FK nullable | |
 | message | varchar(200) | |
 | url | varchar(300) | |
@@ -330,3 +330,4 @@ erDiagram
 - 2026-09-14: E23: `TeacherProfile.onboarded_at`. Quem já tinha entrado alguma vez é marcado como concluído pela migração.
 - 2026-09-14: E25: `StaticPage` troca o texto simples `body` por `body_json` e `body_html` (a migração converte os parágrafos) e mantém `lead` e `is_published`.
 - 2026-09-14: E29: `EditorialEvent` criado, com os tipos `reviewer_removed` (pedido cancelado ou revisão recusada) e `approved` (docs/04 e docs/17 já citavam o evento de aprovação). `Article.status` ganha `in_review` e `changes_requested`.
+- 2026-09-14: E32: `EditorialComment` criado com `anchor_prefix` e `anchor_suffix` (até 40 caracteres de contexto), além dos campos previstos; `anchor_from`/`anchor_to` são posições no texto da âncora (docs/17). `EditorialEvent` ganha `comment_added`, `comment_replied`, `comment_resolved`, `comment_reopened`; `Notification.kind` ganha `review_comment`.

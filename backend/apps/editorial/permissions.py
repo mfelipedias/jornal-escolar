@@ -175,6 +175,12 @@ def can_comment_on_review(user: AnyUser, article: Article) -> bool:
     return is_editor(user) or is_author(user, article) or is_designated_reviewer(user, article)
 
 
+def can_resolve_comment(user: AnyUser, article: Article) -> bool:
+    """Resolver ou reabrir um comentário da revisão: revisor ou autor (docs/17); editores
+    também, porque veem e comentam em qualquer texto."""
+    return can_comment_on_review(user, article)
+
+
 def can_decline_review(user: AnyUser, article: Article) -> bool:
     """Recusar a revisão: só o próprio revisor designado."""
     return article.status == Article.Status.IN_REVIEW and is_designated_reviewer(user, article)

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import EditorialEvent, Notification
+from .models import EditorialComment, EditorialEvent, Notification
 
 
 @admin.register(EditorialEvent)
@@ -47,4 +47,21 @@ class NotificationAdmin(admin.ModelAdmin):
     )
 
     def has_add_permission(self, request) -> bool:
+        return False
+
+
+@admin.register(EditorialComment)
+class EditorialCommentAdmin(admin.ModelAdmin):
+    """Comentários internos da revisão: só leitura; conversa e resolução ficam na tela (docs/17)."""
+
+    list_display = ("created_at", "article", "author", "status", "anchor_text")
+    list_filter = ("status",)
+    search_fields = ("article__title", "author__full_name", "body", "anchor_text")
+    list_select_related = ("article", "author")
+    readonly_fields = [field.name for field in EditorialComment._meta.fields]
+
+    def has_add_permission(self, request) -> bool:
+        return False
+
+    def has_change_permission(self, request, obj=None) -> bool:
         return False

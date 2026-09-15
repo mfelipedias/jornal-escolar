@@ -1,7 +1,8 @@
 """Tela de revisão e aba "Revisões" (E31, docs/15, docs/17).
 
-Aceite: sugerir alterações sem comentário é bloqueado. Até a E32 o comentário é a nota
-obrigatória; o bloqueio está no serviço e na tela.
+Aceite: sugerir alterações sem comentário é bloqueado. Desde a E32 vale ao menos um
+comentário editorial aberto (ou a nota, que vira um comentário geral); o bloqueio está no
+serviço e na tela. Os comentários em si são testados em test_review_comments.py.
 """
 
 import pytest
@@ -74,8 +75,8 @@ def test_screen_requires_comment_to_request_changes(client, article, author, rev
     form = html.split('id="review-changes"')[1].split("</form>")[0]
 
     assert transition_url(article, "request_changes") in form
-    assert "required" in form.split('id="changes-note"')[1].split(">")[0]
-    assert ':disabled="!note.trim()"' in form
+    assert ':disabled="!note.trim() && !openCount"' in form
+    assert "Deixe ao menos um comentário" in form
 
 
 def test_screen_post_without_comment_stays_in_review_with_error(client, article, author, reviewer):
@@ -90,9 +91,9 @@ def test_screen_post_without_comment_stays_in_review_with_error(client, article,
     assert response.status_code == 302
     assert response["Location"] == review_url(article)
     assert Article.objects.get(pk=article.pk).status == S.IN_REVIEW
-    assert flash(response) == ["Escreva o que precisa mudar antes de devolver."]
+    assert flash(response) == [services.CHANGES_WITHOUT_COMMENT]
     page = client.get(response["Location"]).content.decode()
-    assert "Escreva o que precisa mudar antes de devolver." in page
+    assert services.CHANGES_WITHOUT_COMMENT in page
 
 
 def test_request_changes_with_comment_from_screen(client, article, author, reviewer):

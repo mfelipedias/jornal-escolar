@@ -4,6 +4,8 @@ import "../css/app.css";
 import Alpine from "alpinejs";
 import htmx from "htmx.org";
 
+import { registerReviewComments } from "./review-comments.js";
+
 window.htmx = htmx;
 window.Alpine = Alpine;
 
@@ -144,5 +146,8 @@ Alpine.data("share", () => ({
     navigator.share({ title: this.$el.dataset.title, url: this.url }).catch(() => {});
   },
 }));
+
+// Tela de revisão (docs/17): comentários ancorados em trechos do texto.
+registerReviewComments(Alpine);
 
 Alpine.start();

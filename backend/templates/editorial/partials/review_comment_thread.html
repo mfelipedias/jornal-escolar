@@ -1,0 +1,108 @@
+{% load humanize %}
+{% comment %}
+  Uma conversa (comentário principal e respostas). Parâmetros: article, thread
+  (editorial.selectors.CommentThread), can_resolve, draft. Usado por review_comments.html.
+{% endcomment %}
+{% with comment=thread.comment %}
+  <li id="comentario-{{ comment.pk }}"
+      tabindex="-1"
+      class="review-thread scroll-mt-20 rounded-card border border-line p-3"
+      data-comment="{{ comment.pk }}"
+      {% if comment.is_open and thread.anchor_state == "found" %}data-anchor-text="{{ comment.anchor_text }}" data-anchor-prefix="{{ comment.anchor_prefix }}" data-anchor-suffix="{{ comment.anchor_suffix }}" data-anchor-start="{{ thread.anchor_start }}" data-anchor-end="{{ thread.anchor_end }}"{% endif %}>
+    {% if comment.is_anchored %}
+      {% if thread.anchor_state == "found" and comment.is_open %}
+        <button type="button"
+                class="block text-left text-meta text-ink-2 hover:text-accent"
+                @click="showAnchor({{ comment.pk }})">
+          <span class="sr-only">Ir para o trecho:</span>
+          “{{ comment.anchor_text|truncatechars:140 }}”
+        </button>
+      {% else %}
+        <p class="text-meta text-ink-3">“{{ comment.anchor_text|truncatechars:140 }}”</p>
+      {% endif %}
+      {% if thread.is_changed %}
+        <p class="mt-1 inline-flex rounded-full bg-area-ambar-soft px-2 py-0.5 text-meta text-area-ambar">Trecho alterado</p>
+      {% endif %}
+    {% else %}
+      <p class="text-meta text-ink-3">Comentário geral</p>
+    {% endif %}
+    <p class="mt-1 text-meta text-ink-3">
+      <span class="font-medium text-ink">{{ comment.author.public_name|default:"Conta removida" }}</span>
+      · <time datetime="{{ comment.created_at|date:'c' }}">{{ comment.created_at|naturaltime }}</time>
+    </p>
+    <p class="mt-1 text-ui break-words text-ink">{{ comment.body|linebreaksbr }}</p>
+    {% if thread.replies %}
+      <ol class="mt-3 space-y-2 border-l-2 border-line pl-3">
+        {% for reply in thread.replies %}
+          <li>
+            <p class="text-meta text-ink-3">
+              <span class="font-medium text-ink">{{ reply.author.public_name|default:"Conta removida" }}</span>
+              · <time datetime="{{ reply.created_at|date:'c' }}">{{ reply.created_at|naturaltime }}</time>
+            </p>
+            <p class="text-ui break-words text-ink">{{ reply.body|linebreaksbr }}</p>
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+    {% if not comment.is_open %}
+      <p class="mt-2 text-meta text-ink-3">
+        Resolvido{% if comment.resolved_by %} por {{ comment.resolved_by.public_name }}{% endif %}
+        {% if comment.resolved_at %}{{ comment.resolved_at|naturaltime }}{% endif %}
+      </p>
+    {% endif %}
+    <div x-data="{ replying: {% if draft.reply_to == comment.pk %}true{% else %}false{% endif %} }">
+      <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+        {% if comment.is_open %}
+          <button type="button"
+                  class="text-meta font-medium text-accent"
+                  :aria-expanded="replying"
+                  aria-controls="reply-{{ comment.pk }}"
+                  @click="replying = !replying">Responder</button>
+        {% endif %}
+        {% if can_resolve %}
+          {% url 'editorial:comment_status' comment.pk comment.is_open|yesno:"resolve,reopen" as status_url %}
+          <form method="post"
+                action="{{ status_url }}"
+                hx-post="{{ status_url }}"
+                hx-target="#review-comments"
+                hx-swap="outerHTML">
+            {% csrf_token %}
+            <button type="submit"
+                    class="text-meta font-medium text-ink-2 hover:text-accent">
+              {% if comment.is_open %}
+                Resolver
+              {% else %}
+                Reabrir
+              {% endif %}
+            </button>
+          </form>
+        {% endif %}
+      </div>
+      {% if comment.is_open %}
+        {% url 'editorial:comment_reply' comment.pk as reply_url %}
+        <form id="reply-{{ comment.pk }}"
+              method="post"
+              action="{{ reply_url }}"
+              hx-post="{{ reply_url }}"
+              hx-target="#review-comments"
+              hx-swap="outerHTML"
+              x-show="replying"
+              {% if draft.reply_to != comment.pk %}x-cloak{% endif %}
+              class="mt-2">
+          {% csrf_token %}
+          <label for="reply-body-{{ comment.pk }}" class="sr-only">Resposta</label>
+          <textarea id="reply-body-{{ comment.pk }}"
+                    name="body"
+                    rows="2"
+                    maxlength="2000"
+                    required
+                    class="field">{% if draft.reply_to == comment.pk %}{{ draft.reply_body }}{% endif %}</textarea>
+          <div class="mt-2 flex justify-end gap-2">
+            <button type="button" class="btn-ghost" @click="replying = false">Cancelar</button>
+            <button type="submit" class="btn-secondary">Responder</button>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  </li>
+{% endwith %}

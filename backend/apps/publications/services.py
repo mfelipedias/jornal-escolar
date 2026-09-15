@@ -17,6 +17,8 @@ from django.utils.text import slugify
 
 from apps.accounts.models import User
 from apps.editorial import events, notifications, permissions
+from apps.editorial import selectors as editorial_selectors
+from apps.editorial import services as editorial_services
 from apps.taxonomy.models import ArticleType, Discipline, Topic
 
 from . import rendering
@@ -617,6 +619,8 @@ def restore(user: User, article: Article) -> Article:
 
 # --- revisão por colega (docs/04, docs/17) ---
 
+CHANGES_WITHOUT_COMMENT = "Deixe ao menos um comentário antes de sugerir alterações."
+
 
 @transaction.atomic
 def request_review(
@@ -699,19 +703,23 @@ def decline_review(user: User, article: Article, note: str = "") -> Article:
 
 
 @transaction.atomic
-def request_changes(user: User, article: Article, note: str) -> Article:
-    """Sugerir alterações: devolve ao autor com uma nota obrigatória.
+def request_changes(user: User, article: Article, note: str = "") -> Article:
+    """Sugerir alterações: devolve aos autores com ao menos um comentário aberto (docs/17).
 
-    Com os comentários editoriais (E32), a condição passa a ser ao menos um comentário
-    aberto (docs/17).
+    A nota, se houver, vira um comentário geral aberto e fica no evento da mudança de estado.
     """
     current = _locked(article)
     if not permissions.can_review(user, current):
         raise PermissionDenied
-    if not note.strip():
-        raise ValidationError({"note": "Escreva o que precisa mudar antes de devolver."})
+    note = note.strip()
+    if not note and not editorial_selectors.open_comment_count(current):
+        raise ValidationError({"note": CHANGES_WITHOUT_COMMENT})
+    if note:
+        editorial_services.add_note_comment(user, current, note)
     _set_status(current, user, Status.CHANGES_REQUESTED, [], note)
-    notifications.changes_requested(current, user, note)
+    notifications.changes_requested(
+        current, user, note, editorial_selectors.open_comment_count(current)
+    )
     _sync(article, current, ["status", "updated_at"])
     return current
 

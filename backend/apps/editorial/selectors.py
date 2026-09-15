@@ -8,8 +8,8 @@ from django.db.models import QuerySet
 from apps.accounts.models import User
 from apps.publications.models import Article, ArticleContributor
 
-from . import events, permissions
-from .models import EditorialEvent
+from . import anchors, events, permissions
+from .models import EditorialComment, EditorialEvent
 
 Kind = EditorialEvent.Kind
 
@@ -26,6 +26,7 @@ class ReviewSummary:
     changes_note: str
     approved_by: User | None
     approved_at: datetime | None
+    open_comments: int = 0
 
     @property
     def is_empty(self) -> bool:
@@ -64,6 +65,7 @@ def review_summary(article: Article) -> ReviewSummary:
         changes_note=changes.note if changes else "",
         approved_by=approval.actor if approval else None,
         approved_at=approval.created_at if approval else None,
+        open_comments=open_comment_count(article),
     )
 
 
@@ -161,6 +163,10 @@ KIND_TEXTS: dict[str, str] = {
     Kind.EDITED_AFTER_PUBLISH: "editou depois de publicar",
     Kind.EDITED_BY_THIRD_PARTY: "editou o texto",
     Kind.CREDIT_ANONYMIZED: "anonimizou um crédito",
+    Kind.COMMENT_ADDED: "comentou",
+    Kind.COMMENT_REPLIED: "respondeu a um comentário",
+    Kind.COMMENT_RESOLVED: "resolveu um comentário",
+    Kind.COMMENT_REOPENED: "reabriu um comentário",
 }
 
 
@@ -171,6 +177,91 @@ def describe(event: EditorialEvent) -> str:
         (None, event.to_status)
     )
     return text or f"mudou o estado para {Status(event.to_status).label.lower()}"
+
+
+# --- comentários editoriais (docs/17) ---
+
+
+def open_comment_count(article: Article) -> int:
+    """Comentários principais abertos (respostas não contam)."""
+    return article.editorial_comments.filter(
+        parent__isnull=True, status=EditorialComment.Status.OPEN
+    ).count()
+
+
+@dataclass(frozen=True)
+class CommentThread:
+    """Um comentário principal com as respostas e onde o trecho está agora."""
+
+    comment: EditorialComment
+    replies: list[EditorialComment]
+    # "general" (sem trecho), "found" (trecho reencontrado) ou "changed" (trecho alterado).
+    anchor_state: str
+    anchor_start: int | None = None
+    anchor_end: int | None = None
+
+    @property
+    def is_changed(self) -> bool:
+        return self.anchor_state == "changed"
+
+
+@dataclass(frozen=True)
+class CommentBoard:
+    open: list[CommentThread]
+    resolved: list[CommentThread]
+
+    @property
+    def open_count(self) -> int:
+        return len(self.open)
+
+
+def comment_board(article: Article) -> CommentBoard:
+    """Conversas da tela de revisão: abertas primeiro, na ordem do texto (gerais no fim)."""
+    comments = list(
+        article.editorial_comments.select_related("author", "resolved_by").order_by(
+            "created_at", "pk"
+        )
+    )
+    replies: dict[int, list[EditorialComment]] = {}
+    for comment in comments:
+        if comment.parent_id is not None:
+            replies.setdefault(comment.parent_id, []).append(comment)
+    text = anchors.document_text(article.body_json)
+    threads = []
+    for comment in comments:
+        if comment.parent_id is not None:
+            continue
+        found = None
+        if comment.is_anchored:
+            found = anchors.locate(
+                text,
+                comment.anchor_text,
+                comment.anchor_prefix,
+                comment.anchor_suffix,
+                comment.anchor_from,
+            )
+        state = "general" if not comment.is_anchored else ("found" if found else "changed")
+        threads.append(
+            CommentThread(
+                comment=comment,
+                replies=replies.get(comment.pk, []),
+                anchor_state=state,
+                anchor_start=found[0] if found else None,
+                anchor_end=found[1] if found else None,
+            )
+        )
+
+    def order(thread: CommentThread) -> int:
+        # Trecho alterado e comentário geral vão depois dos ancorados (ordem de criação).
+        return thread.anchor_start if thread.anchor_start is not None else len(text) + 1
+
+    open_threads = sorted((t for t in threads if t.comment.is_open), key=order)
+    resolved = sorted(
+        (t for t in threads if not t.comment.is_open),
+        key=lambda t: t.comment.resolved_at or t.comment.created_at,
+        reverse=True,
+    )
+    return CommentBoard(open=open_threads, resolved=resolved)
 
 
 def history_entries(article: Article) -> list[HistoryEntry]:

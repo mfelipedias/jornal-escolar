@@ -4,7 +4,8 @@
   Tela de revisão (docs/17). O texto como ficará publicado, as decisões e o histórico.
   Revisor designado, editores e admin decidem; autores veem a mesma tela sem os botões de
   decisão. As decisões vão para publications:transition com next= desta tela (quem recusa
-  a revisão volta para a lista, porque deixa de ter acesso). Comentários ancorados: E32.
+  a revisão volta para a lista, porque deixa de ter acesso). Comentários (E32) na coluna
+  lateral; a seleção de trechos fica em frontend/src/js/review-comments.js (reviewPage).
 {% endcomment %}
 {% block title %}Revisar: {{ article.title }} · {{ jornal.name }}{% endblock title %}
 {% block content %}
@@ -16,264 +17,289 @@
   {% can "resume" article as can_resume %}
   {% url 'editorial:review' article.pk as review_url %}
   {% url 'editorial:queue' as queue_url %}
-  <header class="border-b border-line pb-6"
-          x-data="{ open: '' }"
-          @keydown.escape="open = ''">
-    <a href="{{ queue_url }}"
-       class="text-meta text-ink-3 hover:text-accent"><span aria-hidden="true">←</span> Revisões</a>
-    <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-      <h1 class="font-serif text-h1 font-semibold text-balance">{{ article.title }}</h1>
-      {% include "components/status_badge.html" with status=article.status %}
-    </div>
-    {% if article.status == "in_review" and review.requested_at %}
-      <p class="mt-2 text-meta text-ink-3">
-        Pedido {{ review.requested_at|naturaltime }}
-        {% if review.requested_by %}por {{ review.requested_by.public_name }}{% endif %}
-        {% if review.reviewer %}· revisão com {{ review.reviewer.display_name }}{% endif %}
-      </p>
-    {% endif %}
-    {% if article.status == "in_review" and review.request_note %}
-      <p class="mt-3 max-w-reading border-l-2 border-accent pl-3 text-ui text-ink-2">
-        <span class="font-medium text-ink">Nota{% if review.requested_by %} de {{ review.requested_by.public_name }}{% endif %}:</span>
-        “{{ review.request_note }}”
-      </p>
-    {% endif %}
-    {% if authors %}
-      <p class="mt-2 text-meta text-ink-2">
-        <span class="text-ink-3">Autores:</span> {{ authors }}
-      </p>
-    {% endif %}
-    {% if can_edit or can_review or can_decline_review or can_archive and archive_requires_note %}
-      <div class="mt-5 flex flex-wrap items-center gap-2">
-        {% if can_edit %}
-          <a href="{% url 'publications:edit' article.pk %}" class="btn-secondary">
-            {% if can_review %}
-              Editar texto
-            {% else %}
-              Abrir no editor
-            {% endif %}
-          </a>
-        {% endif %}
-        {% if can_review %}
-          <button type="button"
-                  class="btn-secondary"
-                  aria-controls="review-changes"
-                  :aria-expanded="open === 'changes'"
-                  @click="open = open === 'changes' ? '' : 'changes'">Sugerir alterações</button>
-          <button type="button"
-                  class="btn-primary"
-                  aria-controls="review-approve"
-                  :aria-expanded="open === 'approve'"
-                  @click="open = open === 'approve' ? '' : 'approve'">
-            Aprovar <span aria-hidden="true">▾</span>
-          </button>
-        {% endif %}
-        {% if can_decline_review %}
-          <button type="button"
-                  class="btn-ghost"
-                  aria-controls="review-decline"
-                  :aria-expanded="open === 'decline'"
-                  @click="open = open === 'decline' ? '' : 'decline'">Recusar revisão</button>
-        {% endif %}
-        {% if can_archive and archive_requires_note %}
-          <button type="button"
-                  class="btn-ghost"
-                  aria-controls="review-archive"
-                  :aria-expanded="open === 'archive'"
-                  @click="open = open === 'archive' ? '' : 'archive'">Arquivar</button>
-        {% endif %}
+  <div x-data="reviewPage({{ board.open_count }})">
+    <header class="border-b border-line pb-6"
+            x-data="{ open: '' }"
+            @keydown.escape="open = ''">
+      <a href="{{ queue_url }}"
+         class="text-meta text-ink-3 hover:text-accent"><span aria-hidden="true">←</span> Revisões</a>
+      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 class="font-serif text-h1 font-semibold text-balance">{{ article.title }}</h1>
+        {% include "components/status_badge.html" with status=article.status %}
       </div>
-    {% endif %}
-    {% if can_review %}
-      {# Sugerir alterações exige um comentário (a nota, até a E32); o serviço também bloqueia. #}
-      <form id="review-changes"
-            method="post"
-            action="{% url 'publications:transition' article.pk 'request_changes' %}"
-            x-show="open === 'changes'"
-            x-cloak
-            x-data="{ note: '' }"
-            class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ review_url }}">
-        <label for="changes-note" class="block text-ui font-medium">O que precisa mudar?</label>
-        <p id="changes-note-help" class="mt-1 text-meta text-ink-2">
-          Obrigatório. Os autores recebem este comentário e o texto volta para eles.
+      {% if article.status == "in_review" and review.requested_at %}
+        <p class="mt-2 text-meta text-ink-3">
+          Pedido {{ review.requested_at|naturaltime }}
+          {% if review.requested_by %}por {{ review.requested_by.public_name }}{% endif %}
+          {% if review.reviewer %}· revisão com {{ review.reviewer.display_name }}{% endif %}
         </p>
-        <textarea id="changes-note"
-                  name="note"
-                  rows="4"
-                  maxlength="1000"
-                  required
-                  aria-describedby="changes-note-help"
-                  x-model="note"
-                  class="field mt-2"></textarea>
-        <div class="mt-3 flex justify-end gap-2">
-          <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
-          <button type="submit" class="btn-primary" :disabled="!note.trim()">Sugerir alterações</button>
-        </div>
-      </form>
-      <form id="review-approve"
-            method="post"
-            action="{% url 'publications:transition' article.pk 'approve' %}"
-            x-show="open === 'approve'"
-            x-cloak
-            class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ review_url }}">
-        <label for="approve-note" class="block text-ui font-medium">Comentário para os autores (opcional)</label>
-        <textarea id="approve-note"
-                  name="note"
-                  rows="3"
-                  maxlength="1000"
-                  class="field mt-2"></textarea>
-        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
-          <button type="submit" class="btn-secondary">Aprovar e devolver aos autores</button>
-          {% if can_approve_and_publish %}
-            <button type="submit"
+      {% endif %}
+      {% if article.status == "in_review" and review.request_note %}
+        <p class="mt-3 max-w-reading border-l-2 border-accent pl-3 text-ui text-ink-2">
+          <span class="font-medium text-ink">Nota{% if review.requested_by %} de {{ review.requested_by.public_name }}{% endif %}:</span>
+          “{{ review.request_note }}”
+        </p>
+      {% endif %}
+      {% if authors %}
+        <p class="mt-2 text-meta text-ink-2">
+          <span class="text-ink-3">Autores:</span> {{ authors }}
+        </p>
+      {% endif %}
+      {% if can_edit or can_review or can_decline_review or can_archive and archive_requires_note %}
+        <div class="mt-5 flex flex-wrap items-center gap-2">
+          {% if can_edit %}
+            <a href="{% url 'publications:edit' article.pk %}" class="btn-secondary">
+              {% if can_review %}
+                Editar texto
+              {% else %}
+                Abrir no editor
+              {% endif %}
+            </a>
+          {% endif %}
+          {% if can_review %}
+            <button type="button"
+                    class="btn-secondary"
+                    aria-controls="review-changes"
+                    :aria-expanded="open === 'changes'"
+                    @click="open = open === 'changes' ? '' : 'changes'">Sugerir alterações</button>
+            <button type="button"
                     class="btn-primary"
-                    formaction="{% url 'publications:transition' article.pk 'approve_publish' %}"
-                    {% if blocking %}disabled title="Complete os itens obrigatórios antes de publicar"{% endif %}>
-              Aprovar e publicar
+                    aria-controls="review-approve"
+                    :aria-expanded="open === 'approve'"
+                    @click="open = open === 'approve' ? '' : 'approve'">
+              Aprovar <span aria-hidden="true">▾</span>
             </button>
           {% endif %}
-        </div>
-        {% if can_approve_and_publish and blocking %}
-          <p class="mt-2 text-meta text-danger">Para publicar, falta completar a conferência ao lado.</p>
-        {% endif %}
-      </form>
-    {% endif %}
-    {% if can_decline_review %}
-      <form id="review-decline"
-            method="post"
-            action="{% url 'publications:transition' article.pk 'decline_review' %}"
-            x-show="open === 'decline'"
-            x-cloak
-            class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ queue_url }}">
-        <p class="text-ui font-medium">Não pode revisar agora?</p>
-        <p class="mt-1 text-meta text-ink-2">Você sai da revisão e os autores são avisados para escolher outro colega.</p>
-        <label for="decline-note" class="mt-3 block text-meta font-medium">Motivo (opcional)</label>
-        <textarea id="decline-note"
-                  name="note"
-                  rows="2"
-                  maxlength="500"
-                  class="field mt-1"></textarea>
-        <div class="mt-3 flex justify-end gap-2">
-          <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
-          <button type="submit" class="btn-danger">Recusar revisão</button>
-        </div>
-      </form>
-    {% endif %}
-    {% if can_archive and archive_requires_note %}
-      <form id="review-archive"
-            method="post"
-            action="{% url 'publications:transition' article.pk 'archive' %}"
-            x-show="open === 'archive'"
-            x-cloak
-            class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ review_url }}">
-        <p class="text-ui font-medium">Arquivar esta publicação?</p>
-        <p class="mt-1 text-meta text-ink-2">Ela sai do site, mas continua guardada e pode ser restaurada.</p>
-        <label for="archive-note" class="mt-3 block text-meta font-medium">Motivo</label>
-        <textarea id="archive-note" name="note" rows="2" required class="field mt-1"></textarea>
-        <div class="mt-3 flex justify-end gap-2">
-          <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
-          <button type="submit" class="btn-danger">Arquivar</button>
-        </div>
-      </form>
-    {% endif %}
-  </header>
-  <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-    <article aria-labelledby="review-text-title" class="min-w-0">
-      <h2 id="review-text-title" class="sr-only">Texto como ficará publicado</h2>
-      <div class="rounded-card border border-line bg-white px-4 py-6 sm:px-8 sm:py-8">
-        <p class="font-serif text-h2 font-semibold text-balance">{{ article.title }}</p>
-        {% if article.subtitle %}<p class="mt-3 font-serif text-lead text-ink-2">{{ article.subtitle }}</p>{% endif %}
-        {% if article.cover %}
-          <figure class="mt-6">
-            <img src="{{ article.cover.variant_urls.w960|default:article.cover.url }}"
-                 alt="{% if not article.cover.is_decorative %}{{ article.cover.alt_text }}{% endif %}"
-                 width="{{ article.cover.width }}"
-                 height="{{ article.cover.height }}"
-                 class="aspect-[3/2] w-full rounded-card bg-paper-2 object-cover">
-            {% if article.cover_caption %}<figcaption class="mt-2 text-meta text-ink-2">{{ article.cover_caption }}</figcaption>{% endif %}
-          </figure>
-        {% endif %}
-        <div class="article-body mt-6">{{ article.body_html|safe }}</div>
-        {% if article.sources %}
-          <section class="mt-8 border-t border-line pt-4"
-                   aria-labelledby="review-sources-title">
-            <h3 id="review-sources-title" class="editor-panel-title">Fontes e referências</h3>
-            <ol class="list-decimal space-y-1 pl-5 text-ui text-ink-2">
-              {% for source in article.sources %}
-                <li>
-                  {% if source.url %}
-                    <a href="{{ source.url }}"
-                       rel="noopener noreferrer"
-                       target="_blank"
-                       class="text-accent underline underline-offset-2">{{ source.title }}</a>
-                  {% else %}
-                    {{ source.title }}
-                  {% endif %}
-                  {% if source.publisher %}— {{ source.publisher }}{% endif %}
-                </li>
-              {% endfor %}
-            </ol>
-          </section>
-        {% endif %}
-      </div>
-    </article>
-    <aside class="space-y-4" aria-label="Revisão, conferência e histórico">
-      {% if article.status != "in_review" %}
-        <div class="rounded-card border border-line bg-white p-4">
-          {% include "publications/partials/review_status.html" %}
-          {% if not review.approved_by and article.status != "changes_requested" %}
-            <p class="text-ui text-ink-2">Esta publicação não está em revisão agora.</p>
+          {% if can_decline_review %}
+            <button type="button"
+                    class="btn-ghost"
+                    aria-controls="review-decline"
+                    :aria-expanded="open === 'decline'"
+                    @click="open = open === 'decline' ? '' : 'decline'">Recusar revisão</button>
+          {% endif %}
+          {% if can_archive and archive_requires_note %}
+            <button type="button"
+                    class="btn-ghost"
+                    aria-controls="review-archive"
+                    :aria-expanded="open === 'archive'"
+                    @click="open = open === 'archive' ? '' : 'archive'">Arquivar</button>
           {% endif %}
         </div>
       {% endif %}
-      <div class="rounded-card border border-line bg-white p-4">{% include "publications/partials/checklist.html" %}</div>
-      <section class="rounded-card border border-line bg-white p-4"
-               aria-labelledby="history-title">
-        <h2 id="history-title" class="editor-panel-title">Histórico</h2>
-        {% if history %}
-          <ol class="space-y-3">
-            {% for entry in history %}
-              <li class="text-meta">
-                <p class="text-ink-3">
-                  <time datetime="{{ entry.when|date:'c' }}">{{ entry.when|date:"d/m/Y H:i" }}</time>
-                </p>
-                <p class="text-ink">
-                  <span class="font-medium">{{ entry.actor }}</span> {{ entry.text }}
-                </p>
-                {% if entry.note %}<p class="mt-0.5 border-l-2 border-line pl-2 text-ink-2">{{ entry.note }}</p>{% endif %}
-              </li>
-            {% endfor %}
-          </ol>
-        {% else %}
-          <p class="text-meta text-ink-3">Nenhum evento registrado.</p>
-        {% endif %}
-        {% if revisions is not None %}
-          <details class="mt-4 border-t border-line pt-3">
-            <summary class="cursor-pointer text-meta font-medium text-accent">Ver versões ({{ revisions|length }})</summary>
-            {% if revisions %}
-              <ul class="mt-2 space-y-1.5 text-meta text-ink-2">
-                {% for revision in revisions %}
+      {% if can_review %}
+        {# Sugerir alterações exige ao menos um comentário aberto; a nota vira um comentário geral. #}
+        <form id="review-changes"
+              method="post"
+              action="{% url 'publications:transition' article.pk 'request_changes' %}"
+              x-show="open === 'changes'"
+              x-cloak
+              x-data="{ note: '' }"
+              class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ review_url }}">
+          <p class="text-ui font-medium">Devolver aos autores com sugestões</p>
+          <p id="changes-note-help" class="mt-1 text-meta text-ink-2">
+            <span x-show="openCount" {% if not board.open_count %}x-cloak{% endif %}>
+              Os comentários abertos (<span x-text="openCount">{{ board.open_count }}</span>) vão para os autores e o texto volta para eles.
+            </span>
+            <span x-show="!openCount" {% if board.open_count %}x-cloak{% endif %}>
+              Deixe ao menos um comentário: selecione um trecho do texto ou escreva abaixo.
+            </span>
+          </p>
+          <label for="changes-note"
+                 class="mt-3 block text-meta font-medium">Comentário geral (opcional se já houver comentários)</label>
+          <textarea id="changes-note"
+                    name="note"
+                    rows="3"
+                    maxlength="1000"
+                    aria-describedby="changes-note-help"
+                    x-model="note"
+                    class="field mt-1"></textarea>
+          <div class="mt-3 flex justify-end gap-2">
+            <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
+            <button type="submit"
+                    class="btn-primary"
+                    :disabled="!note.trim() && !openCount">Sugerir alterações</button>
+          </div>
+        </form>
+        <form id="review-approve"
+              method="post"
+              action="{% url 'publications:transition' article.pk 'approve' %}"
+              x-show="open === 'approve'"
+              x-cloak
+              class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ review_url }}">
+          <label for="approve-note" class="block text-ui font-medium">Comentário para os autores (opcional)</label>
+          <textarea id="approve-note"
+                    name="note"
+                    rows="3"
+                    maxlength="1000"
+                    class="field mt-2"></textarea>
+          <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
+            <button type="submit" class="btn-secondary">Aprovar e devolver aos autores</button>
+            {% if can_approve_and_publish %}
+              <button type="submit"
+                      class="btn-primary"
+                      formaction="{% url 'publications:transition' article.pk 'approve_publish' %}"
+                      {% if blocking %}disabled title="Complete os itens obrigatórios antes de publicar"{% endif %}>
+                Aprovar e publicar
+              </button>
+            {% endif %}
+          </div>
+          {% if can_approve_and_publish and blocking %}
+            <p class="mt-2 text-meta text-danger">Para publicar, falta completar a conferência ao lado.</p>
+          {% endif %}
+        </form>
+      {% endif %}
+      {% if can_decline_review %}
+        <form id="review-decline"
+              method="post"
+              action="{% url 'publications:transition' article.pk 'decline_review' %}"
+              x-show="open === 'decline'"
+              x-cloak
+              class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ queue_url }}">
+          <p class="text-ui font-medium">Não pode revisar agora?</p>
+          <p class="mt-1 text-meta text-ink-2">Você sai da revisão e os autores são avisados para escolher outro colega.</p>
+          <label for="decline-note" class="mt-3 block text-meta font-medium">Motivo (opcional)</label>
+          <textarea id="decline-note"
+                    name="note"
+                    rows="2"
+                    maxlength="500"
+                    class="field mt-1"></textarea>
+          <div class="mt-3 flex justify-end gap-2">
+            <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
+            <button type="submit" class="btn-danger">Recusar revisão</button>
+          </div>
+        </form>
+      {% endif %}
+      {% if can_archive and archive_requires_note %}
+        <form id="review-archive"
+              method="post"
+              action="{% url 'publications:transition' article.pk 'archive' %}"
+              x-show="open === 'archive'"
+              x-cloak
+              class="mt-4 max-w-xl rounded-card border border-line bg-white p-4">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ review_url }}">
+          <p class="text-ui font-medium">Arquivar esta publicação?</p>
+          <p class="mt-1 text-meta text-ink-2">Ela sai do site, mas continua guardada e pode ser restaurada.</p>
+          <label for="archive-note" class="mt-3 block text-meta font-medium">Motivo</label>
+          <textarea id="archive-note" name="note" rows="2" required class="field mt-1"></textarea>
+          <div class="mt-3 flex justify-end gap-2">
+            <button type="button" class="btn-ghost" @click="open = ''">Cancelar</button>
+            <button type="submit" class="btn-danger">Arquivar</button>
+          </div>
+        </form>
+      {% endif %}
+    </header>
+    <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <article aria-labelledby="review-text-title" class="min-w-0">
+        <h2 id="review-text-title" class="sr-only">Texto como ficará publicado</h2>
+        <div class="relative rounded-card border border-line bg-white px-4 py-6 sm:px-8 sm:py-8"
+             x-ref="textBox">
+          <p class="font-serif text-h2 font-semibold text-balance">{{ article.title }}</p>
+          {% if article.subtitle %}<p class="mt-3 font-serif text-lead text-ink-2">{{ article.subtitle }}</p>{% endif %}
+          {% if article.cover %}
+            <figure class="mt-6">
+              <img src="{{ article.cover.variant_urls.w960|default:article.cover.url }}"
+                   alt="{% if not article.cover.is_decorative %}{{ article.cover.alt_text }}{% endif %}"
+                   width="{{ article.cover.width }}"
+                   height="{{ article.cover.height }}"
+                   class="aspect-[3/2] w-full rounded-card bg-paper-2 object-cover">
+              {% if article.cover_caption %}<figcaption class="mt-2 text-meta text-ink-2">{{ article.cover_caption }}</figcaption>{% endif %}
+            </figure>
+          {% endif %}
+          <div class="article-body mt-6"
+               data-review-text
+               @click="openCommentFromText($event)">{{ article.body_html|safe }}</div>
+          <button type="button"
+                  class="review-comment-button btn-primary"
+                  x-ref="commentButton"
+                  x-show="pending"
+                  x-cloak
+                  :disabled="pending && pending.tooLong"
+                  @pointerdown.prevent
+                  @click="startComment()">
+            <span x-show="!(pending && pending.tooLong)">Comentar</span>
+            <span x-show="pending && pending.tooLong">Selecione até 300 caracteres</span>
+          </button>
+          {% if article.sources %}
+            <section class="mt-8 border-t border-line pt-4"
+                     aria-labelledby="review-sources-title">
+              <h3 id="review-sources-title" class="editor-panel-title">Fontes e referências</h3>
+              <ol class="list-decimal space-y-1 pl-5 text-ui text-ink-2">
+                {% for source in article.sources %}
                   <li>
-                    v{{ revision.number }} · {{ revision.get_reason_display }} · {{ revision.created_at|date:"d/m/Y H:i" }}
-                    {% if revision.created_by %}· {{ revision.created_by.public_name }}{% endif %}
+                    {% if source.url %}
+                      <a href="{{ source.url }}"
+                         rel="noopener noreferrer"
+                         target="_blank"
+                         class="text-accent underline underline-offset-2">{{ source.title }}</a>
+                    {% else %}
+                      {{ source.title }}
+                    {% endif %}
+                    {% if source.publisher %}— {{ source.publisher }}{% endif %}
                   </li>
                 {% endfor %}
-              </ul>
-            {% else %}
-              <p class="mt-2 text-meta text-ink-3">Nenhuma versão guardada ainda.</p>
+              </ol>
+            </section>
+          {% endif %}
+        </div>
+      </article>
+      <aside class="space-y-4" aria-label="Comentários, conferência e histórico">
+        {% include "editorial/partials/review_comments.html" %}
+        {% if article.status != "in_review" %}
+          <div class="rounded-card border border-line bg-white p-4">
+            {% include "publications/partials/review_status.html" %}
+            {% if not review.approved_by and article.status != "changes_requested" %}
+              <p class="text-ui text-ink-2">Esta publicação não está em revisão agora.</p>
             {% endif %}
-          </details>
+          </div>
         {% endif %}
-      </section>
-    </aside>
+        <div class="rounded-card border border-line bg-white p-4">{% include "publications/partials/checklist.html" %}</div>
+        <section class="rounded-card border border-line bg-white p-4"
+                 aria-labelledby="history-title">
+          <h2 id="history-title" class="editor-panel-title">Histórico</h2>
+          {% if history %}
+            <ol class="space-y-3">
+              {% for entry in history %}
+                <li class="text-meta">
+                  <p class="text-ink-3">
+                    <time datetime="{{ entry.when|date:'c' }}">{{ entry.when|date:"d/m/Y H:i" }}</time>
+                  </p>
+                  <p class="text-ink">
+                    <span class="font-medium">{{ entry.actor }}</span> {{ entry.text }}
+                  </p>
+                  {% if entry.note %}<p class="mt-0.5 border-l-2 border-line pl-2 text-ink-2">{{ entry.note }}</p>{% endif %}
+                </li>
+              {% endfor %}
+            </ol>
+          {% else %}
+            <p class="text-meta text-ink-3">Nenhum evento registrado.</p>
+          {% endif %}
+          {% if revisions is not None %}
+            <details class="mt-4 border-t border-line pt-3">
+              <summary class="cursor-pointer text-meta font-medium text-accent">Ver versões ({{ revisions|length }})</summary>
+              {% if revisions %}
+                <ul class="mt-2 space-y-1.5 text-meta text-ink-2">
+                  {% for revision in revisions %}
+                    <li>
+                      v{{ revision.number }} · {{ revision.get_reason_display }} · {{ revision.created_at|date:"d/m/Y H:i" }}
+                      {% if revision.created_by %}· {{ revision.created_by.public_name }}{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="mt-2 text-meta text-ink-3">Nenhuma versão guardada ainda.</p>
+              {% endif %}
+            </details>
+          {% endif %}
+        </section>
+      </aside>
+    </div>
   </div>
 {% endblock content %}

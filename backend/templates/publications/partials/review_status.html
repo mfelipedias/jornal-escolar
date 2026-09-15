@@ -42,6 +42,15 @@
         </form>
       {% endif %}
     {% endif %}
+    {% if review.open_comments %}
+      {# Os comentários ficam na tela de revisão, ancorados no texto (docs/16, docs/17). #}
+      <p class="mt-2 text-meta">
+        <a href="{% url 'editorial:review' article.pk %}#review-comments"
+           class="font-medium text-accent underline underline-offset-2">
+          {{ review.open_comments }} comentário{{ review.open_comments|pluralize }} aberto{{ review.open_comments|pluralize }}
+        </a>
+      </p>
+    {% endif %}
     {% if review.approved_by and article.status != "in_review" %}
       <p class="inline-flex items-center gap-1.5 rounded-full bg-area-verde-soft px-2.5 py-0.5 text-meta text-area-verde">
         <span aria-hidden="true">✓</span>

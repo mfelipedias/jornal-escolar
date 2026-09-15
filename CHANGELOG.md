@@ -17,12 +17,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Tag de template `{% can "acao" objeto as variavel %}` (`{% load permissions %}`), usada no cabeçalho e no link "Editar" da página da publicação.
 - Tela de revisão (E31) em `/painel/publicacoes/<id>/revisar/`: o texto como ficará publicado, nota do pedido, autores, "Editar texto", "Sugerir alterações" (comentário obrigatório, bloqueado na tela e no serviço), "Aprovar" com "Aprovar e publicar" quando permitido, "Recusar revisão", "Arquivar" para editor com motivo, conferência e histórico legível dos eventos. Editores veem a lista de versões. Autores acompanham pela mesma tela, sem decisões.
 - "Revisões" no menu do painel, com contador: abas "Pedidas a mim", "Que eu pedi" e, para editores, "Todas em revisão".
+- Comentários editoriais (E32) na tela de revisão: selecionar um trecho do texto mostra "Comentar"; também há comentário geral. Trechos comentados ficam marcados no texto (clicar leva ao comentário e vice-versa), respostas em um nível, "Resolver" e "Reabrir" (resolvidos ficam recolhidos). A âncora guarda o trecho com o contexto e é reencontrada a cada leitura: editar outro parágrafo não a perde; se o trecho mudar, o comentário aparece como "trecho alterado". No celular, botão flutuante "Comentários" com contador. Comentários entram no histórico e geram avisos (resposta avisa quem está na conversa; autor comentando avisa o revisor). O painel lateral do editor mostra os comentários abertos com link para a tela.
 
 ### Alterado
 
 - O revisor designado edita o texto enquanto a revisão está com ele, mas não altera créditos. O crédito de revisão só entra e sai pelo fluxo de revisão.
 - No celular, "Pedir revisão" e "Arquivar" ficam na folha "Detalhes" do editor.
 - O selo de estado usa "Alterações sugeridas" (antes "Alterações pedidas").
+- "Sugerir alterações" passa a exigir ao menos um comentário aberto; a nota opcional vira um comentário geral e o aviso aos autores diz quantos comentários estão abertos.
 - O revisor designado não duplica mais o texto que revisa: duplicar fica com autores e editores.
 - Cabeçalho, página de perfil, login Microsoft, menu do painel e telas de dev consultam só `permissions.py`, sem testar `role` ou `is_staff` direto.
 - No editor, "Revisar" abre a tela de revisão. Avisos de pedido de revisão, edição durante a revisão e alterações sugeridas abrem a tela de revisão; pedido cancelado abre a lista de revisões.

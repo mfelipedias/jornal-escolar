@@ -1,0 +1,90 @@
+{% load humanize permissions %}
+{% comment %}
+  Comentários editoriais da tela de revisão (docs/17). Devolvido inteiro pelas ações de
+  comentário (o HTMX troca #review-comments). Parâmetros: article, board
+  (editorial.selectors.CommentBoard), comment_error, draft (texto digitado quando deu erro).
+  Seleção de trechos e marcas no texto: frontend/src/js/review-comments.js (reviewPage).
+  Os data-anchor-* só aparecem em conversas abertas cujo trecho foi reencontrado.
+{% endcomment %}
+{% can "resolve_comment" article as can_resolve %}
+{% url 'editorial:comment_create' article.pk as create_url %}
+<section id="review-comments"
+         class="scroll-mt-20 rounded-card border border-line bg-white p-4"
+         aria-labelledby="comments-title"
+         data-open-count="{{ board.open_count }}"
+         {% if comment_error %}data-error="1"{% endif %}
+         x-init="syncComments($el)">
+  <h2 id="comments-title" class="editor-panel-title">
+    Comentários
+    <span class="font-normal normal-case tracking-normal text-ink-3">({{ board.open_count }} {{ board.open_count|pluralize:"aberto,abertos" }})</span>
+  </h2>
+  {% if comment_error %}
+    <p class="mb-3 rounded-field border border-danger px-3 py-2 text-meta text-danger"
+       role="alert">{{ comment_error }}</p>
+  {% endif %}
+  {% if board.open %}
+    <ol class="space-y-3">
+      {% for thread in board.open %}
+        {% include "editorial/partials/review_comment_thread.html" %}
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="text-meta text-ink-3">Nenhum comentário aberto. Selecione um trecho do texto para comentar.</p>
+  {% endif %}
+  <form id="new-comment"
+        method="post"
+        action="{{ create_url }}"
+        hx-post="{{ create_url }}"
+        hx-target="#review-comments"
+        hx-swap="outerHTML"
+        class="mt-4 scroll-mt-20 border-t border-line pt-4">
+    {% csrf_token %}
+    <input type="hidden" name="anchor_text" :value="selection.text">
+    <input type="hidden" name="anchor_prefix" :value="selection.prefix">
+    <input type="hidden" name="anchor_suffix" :value="selection.suffix">
+    <input type="hidden" name="anchor_from" :value="selection.from">
+    <div x-show="selection.text"
+         x-cloak
+         class="mb-2 border-l-2 border-area-ambar pl-2">
+      <p class="text-meta text-ink-3">Sobre o trecho</p>
+      <p class="text-meta text-ink-2" x-text="selectionPreview"></p>
+      <button type="button"
+              class="text-meta text-accent underline underline-offset-2"
+              @click="clearSelection()">Comentar o texto todo</button>
+    </div>
+    <label for="comment-body" class="block text-ui font-medium">
+      <span x-show="!selection.text">Novo comentário geral</span>
+      <span x-show="selection.text" x-cloak>Comentário sobre o trecho</span>
+    </label>
+    <p id="comment-body-help" class="mt-0.5 text-meta text-ink-3">
+      Para comentar um trecho, selecione-o no texto e toque em “Comentar”.
+    </p>
+    <textarea id="comment-body"
+              name="body"
+              rows="3"
+              maxlength="2000"
+              required
+              aria-describedby="comment-body-help"
+              class="field mt-1">{{ draft.body|default:"" }}</textarea>
+    <div class="mt-2 flex justify-end">
+      <button type="submit" class="btn-secondary">Comentar</button>
+    </div>
+  </form>
+  {% if board.resolved %}
+    <details class="mt-4 border-t border-line pt-3">
+      <summary class="cursor-pointer text-meta font-medium text-accent">Resolvidos ({{ board.resolved|length }})</summary>
+      <ol class="mt-3 space-y-3">
+        {% for thread in board.resolved %}
+          {% include "editorial/partials/review_comment_thread.html" %}
+        {% endfor %}
+      </ol>
+    </details>
+  {% endif %}
+  <a href="#review-comments"
+     class="review-fab btn-primary lg:hidden"
+     x-show="!pending"
+     aria-label="Ir para os comentários ({{ board.open_count }} {{ board.open_count|pluralize:'aberto,abertos' }})">
+    Comentários
+    <span class="rounded-full bg-white px-1.5 text-meta text-accent">{{ board.open_count }}</span>
+  </a>
+</section>

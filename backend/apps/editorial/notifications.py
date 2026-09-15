@@ -149,8 +149,13 @@ def edited_during_review(article: Article, actor: User, reviewer: User) -> int:
     )
 
 
-def changes_requested(article: Article, actor: User, note: str) -> int:
-    message = _with_note(f"{actor.public_name} sugeriu alterações em “{article.title}”.", note)
+def changes_requested(article: Article, actor: User, note: str, open_comments: int = 0) -> int:
+    """Aos autores, com quantos comentários abertos esperam por eles (docs/17)."""
+    message = f"{actor.public_name} sugeriu alterações em “{article.title}”."
+    if open_comments:
+        plural = "comentário aberto" if open_comments == 1 else "comentários abertos"
+        message = f"{message[:-1]}: {open_comments} {plural}."
+    message = _with_note(message, note)
     return _notify_many(
         article_team(article, exclude=actor),
         Notification.Kind.CHANGES_REQUESTED,
@@ -179,6 +184,62 @@ def review_declined(article: Article, actor: User, note: str = "") -> int:
     return _notify_many(
         article_team(article, exclude=actor), Notification.Kind.SYSTEM, message, article, actor
     )
+
+
+def _comment_url(article: Article, comment_pk: int) -> str:
+    return f"{_review_url(article)}#comentario-{comment_pk}"
+
+
+def review_comment_added(article: Article, actor: User, comment) -> int:
+    """Comentário novo na revisão.
+
+    Autor comentando avisa o revisor designado. Revisor ou editor comentando avisa os autores
+    só fora de "em revisão": durante a leitura, os autores recebem tudo junto ao "Sugerir
+    alterações" (um aviso por comentário atrapalharia quem ainda está sendo revisado).
+    """
+    title = article.title
+    if article_team(article).filter(pk=actor.pk).exists():
+        reviewer = _reviewer_user(article)
+        if reviewer is None or reviewer.pk == actor.pk or not reviewer.is_active:
+            return 0
+        users: Iterable[User] = [reviewer]
+    elif article.status == Article.Status.IN_REVIEW:
+        return 0
+    else:
+        users = article_team(article, exclude=actor)
+    message = f"{actor.public_name} comentou “{title}”."
+    return _notify_many(
+        users,
+        Notification.Kind.REVIEW_COMMENT,
+        message,
+        article,
+        actor,
+        _comment_url(article, comment.pk),
+    )
+
+
+def review_comment_replied(article: Article, actor: User, parent) -> int:
+    """Resposta: avisa quem já escreveu na conversa (quem abriu e quem respondeu)."""
+    ids = {parent.author_id, *parent.replies.values_list("author_id", flat=True)}
+    ids.discard(None)
+    ids.discard(actor.pk)
+    users = User.objects.filter(pk__in=ids, is_active=True)
+    message = f"{actor.public_name} respondeu a um comentário em “{article.title}”."
+    return _notify_many(
+        users,
+        Notification.Kind.REVIEW_COMMENT,
+        message,
+        article,
+        actor,
+        _comment_url(article, parent.pk),
+    )
+
+
+def _reviewer_user(article: Article) -> User | None:
+    credit = article.contributors.filter(
+        role=ArticleContributor.Role.REVIEWER, user__isnull=False
+    ).first()
+    return credit.user if credit is not None else None
 
 
 # --- leitura ---
