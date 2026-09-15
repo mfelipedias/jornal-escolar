@@ -30,25 +30,25 @@ Possível, mas **não recomendada agora**: o container precisa baixar e atualiza
 - Requisição: `current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America/Sao_Paulo&forecast_days=1`.
 - Serviço `apps/core/weather.py` com `get_weather()` que consulta o cache do Django (30 minutos), chama a API com timeout de 3 segundos e, em falha, devolve `None` e mantém o último valor bom por até 6 horas.
 - Mapeamento de `weather_code` (WMO) para rótulo em português e ícone em linha (SVG simples, monocromático): céu limpo, parcialmente nublado, nublado, nevoeiro, chuvisco, chuva, trovoada.
-- Template tag `{% weather_widget %}` renderizado no bloco lateral da home, acima da Agenda.
+- Template tag `{% weather_widget %}` renderizado no cabeçalho de todas as páginas públicas, embaixo da data e ao lado da busca (decisão do dono em 2026-09-15; antes ficava na coluna lateral da home).
 - Sem JavaScript, sem chamada do navegador.
 
 ## Exibição
 
 ```
-HOJE NA ESCOLA
-☁ 23° · Nublado
-mín 17° · máx 26° · chuva 40%
+                    terça-feira, 15 de setembro de 2026   🔍  Entrar
+                    ☁ 23° Nublado · mín 17° máx 26° · chuva 40%
 ```
 
-Texto em `text-meta`, cor `ink-2`; ícone 20px. Se `get_weather()` devolver `None`, o bloco não é renderizado. No celular aparece logo abaixo do destaque, em uma linha.
+Uma linha em `text-meta`, cor `ink-3`, temperatura em `ink-2` e ícone de 16px no acento, alinhada à direita embaixo da data. Abaixo de 1024px (onde a data some) só ícone e temperatura ficam visíveis; condição, mínima, máxima e chuva continuam para leitores de tela, que ouvem "Tempo agora na escola:" antes. No celular (< 640px) não cabe ao lado da busca: aparece como primeiro item da barra de seções. Se `get_weather()` devolver `None`, nada é renderizado.
 
 ## O que não fazer
 
 - Previsão de vários dias, mapas, alertas: não.
 - "Pautas a partir do clima": não. Se um professor quiser escrever sobre a onda de calor, a pauta é dele.
-- Widget na página de publicação: não, só na home.
+- Bloco grande ou cartão na página: não; só a linha do cabeçalho.
 
 ## Histórico
 
 - 2026-09-12: criado após decisão de incluir clima ([27](27-decisoes-pendentes-e-perguntas.md)).
+- 2026-09-15: a pedido do dono, o clima sai da coluna lateral da home e vai para o cabeçalho, embaixo da data, em todas as páginas públicas; no celular abre a barra de seções.

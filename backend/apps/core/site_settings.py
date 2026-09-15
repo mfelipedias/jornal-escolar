@@ -131,7 +131,7 @@ REGISTRY: dict[str, SettingSpec] = {
         ),
         SettingSpec(
             "weather.enabled",
-            "Mostrar o clima na página inicial",
+            "Mostrar o clima no cabeçalho",
             "bool",
             True,
         ),

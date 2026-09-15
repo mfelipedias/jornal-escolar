@@ -1,4 +1,4 @@
-"""Bloco "Hoje na escola" (docs/29). Uso: {% load weather %}{% weather_widget %}."""
+"""Tempo agora na escola, no cabeçalho (docs/29). Uso: {% load weather %}{% weather_widget %}."""
 
 from django import template
 
@@ -9,7 +9,10 @@ register = template.Library()
 
 
 @register.inclusion_tag("components/weather.html")
-def weather_widget(variant: str = "aside", css: str = "") -> dict:
-    """variant "aside" (lateral, com título) ou "line" (uma linha, celular); css: classes extras."""
+def weather_widget(css: str = "", as_item: bool = False) -> dict:
+    """Linha do clima; sem dados ou com weather.enabled desligado, não renderiza nada.
+
+    as_item=True embrulha a linha num <li>, para abrir a barra de seções no celular.
+    """
     weather = get_weather() if get_setting("weather.enabled") else None
-    return {"weather": weather, "variant": variant, "css": css}
+    return {"weather": weather, "css": css, "as_item": as_item}

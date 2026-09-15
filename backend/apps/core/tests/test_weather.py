@@ -138,14 +138,7 @@ def test_bad_payload_is_a_failure(api):
     assert weather.get_weather() is None
 
 
-# --- Bloco na página inicial ---
-
-
-@pytest.fixture
-def home_with_content():
-    author = UserFactory()
-    article = ArticleFactory(ready=True, author=author, created_by=author)
-    services.publish(author, article)
+# --- Clima no cabeçalho ---
 
 
 @pytest.fixture
@@ -155,35 +148,70 @@ def widget():
         yield get_weather
 
 
-def test_home_shows_weather_block(client, home_with_content, widget):
+def test_masthead_shows_weather_under_date(client, widget):
     html = client.get("/").content.decode()
 
-    # Uma vez na linha do celular, outra na coluna lateral do desktop.
-    assert html.count('aria-label="Hoje na escola"') == 2
-    assert "23° · Nublado" in html
-    assert "mín 17° · máx 26° · chuva 40%" in html
-    assert "lg:hidden" in html
-    assert "hidden lg:block" in html
+    masthead = html[html.index("<header") : html.index("</header>")]
+    # Ao lado da busca (tablet e computador) e abrindo a barra de seções (celular).
+    assert masthead.count("Tempo agora na escola:") == 2
+    assert "max-sm:hidden" in masthead
+    assert '<li class="flex items-center pr-2 sm:hidden">' in masthead
+    # Embaixo da data e antes do botão de busca.
+    date = masthead.index("hidden text-meta text-ink-3 lg:block")
+    assert date < masthead.index("Tempo agora na escola:") < masthead.index("masthead-search")
+    assert ">23°</span>" in masthead
+    assert "Nublado" in masthead
+    assert "mín 17° máx 26°" in masthead
+    assert "chuva 40%" in masthead
+    # Abaixo de 1024px só ícone e temperatura aparecem; o resto fica para leitores de tela.
+    assert "max-lg:sr-only" in masthead
 
 
-def test_home_hides_block_when_weather_unavailable(client, home_with_content, widget):
+def test_weather_appears_on_other_public_pages(client, widget):
+    author = UserFactory()
+    article = ArticleFactory(ready=True, author=author, created_by=author)
+    services.publish(author, article)
+
+    html = client.get(article.get_absolute_url()).content.decode()
+
+    assert "Tempo agora na escola:" in html
+
+
+def test_home_body_has_no_weather_block(client, widget):
+    author = UserFactory()
+    article = ArticleFactory(ready=True, author=author, created_by=author)
+    services.publish(author, article)
+
+    html = client.get("/").content.decode()
+    main = html[html.index("<main") : html.index("</main>")]
+
+    assert "Tempo agora na escola" not in main
+    assert "Hoje na escola" not in html
+
+
+def test_masthead_hides_weather_when_unavailable(client, widget):
     widget.return_value = None
 
     html = client.get("/").content.decode()
 
-    assert "Hoje na escola" not in html
+    assert "Tempo agora na escola" not in html
 
 
-def test_home_hides_block_when_setting_is_off(client, home_with_content, widget):
+def test_masthead_hides_weather_when_setting_is_off(client, widget):
     SiteSetting.objects.create(key="weather.enabled", value=False)
 
     html = client.get("/").content.decode()
 
-    assert "Hoje na escola" not in html
+    assert "Tempo agora na escola" not in html
     widget.assert_not_called()
 
 
-def test_empty_home_has_no_weather(client, widget):
+def test_weather_without_rain_chance(client, widget):
+    payload = json.loads(json.dumps(PAYLOAD))
+    payload["daily"]["precipitation_probability_max"] = [None]
+    widget.return_value = weather.parse(payload)
+
     html = client.get("/").content.decode()
 
-    assert "Hoje na escola" not in html
+    assert "mín 17° máx 26°" in html
+    assert "chuva" not in html[html.index("<header") : html.index("</header>")]

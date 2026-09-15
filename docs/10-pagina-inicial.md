@@ -48,7 +48,7 @@ Não é um portal com dezenas de chamadas. É uma capa de revista com sumário.
 └──────────────────────────────────────────────────────────────┘
 ```
 
-No celular a ordem é: masthead, destaque (hero + dois compactos), clima em uma linha, últimas (cinco), agenda (três), faixas por área (dois cards cada, rolagem horizontal), quem escreve, rodapé.
+No celular a ordem é: masthead, destaque (hero + dois compactos), últimas (cinco), agenda (três), faixas por área (dois cards cada, rolagem horizontal), quem escreve, rodapé.
 
 ## Blocos
 
@@ -66,7 +66,7 @@ No celular a ordem é: masthead, destaque (hero + dois compactos), clima em uma 
 
 ### Hoje na escola (Fase 3)
 
-- Bloco pequeno com o tempo atual na escola, via Open-Meteo com cache de 30 minutos ([29](29-clima.md)). Some silenciosamente se a API falhar ou se `weather.enabled` estiver desligado.
+- Desde 2026-09-15 o clima não é um bloco da home: fica no cabeçalho, embaixo da data, em todas as páginas ([29](29-clima.md)).
 
 ### Agenda
 
@@ -132,3 +132,4 @@ Editores não editam a home "in place"; usam o painel editorial. Isso mantém a 
 - 2026-09-14: E26: meta description vem da nova configuração `site.description` (se vazia, a tagline). JSON-LD `WebSite` sem `SearchAction` por enquanto: a busca (`/busca/`) só existe na Fase 3, e apontar para uma URL inexistente seria erro. Acrescentar o `SearchAction` junto com a busca. Open Graph com `static/img/og-default.png`.
 - 2026-09-14: E36: JSON-LD `WebSite` ganhou o `SearchAction` (`/busca/?q={search_term_string}`).
 - 2026-09-15: R3 (redesign "Pátio"): destaque numa faixa com gradiente da cor da área, faixas por área de borda a borda com fundo suave, títulos de seção com marca-texto, "Quem escreve" em pílulas, estado vazio com o adesivo do glifo. Estrutura e dados não mudaram.
+- 2026-09-15: clima sai da home e vai para o cabeçalho ([29](29-clima.md)).
