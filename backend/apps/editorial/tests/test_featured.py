@@ -184,7 +184,9 @@ def test_screen_lists_chosen_candidates_and_preview(client, editor_user, staff_u
     assert "Sem capa" not in html.split('id="featured-candidates"')[1].split("</section>")[0]
     assert "data-featured-preview" in html
     assert "Mais recente (automático)" in html
-    assert 'title="Destaques"' in html.split('aria-current="page"')[0].rsplit("<a ", 1)[1]
+    # Menu: "Editorial" ativo; abas do editorial: "Destaques" atual (E33).
+    assert 'title="Editorial"' in html.split('aria-current="page"')[0].rsplit("<a ", 1)[1]
+    assert 'aria-current="page">Destaques</a>' in html
 
 
 def test_search_filters_by_title(client, editor_user, staff_user, three):
@@ -232,8 +234,9 @@ def test_without_htmx_redirects_back(client, editor_user, three):
     assert services.featured_ids() == [three[0].pk]
 
 
-def test_menu_shows_featured_and_pages_only_to_editors(staff_user, editor_user, admin_user):
-    assert {"featured", "pages"}.isdisjoint(item.key for item in menu_items(staff_user))
+def test_menu_leads_editors_to_featured_through_editorial(staff_user, editor_user, admin_user):
+    """Desde a E33, Destaques e Páginas são abas do item "Editorial" (só editor+)."""
+    assert "editorial" not in [item.key for item in menu_items(staff_user)]
     for user in (editor_user, admin_user):
-        keys = [item.key for item in menu_items(user)]
-        assert keys.index("create") < keys.index("featured") < keys.index("pages")
+        item = next(i for i in menu_items(user, "editorial:featured") if i.key == "editorial")
+        assert item.active

@@ -11,7 +11,7 @@ from django.views.decorators.http import require_GET
 
 from apps.accounts.services import ensure_profile
 from apps.core.templatetags.ui import PAGE_PARAM
-from apps.editorial import permissions
+from apps.editorial import alerts, permissions
 from apps.publications.models import Article
 
 from . import selectors
@@ -34,6 +34,12 @@ def home(request: HttpRequest) -> HttpResponse:
         "drafts": selectors.recent_drafts(user),
         "published": selectors.recent_published(user),
         "stats": selectors.stats(user),
+        # Editor+ vê quantos alertas o painel editorial tem (E33).
+        "editorial_alerts": (
+            alerts.alert_count(alerts.editorial_alerts())
+            if permissions.can_access_editorial(user)
+            else 0
+        ),
     }
     return render(request, "dashboard/home.html", context)
 

@@ -230,6 +230,16 @@ def can_edit_media(user: AnyUser, asset: MediaAsset) -> bool:
     return asset.article_id is not None and is_author(user, asset.article)
 
 
+def can_access_editorial(user: AnyUser) -> bool:
+    """Painel editorial (/painel/editorial/): visão geral, alertas e todas as publicações."""
+    return is_editor(user)
+
+
+def can_reassign_reviewer(user: AnyUser, article: Article) -> bool:
+    """Trocar o revisor de um texto em revisão (revisão parada, colega ausente): editor+."""
+    return article.status == Article.Status.IN_REVIEW and is_editor(user)
+
+
 def can_feature(user: AnyUser) -> bool:
     """Definir destaques da home."""
     return is_editor(user)

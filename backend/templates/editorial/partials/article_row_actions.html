@@ -1,0 +1,21 @@
+{% load permissions %}
+{% comment %}
+  Ações de uma linha de "Todas as publicações" (E33). Parâmetro: article. Arquivar e trocar
+  o revisor ficam nas ações em massa (pedem motivo ou colega).
+{% endcomment %}
+{% can "edit" article as can_edit %}
+<div class="flex flex-wrap items-center gap-1">
+  <a href="{% url 'editorial:review' article.pk %}"
+     class="btn-ghost"
+     aria-label="Revisar “{{ article.title }}”">Revisar</a>
+  {% if can_edit %}
+    <a href="{% url 'publications:edit' article.pk %}"
+       class="btn-ghost"
+       aria-label="Abrir “{{ article.title }}” no editor">Editar</a>
+  {% endif %}
+  {% if article.is_published %}
+    <a href="{{ article.get_absolute_url }}"
+       class="btn-ghost"
+       aria-label="Ver “{{ article.title }}” no jornal">Ver no jornal</a>
+  {% endif %}
+</div>

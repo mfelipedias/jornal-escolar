@@ -1,0 +1,88 @@
+{% extends "layouts/dashboard.html" %}
+{% load humanize %}
+{% comment %}
+  Painel editorial, visão geral (docs/18, E33): alertas primeiro, depois contadores por estado
+  e quem tem rascunhos. Os contadores levam a "Todas as publicações" já filtrada.
+{% endcomment %}
+{% block title %}Editorial · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <h1 class="font-serif text-h1 font-semibold">Editorial</h1>
+  <p class="mt-2 max-w-reading text-ui text-ink-2">
+    O jornal inteiro em uma olhada: o que está parado, o que precisa de correção e em que pé estão os textos.
+  </p>
+  <div class="mt-6">{% include "editorial/partials/editorial_nav.html" %}</div>
+  <section aria-labelledby="sec-alertas" class="mt-8" data-alerts>
+    <h2 id="sec-alertas" class="font-serif text-h3 font-semibold">
+      Alertas
+      {% if alert_total %}<span class="text-ink-3">({{ alert_total }})</span>{% endif %}
+    </h2>
+    {% if alert_groups %}
+      <div class="mt-4 space-y-4">
+        {% for group in alert_groups %}
+          <section aria-labelledby="alerta-{{ group.key }}"
+                   class="rounded-card border border-line border-l-4 bg-white
+                          {% if group.level == 'danger' %}border-l-danger{% else %}border-l-warn{% endif %}"
+                   data-alert-group="{{ group.key }}">
+            <div class="border-b border-line px-4 py-3">
+              <h3 id="alerta-{{ group.key }}"
+                  class="flex flex-wrap items-center gap-2 font-medium
+                         {% if group.level == 'danger' %}text-danger{% else %}text-warn{% endif %}">
+                {{ group.title }}
+                <span class="rounded-full bg-paper-2 px-2 text-meta text-ink-2">{{ group.items|length }}</span>
+              </h3>
+              <p class="mt-1 text-meta text-ink-2">{{ group.help }}</p>
+            </div>
+            <ul class="divide-y divide-line">
+              {% for alert in group.items %}
+                <li class="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    data-article="{{ alert.article.pk }}">
+                  <div class="min-w-0">
+                    <p class="font-medium text-ink">{{ alert.article.title }}</p>
+                    <p class="text-meta text-ink-2">{{ alert.message }}</p>
+                  </div>
+                  <a href="{{ alert.url }}"
+                     class="btn-secondary shrink-0 self-start sm:self-auto">{{ alert.action }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="mt-3 rounded-card border border-line bg-white px-4 py-3 text-ui text-ink-2"
+         data-no-alerts>Nenhum alerta agora. Revisões andando, comentários respondidos e autorizações em dia.</p>
+    {% endif %}
+  </section>
+  <section aria-labelledby="sec-estados" class="mt-10">
+    <h2 id="sec-estados" class="font-serif text-h3 font-semibold">Publicações</h2>
+    {% url 'editorial:articles' as list_url %}
+    <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {% with drafts_url=list_url|add:"?estado=rascunhos" review_url=list_url|add:"?estado=em-revisao" changes_url=list_url|add:"?estado=alteracoes-sugeridas" published_url=list_url|add:"?estado=publicados" archived_url=list_url|add:"?estado=arquivados" %}
+        {% include "components/stat.html" with value=counts.drafts label="Rascunhos" url=drafts_url %}
+        {% include "components/stat.html" with value=counts.in_review label="Em revisão" url=review_url %}
+        {% include "components/stat.html" with value=counts.changes_requested label="Alterações sugeridas" url=changes_url %}
+        {% include "components/stat.html" with value=counts.published_recent label=published_label url=published_url %}
+        {% include "components/stat.html" with value=counts.archived label="Arquivadas" url=archived_url %}
+        {% include "components/stat.html" with value=counts.open_comments label="Comentários abertos na revisão" %}
+      {% endwith %}
+    </div>
+  </section>
+  <section aria-labelledby="sec-rascunhos" class="mt-10">
+    <h2 id="sec-rascunhos" class="font-serif text-h3 font-semibold">Rascunhos por autor</h2>
+    {% if draft_authors %}
+      <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-white sm:max-w-md">
+        {% for person in draft_authors %}
+          <li>
+            <a href="{{ list_url }}?estado=rascunhos&amp;autor={{ person.pk }}"
+               class="flex items-center justify-between gap-3 px-4 py-2.5 text-ui hover:bg-paper-2">
+              <span class="min-w-0 truncate text-ink">{{ person.public_name }}</span>
+              <span class="shrink-0 text-meta text-ink-3">{{ person.drafts }} rascunho{{ person.drafts|pluralize }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mt-3 text-ui text-ink-2">Ninguém tem rascunho no momento.</p>
+    {% endif %}
+  </section>
+{% endblock content %}

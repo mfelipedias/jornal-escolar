@@ -1,9 +1,11 @@
-"""Consultas da revisão por colega: editor, tela de revisão e aba "Revisões" (docs/04, 15-17)."""
+"""Consultas da revisão por colega (editor, tela de revisão, aba "Revisões"; docs/04, 15-17) e
+do painel editorial (visão geral e todas as publicações; docs/18). Alertas em alerts.py."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from django.db.models import QuerySet
+from django.db.models import Count, Q, QuerySet
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.publications.models import Article, ArticleContributor
@@ -275,3 +277,150 @@ def history_entries(article: Article) -> list[HistoryEntry]:
         )
         for event in events.history(article)
     ]
+
+
+# --- painel editorial: visão geral e todas as publicações (docs/18, E33) ---
+
+RECENT_PUBLISHED_DAYS = 30
+DRAFT_AUTHORS_LIMIT = 6
+
+# ?estado= → estado do modelo. Mesmas chaves de "Minhas publicações" (dashboard).
+EDITORIAL_STATUS: dict[str, str] = {
+    "rascunhos": Status.DRAFT,
+    "em-revisao": Status.IN_REVIEW,
+    "alteracoes-sugeridas": Status.CHANGES_REQUESTED,
+    "publicados": Status.PUBLISHED,
+    "arquivados": Status.ARCHIVED,
+}
+
+# ?periodo= → dias desde a última atualização.
+PERIODS: dict[str, tuple[str, int]] = {
+    "7": ("Últimos 7 dias", 7),
+    "30": ("Últimos 30 dias", 30),
+    "90": ("Últimos 90 dias", 90),
+    "365": ("Último ano", 365),
+}
+
+
+def editorial_counts(now: datetime | None = None) -> dict[str, int]:
+    """Contadores da visão geral: um por estado, publicados nos últimos 30 dias e comentários
+    da revisão abertos (fora dos arquivados)."""
+    now = now or timezone.now()
+    recent = now - timedelta(days=RECENT_PUBLISHED_DAYS)
+    counts = Article.objects.aggregate(
+        drafts=Count("pk", filter=Q(status=Status.DRAFT)),
+        in_review=Count("pk", filter=Q(status=Status.IN_REVIEW)),
+        changes_requested=Count("pk", filter=Q(status=Status.CHANGES_REQUESTED)),
+        published_recent=Count("pk", filter=Q(status=Status.PUBLISHED, published_at__gte=recent)),
+        archived=Count("pk", filter=Q(status=Status.ARCHIVED)),
+    )
+    counts["open_comments"] = (
+        EditorialComment.objects.filter(parent__isnull=True, status=EditorialComment.Status.OPEN)
+        .exclude(article__status=Status.ARCHIVED)
+        .count()
+    )
+    return counts
+
+
+def draft_authors(limit: int = DRAFT_AUTHORS_LIMIT) -> list[User]:
+    """Quem tem rascunhos, com a quantidade em .drafts (mais rascunhos primeiro)."""
+    return list(
+        User.objects.filter(
+            contributions__article__status=Status.DRAFT,
+            contributions__role__in=ArticleContributor.EDITING_ROLES,
+        )
+        .annotate(drafts=Count("contributions__article", distinct=True))
+        .order_by("-drafts", "full_name")[:limit]
+    )
+
+
+@dataclass(frozen=True)
+class ArticleFilters:
+    """Filtros de "Todas as publicações", já validados a partir do ?querystring."""
+
+    estado: str = ""
+    tipo: str = ""
+    area: str = ""
+    autor: int | None = None
+    revisor: int | None = None
+    periodo: str = ""
+    q: str = ""
+
+    @property
+    def active(self) -> bool:
+        return any(
+            (self.estado, self.tipo, self.area, self.autor, self.revisor, self.periodo, self.q)
+        )
+
+
+def _int_or_none(value: str | None) -> int | None:
+    try:
+        number = int(value or "")
+    except ValueError:
+        return None
+    return number if number > 0 else None
+
+
+def parse_article_filters(params) -> ArticleFilters:
+    estado = params.get("estado", "")
+    periodo = params.get("periodo", "")
+    return ArticleFilters(
+        estado=estado if estado in EDITORIAL_STATUS else "",
+        tipo=(params.get("tipo") or "")[:140],
+        area=(params.get("area") or "")[:140],
+        autor=_int_or_none(params.get("autor")),
+        revisor=_int_or_none(params.get("revisor")),
+        periodo=periodo if periodo in PERIODS else "",
+        q=" ".join((params.get("q") or "").split())[:100],
+    )
+
+
+def all_articles(filters: ArticleFilters, now: datetime | None = None) -> QuerySet[Article]:
+    """Todas as publicações do jornal, filtradas, da atualização mais recente para a mais antiga."""
+    articles = Article.objects.all()
+    if filters.estado:
+        articles = articles.filter(status=EDITORIAL_STATUS[filters.estado])
+    if filters.tipo:
+        articles = articles.filter(type__slug=filters.tipo)
+    if filters.periodo:
+        since = (now or timezone.now()) - timedelta(days=PERIODS[filters.periodo][1])
+        articles = articles.filter(updated_at__gte=since)
+    if filters.q:
+        articles = articles.filter(title__icontains=filters.q)
+    # Filtros por relações de muitos: subconsulta por pk, sem linhas repetidas.
+    if filters.area:
+        articles = articles.filter(
+            pk__in=Article.objects.filter(disciplines__area__slug=filters.area).values("pk")
+        )
+    if filters.autor:
+        articles = articles.filter(
+            pk__in=ArticleContributor.objects.filter(
+                user_id=filters.autor, role__in=ArticleContributor.EDITING_ROLES
+            ).values("article_id")
+        )
+    if filters.revisor:
+        articles = articles.filter(
+            pk__in=ArticleContributor.objects.filter(
+                user_id=filters.revisor, role=ArticleContributor.Role.REVIEWER
+            ).values("article_id")
+        )
+    return (
+        articles.select_related("type")
+        .prefetch_related("contributors")
+        .order_by("-updated_at", "-pk")
+    )
+
+
+def filter_people() -> tuple[QuerySet[User], QuerySet[User]]:
+    """Opções dos filtros "Autor" e "Revisor": quem já assinou ou revisou algum texto."""
+    authors = (
+        User.objects.filter(contributions__role__in=ArticleContributor.EDITING_ROLES)
+        .distinct()
+        .order_by("full_name")
+    )
+    reviewers = (
+        User.objects.filter(contributions__role=ArticleContributor.Role.REVIEWER)
+        .distinct()
+        .order_by("full_name")
+    )
+    return authors, reviewers

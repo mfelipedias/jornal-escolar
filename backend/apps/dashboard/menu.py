@@ -1,7 +1,8 @@
 """Menu lateral do painel (docs/15, "Menu lateral").
 
-Itens da Fase 1; Destaques e Páginas (E25) só para editor+; Revisões (E31) com o contador de
-revisões pedidas à pessoa. Comentários, Sugestões, Pautas e Editorial aparecem quando as fases
+Itens da Fase 1; Revisões (E31) com o contador de revisões pedidas à pessoa; Editorial (E33)
+só para editor+, agrupando visão geral, todas as publicações, Destaques e Páginas (as duas
+últimas mantêm os endereços da E25). Comentários, Sugestões e Pautas aparecem quando as fases
 deles chegarem: basta acrescentar a linha aqui.
 """
 
@@ -34,8 +35,10 @@ ACTIVE_BY_VIEW = {
     "editorial:notifications": "home",
     "editorial:queue": "reviews",
     "editorial:review": "reviews",
-    "editorial:featured": "featured",
-    "core:page_list": "pages",
+    "editorial:overview": "editorial",
+    "editorial:articles": "editorial",
+    "editorial:featured": "editorial",
+    "core:page_list": "editorial",
 }
 
 
@@ -47,10 +50,8 @@ def menu_items(user: User, view_name: str = "") -> list[MenuItem]:
         ("create", "Nova publicação", reverse("publications:create"), "plus", False),
         ("reviews", "Revisões", reverse("editorial:queue"), "check", False),
     ]
-    if permissions.can_feature(user):
-        rows.append(("featured", "Destaques", reverse("editorial:featured"), "star", False))
-    if permissions.can_edit_pages(user):
-        rows.append(("pages", "Páginas", reverse("core:page_list"), "file", False))
+    if permissions.can_access_editorial(user):
+        rows.append(("editorial", "Editorial", reverse("editorial:overview"), "grid", False))
     rows += [
         ("profile", "Perfil", reverse("accounts:profile_edit"), "user", False),
         ("account", "Conta", reverse("accounts:account_settings"), "key", False),

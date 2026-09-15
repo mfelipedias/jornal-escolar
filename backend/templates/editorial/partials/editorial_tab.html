@@ -1,0 +1,7 @@
+{% comment %}Uma aba do editorial_nav. Parâmetros: key, label, url, section (aba atual).{% endcomment %}
+<li>
+  <a href="{{ url }}"
+     class="-mb-px inline-flex min-h-11 items-center border-b-2 px-3 text-ui
+            {% if section == key %}border-accent font-medium text-accent-2{% else %}border-transparent text-ink-2 hover:text-accent{% endif %}"
+     {% if section == key %}aria-current="page"{% endif %}>{{ label }}</a>
+</li>

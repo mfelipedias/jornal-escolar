@@ -1,5 +1,5 @@
 {% extends "layouts/dashboard.html" %}
-{% load humanize %}
+{% load humanize permissions %}
 {% comment %}
   Início do painel (docs/15): pendências, continuar escrevendo, últimas publicadas e números.
   Sugestões (Fase 4), leituras e comentários (Fase 3) ainda não aparecem.
@@ -44,6 +44,18 @@
         {% endfor %}
       </ul>
     </section>
+  {% endif %}
+  {% can "access_editorial" as show_editorial %}
+  {% if show_editorial and editorial_alerts %}
+    <a href="{% url 'editorial:overview' %}"
+       class="mt-8 flex items-center gap-3 rounded-card border border-line border-l-4 border-l-warn bg-white px-4 py-3 hover:border-accent"
+       data-editorial-alerts>
+      <span class="min-w-0 flex-1 text-ui text-ink">
+        {{ editorial_alerts }} alerta{{ editorial_alerts|pluralize }} no editorial
+        <span class="block text-meta text-ink-2">Revisões paradas, comentários sem resposta ou autorizações faltando.</span>
+      </span>
+      <span class="shrink-0 text-meta text-accent">Ver <span aria-hidden="true">→</span></span>
+    </a>
   {% endif %}
   <section aria-labelledby="sec-numeros" class="mt-8">
     <h2 id="sec-numeros" class="sr-only">Números</h2>

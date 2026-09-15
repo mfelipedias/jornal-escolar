@@ -134,6 +134,28 @@ def review_cancelled(article: Article, actor: User, reviewer: User) -> int:
     )
 
 
+def reviewer_replaced(
+    article: Article, actor: User, old: User | None, new: User, note: str = ""
+) -> int:
+    """Editor trocou o revisor (E33): o novo recebe o pedido; o antigo e os autores sabem."""
+    count = review_requested(article, actor, new, note)
+    if old is not None and old.pk != actor.pk and old.is_active:
+        message = f"{actor.public_name} passou a revisão de “{article.title}” para outro colega."
+        count += _notify_many(
+            [old], Notification.Kind.SYSTEM, message, article, actor, reverse("editorial:queue")
+        )
+    message = f"{actor.public_name} passou a revisão de “{article.title}” para {new.public_name}."
+    count += _notify_many(
+        article_team(article, exclude=actor),
+        Notification.Kind.SYSTEM,
+        message,
+        article,
+        actor,
+        _review_url(article),
+    )
+    return count
+
+
 def edited_during_review(article: Article, actor: User, reviewer: User) -> int:
     """O autor continua editando durante a revisão; o revisor fica sabendo (docs/16)."""
     if reviewer.pk == actor.pk or not reviewer.is_active:

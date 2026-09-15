@@ -676,6 +676,40 @@ def _remove_reviewer(current: Article, user: User, reason: str) -> User | None:
 
 
 @transaction.atomic
+def reassign_reviewer(user: User, article: Article, reviewer: User, note: str = "") -> Article:
+    """Editor troca o revisor de um texto em revisão (docs/18, "reatribuir revisor").
+
+    O estado não muda. O "pode publicar por mim" foi dado pelo autor a um colega específico,
+    então não passa para o novo revisor.
+    """
+    current = _locked(article)
+    if not permissions.can_reassign_reviewer(user, current):
+        raise PermissionDenied
+    if not permissions.can_be_reviewer(reviewer, current):
+        raise ValidationError({"reviewer": "Escolha um colega ativo que não assine este texto."})
+    old_credit = permissions.reviewer_credit(current)
+    if old_credit is not None and old_credit.user_id == reviewer.pk:
+        raise ValidationError({"reviewer": "Este colega já é o revisor."})
+    old = _remove_reviewer(current, user, "revisão passada para outro colega.")
+    ArticleContributor.objects.create(
+        article=current,
+        user=reviewer,
+        role=ArticleContributor.Role.REVIEWER,
+        display_name=reviewer.public_name,
+        order=_next_order(current),
+    )
+    events.record(
+        current,
+        user,
+        EventKind.REVIEWER_ASSIGNED,
+        note=f"{reviewer.public_name} (só devolve ao autor). {note.strip()}".strip(),
+    )
+    # Sem salvar a publicação: mudar updated_at acusaria conflito no editor de quem escreve.
+    notifications.reviewer_replaced(current, user, old, reviewer, note)
+    return current
+
+
+@transaction.atomic
 def cancel_review(user: User, article: Article) -> Article:
     """O autor desiste do pedido: volta a rascunho e o revisor é avisado."""
     current = _locked(article)

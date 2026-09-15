@@ -1,0 +1,238 @@
+{% extends "layouts/dashboard.html" %}
+{% load humanize permissions %}
+{% comment %}
+  Todas as publicações (docs/18, E33): filtros por estado, tipo, área, autor, revisor, período
+  e título (formulário GET, funciona sem JavaScript); ações em massa arquivar e trocar revisor.
+  Clicar no título leva à tela de revisão (docs/17).
+{% endcomment %}
+{% block title %}Todas as publicações · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <h1 class="font-serif text-h1 font-semibold">Editorial</h1>
+  <div class="mt-6">{% include "editorial/partials/editorial_nav.html" %}</div>
+  <details class="group mt-6 rounded-card border border-line bg-white">
+    <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-4 text-ui font-medium text-ink">
+      <span>
+        Filtrar
+        {% if filters.active %}<span class="text-meta font-normal text-ink-3">(filtros aplicados)</span>{% endif %}
+      </span>
+      <span class="text-ink-3 group-open:rotate-180" aria-hidden="true">▾</span>
+    </summary>
+    <form method="get"
+          class="grid gap-4 border-t border-line p-4 sm:grid-cols-2 lg:grid-cols-4"
+          data-filters>
+      <div class="sm:col-span-2 lg:col-span-4">
+        <label for="f-q" class="text-meta font-medium text-ink-2">Título</label>
+        <input id="f-q"
+               type="search"
+               name="q"
+               value="{{ filters.q }}"
+               maxlength="100"
+               class="field mt-1"
+               placeholder="Parte do título">
+      </div>
+      <div>
+        <label for="f-estado" class="text-meta font-medium text-ink-2">Estado</label>
+        <select id="f-estado" name="estado" class="field mt-1">
+          <option value="">Todos</option>
+          {% for key, label in statuses %}
+            <option value="{{ key }}" {% if filters.estado == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-tipo" class="text-meta font-medium text-ink-2">Tipo</label>
+        <select id="f-tipo" name="tipo" class="field mt-1">
+          <option value="">Todos</option>
+          {% for item in types %}
+            <option value="{{ item.slug }}"
+                    {% if filters.tipo == item.slug %}selected{% endif %}>{{ item.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-area" class="text-meta font-medium text-ink-2">Área</label>
+        <select id="f-area" name="area" class="field mt-1">
+          <option value="">Todas</option>
+          {% for item in areas %}
+            <option value="{{ item.slug }}"
+                    {% if filters.area == item.slug %}selected{% endif %}>{{ item.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-periodo" class="text-meta font-medium text-ink-2">Atualizada</label>
+        <select id="f-periodo" name="periodo" class="field mt-1">
+          <option value="">Qualquer data</option>
+          {% for key, label in periods %}
+            <option value="{{ key }}" {% if filters.periodo == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-autor" class="text-meta font-medium text-ink-2">Autor</label>
+        <select id="f-autor" name="autor" class="field mt-1">
+          <option value="">Todos</option>
+          {% for person in authors %}
+            <option value="{{ person.pk }}"
+                    {% if filters.autor == person.pk %}selected{% endif %}>{{ person.public_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-revisor" class="text-meta font-medium text-ink-2">Revisor</label>
+        <select id="f-revisor" name="revisor" class="field mt-1">
+          <option value="">Todos</option>
+          {% for person in reviewers %}
+            <option value="{{ person.pk }}"
+                    {% if filters.revisor == person.pk %}selected{% endif %}>{{ person.public_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex flex-wrap items-end gap-2 sm:col-span-2">
+        <button type="submit" class="btn-primary min-h-11 px-5">Aplicar filtros</button>
+        {% if filters.active %}
+          <a href="{% url 'editorial:articles' %}" class="btn-ghost min-h-11">Limpar filtros</a>
+        {% endif %}
+      </div>
+    </form>
+  </details>
+  <p class="mt-6 text-meta text-ink-3" data-total>
+    {{ page_obj.paginator.count }} publicaç{{ page_obj.paginator.count|pluralize:"ão,ões" }}
+  </p>
+  {% if rows %}
+    <form method="post"
+          action="{% url 'editorial:bulk_action' %}"
+          class="mt-2"
+          x-data="{ selected: 0, action: '' }"
+          @change="selected = new Set([...$root.querySelectorAll('input[name=ids]:checked')].map(i => i.value)).size">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <fieldset class="rounded-card border border-line bg-paper-2 p-4" data-bulk>
+        <legend class="sr-only">Ações em massa</legend>
+        <div class="grid gap-3 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:items-start">
+          <div>
+            <label for="bulk-acao" class="text-meta font-medium text-ink-2">
+              Com as marcadas <span class="text-ink-3" x-text="'(' + selected + ')'"></span>
+            </label>
+            <select id="bulk-acao"
+                    name="acao"
+                    class="field mt-1"
+                    x-model="action"
+                    required>
+              <option value="">Escolha a ação…</option>
+              <option value="arquivar">Arquivar</option>
+              <option value="trocar-revisor">Trocar o revisor</option>
+            </select>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div x-show="action === 'trocar-revisor'" x-cloak>
+              <label for="bulk-revisor" class="text-meta font-medium text-ink-2">Novo revisor</label>
+              <select id="bulk-revisor" name="reviewer" class="field mt-1">
+                <option value="">Escolha…</option>
+                {% for person in reviewer_options %}<option value="{{ person.pk }}">{{ person.public_name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="sm:col-span-2" x-show="action" x-cloak>
+              <label for="bulk-note" class="text-meta font-medium text-ink-2">
+                <span x-show="action === 'arquivar'">Motivo (vai no aviso aos autores)</span>
+                <span x-show="action !== 'arquivar'">Nota para o novo revisor (opcional)</span>
+              </label>
+              <textarea id="bulk-note"
+                        name="note"
+                        rows="2"
+                        maxlength="500"
+                        class="field mt-1"
+                        :required="action === 'arquivar'"></textarea>
+            </div>
+          </div>
+        </div>
+        <p class="mt-3 text-meta text-ink-3"
+           x-show="action === 'trocar-revisor'"
+           x-cloak>Trocar o revisor vale só para textos em revisão; o novo revisor não herda o “pode publicar”.</p>
+        <button type="submit"
+                class="btn-secondary mt-3"
+                :disabled="!selected || !action"
+                @click="if (action === 'arquivar' && !confirm('Arquivar as publicações marcadas? Elas deixam de aparecer no site.')) $event.preventDefault()">
+          Aplicar às marcadas
+        </button>
+      </fieldset>
+      <div class="mt-4 hidden overflow-x-auto rounded-card border border-line bg-white md:block">
+        <table class="w-full text-left text-ui">
+          <caption class="sr-only">Todas as publicações</caption>
+          <thead class="border-b border-line text-meta text-ink-3">
+            <tr>
+              <th scope="col" class="w-10 px-4 py-2.5">
+                <input type="checkbox"
+                       class="size-4 accent-accent"
+                       aria-label="Marcar todas desta página"
+                       @change="$root.querySelectorAll('input[name=ids]').forEach(i => i.checked = $el.checked)">
+              </th>
+              <th scope="col" class="px-2 py-2.5 font-medium">Título</th>
+              <th scope="col" class="px-4 py-2.5 font-medium">Estado</th>
+              <th scope="col" class="px-4 py-2.5 font-medium">Autores</th>
+              <th scope="col" class="px-4 py-2.5 font-medium">Revisor</th>
+              <th scope="col" class="px-4 py-2.5 font-medium">Atualizada</th>
+              <th scope="col" class="px-4 py-2.5 font-medium">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-line">
+            {% for row in rows %}
+              <tr data-article="{{ row.article.pk }}">
+                <td class="px-4 py-3">
+                  <input type="checkbox"
+                         name="ids"
+                         value="{{ row.article.pk }}"
+                         class="size-4 accent-accent"
+                         aria-label="Marcar “{{ row.article.title }}”">
+                </td>
+                <td class="max-w-72 px-2 py-3">
+                  <a href="{% url 'editorial:review' row.article.pk %}"
+                     class="line-clamp-2 font-medium text-ink hover:text-accent">{{ row.article.title }}</a>
+                  {% if row.article.type %}<span class="text-meta text-ink-3">{{ row.article.type.name }}</span>{% endif %}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  {% include "components/status_badge.html" with status=row.article.status %}
+                </td>
+                <td class="px-4 py-3 text-ink-2">{{ row.authors|default:"—" }}</td>
+                <td class="px-4 py-3 text-ink-2">{{ row.reviewer.display_name|default:"—" }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-ink-3">{{ row.article.updated_at|naturaltime }}</td>
+                <td class="px-4 py-3">{% include "editorial/partials/article_row_actions.html" with article=row.article %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-white md:hidden">
+        {% for row in rows %}
+          <li class="flex gap-3 px-4 py-3" data-article="{{ row.article.pk }}">
+            <input type="checkbox"
+                   name="ids"
+                   value="{{ row.article.pk }}"
+                   class="mt-1 size-5 shrink-0 accent-accent"
+                   aria-label="Marcar “{{ row.article.title }}”">
+            <div class="min-w-0 flex-1 space-y-2">
+              <a href="{% url 'editorial:review' row.article.pk %}"
+                 class="block font-medium text-ink hover:text-accent">{{ row.article.title }}</a>
+              <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-meta text-ink-3">
+                {% include "components/status_badge.html" with status=row.article.status %}
+                {% if row.article.type %}<span>{{ row.article.type.name }}</span>{% endif %}
+                {% if row.authors %}<span>{{ row.authors }}</span>{% endif %}
+                {% if row.reviewer %}<span>revisão: {{ row.reviewer.display_name }}</span>{% endif %}
+                <span>{{ row.article.updated_at|naturaltime }}</span>
+              </p>
+              {% include "editorial/partials/article_row_actions.html" with article=row.article %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </form>
+    {% include "components/pagination.html" %}
+  {% elif filters.active %}
+    {% url 'editorial:articles' as all_url %}
+    {% include "components/empty_state.html" with title="Nada com esses filtros" text="Tire um filtro ou procure por outra parte do título." action_url=all_url action_label="Limpar filtros" %}
+  {% else %}
+    {% include "components/empty_state.html" with title="O jornal ainda não tem publicações" text="Quando a equipe começar a escrever, os textos aparecem aqui em qualquer estado." %}
+  {% endif %}
+{% endblock content %}

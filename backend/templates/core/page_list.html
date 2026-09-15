@@ -3,10 +3,10 @@
 {% comment %}Páginas institucionais (docs/18): editar no editor, pôr no ar ou tirar do ar.{% endcomment %}
 {% block title %}Páginas · {{ jornal.name }}{% endblock title %}
 {% block content %}
+  <p class="text-meta text-ink-3">Editorial</p>
   <h1 class="font-serif text-h1 font-semibold">Páginas</h1>
-  <p class="mt-2 max-w-reading text-ui text-ink-2">
-    Textos fixos do jornal, com link no rodapé quando estão no ar.
-  </p>
+  <div class="mt-4">{% include "editorial/partials/editorial_nav.html" with section="pages" %}</div>
+  <p class="mt-4 max-w-reading text-ui text-ink-2">Textos fixos do jornal, com link no rodapé quando estão no ar.</p>
   <ul class="mt-8 divide-y divide-line rounded-card border border-line bg-white">
     {% for page in pages %}
       <li class="flex flex-wrap items-center gap-3 px-4 py-4"

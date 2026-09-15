@@ -53,7 +53,9 @@ def test_list_creates_missing_pages(client, editor_user):
     assert html.index('data-page="sobre"') < html.index('data-page="privacidade"')
     assert 'href="/painel/paginas/colaborar/editar/"' in html
     assert "Fora do ar" in html  # privacidade nasce despublicada
-    assert 'title="Páginas"' in html.split('aria-current="page"')[0].rsplit("<a ", 1)[1]
+    # Menu: "Editorial" ativo; abas do editorial: "Páginas" atual (E33).
+    assert 'title="Editorial"' in html.split('aria-current="page"')[0].rsplit("<a ", 1)[1]
+    assert 'aria-current="page">Páginas</a>' in html
 
 
 def test_edit_page_uses_editor_without_images(client, editor_user, about):

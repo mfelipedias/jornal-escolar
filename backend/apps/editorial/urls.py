@@ -1,10 +1,13 @@
 from django.urls import path
 
-from . import views
+from . import panel_views, views
 
 app_name = "editorial"
 
 urlpatterns = [
+    path("painel/editorial/", panel_views.overview, name="overview"),
+    path("painel/editorial/publicacoes/", panel_views.articles, name="articles"),
+    path("painel/editorial/publicacoes/acoes/", panel_views.bulk_action, name="bulk_action"),
     path("painel/notificacoes/", views.notification_list, name="notifications"),
     path("x/notifications/", views.notification_dropdown, name="notification_dropdown"),
     path("x/notifications/read-all/", views.notification_read_all, name="notification_read_all"),
