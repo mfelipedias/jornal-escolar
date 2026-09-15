@@ -1,39 +1,39 @@
 {% comment %}
-  Card de publicação (docs/09). Parâmetros:
+  Card de publicação (docs/09, R3). Parâmetros:
     card: presentation.ArticleCard (monte com presentation.card(article))
-    variant: "hero" (imagem grande, título display), "standard" (imagem 3:2 acima, padrão),
-             "compact" (sem imagem, para listas; mostra card.snippet da busca no lugar da
-             linha fina) ou "mini" (título e data, para barras laterais)
+    variant: "hero" (imagem grande, título display), "standard" (cartão branco com imagem 3:2,
+             padrão; sem capa, um bloco na cor da área com o glifo), "compact" (linha de lista com barra na cor da área; mostra card.snippet da
+             busca no lugar da linha fina) ou "mini" (título e data, para barras laterais)
   O título é o link; o card inteiro fica clicável. Títulos: h2 no hero, h3 nos demais.
+  A cor da área aparece na etiqueta e, nas linhas de lista, na barra lateral (border-area-x).
 {% endcomment %}
-{% with border=card.area.color_classes.border|default:"border-line" %}
+{% with classes=card.area.color_classes %}
   {% if variant == "hero" %}
-    <article class="group relative {% if not card.image %}rounded-b-card border-t-[3px] {{ border }} bg-paper-2 px-5 py-6 sm:px-8 sm:py-10{% endif %}">
+    <article class="group relative {% if not card.image %}rounded-hero bg-linear-to-br {{ classes.from_soft|default:'from-accent-soft' }} to-paper-3 px-6 py-8 sm:px-10 sm:py-12{% endif %}">
       {% if card.image %}
-        <img src="{{ card.image.src }}"
-             {% if card.image.srcset %}srcset="{{ card.image.srcset }}" sizes="(min-width: 1024px) 760px, 100vw"{% endif %}
-             alt=""
-             {% if card.image.width %}width="{{ card.image.width }}" height="{{ card.image.height }}"{% endif %}
-             fetchpriority="high"
-             class="mb-5 aspect-video w-full rounded-card bg-paper-2 object-cover">
-      {% endif %}
-      <div class="{% if card.image %}border-t-[3px] {{ border }} pt-4{% endif %}">
-        {% include "components/card_tags.html" %}
-        <h2 class="mt-3 font-display text-h1 font-semibold text-balance text-ink sm:text-display">
-          <a href="{{ card.url }}"
-             class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
-        </h2>
-        {% if card.subtitle %}<p class="mt-4 font-serif text-lead text-ink-2">{{ card.subtitle }}</p>{% endif %}
-        <div class="mt-5">
-          {% include "components/byline.html" with people=card.people names=card.byline avatars=True size="md" %}
+        <div class="card-media mb-6 aspect-video rounded-hero">
+          <img src="{{ card.image.src }}"
+               {% if card.image.srcset %}srcset="{{ card.image.srcset }}" sizes="(min-width: 1024px) 760px, 100vw"{% endif %}
+               alt=""
+               {% if card.image.width %}width="{{ card.image.width }}" height="{{ card.image.height }}"{% endif %}
+               fetchpriority="high">
         </div>
-        {% include "components/card_meta.html" %}
+      {% endif %}
+      {% include "components/card_tags.html" %}
+      <h2 class="mt-4 font-display text-h1 font-extrabold text-balance text-ink sm:text-display">
+        <a href="{{ card.url }}"
+           class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
+      </h2>
+      {% if card.subtitle %}<p class="mt-4 max-w-reading font-serif text-lead text-ink-2">{{ card.subtitle }}</p>{% endif %}
+      <div class="mt-5">
+        {% include "components/byline.html" with people=card.people names=card.byline avatars=True size="md" %}
       </div>
+      {% include "components/card_meta.html" %}
     </article>
   {% elif variant == "compact" %}
-    <article class="group relative border-t-[3px] {{ border }} pt-3">
+    <article class="card-row group {{ classes.border|default:'border-line' }}">
       {% include "components/card_tags.html" %}
-      <h3 class="mt-2 font-display text-h3 font-semibold text-balance text-ink">
+      <h3 class="mt-2 font-display text-h3 font-bold text-balance text-ink">
         <a href="{{ card.url }}"
            class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
       </h3>
@@ -46,42 +46,45 @@
       {% include "components/card_meta.html" %}
     </article>
   {% elif variant == "mini" %}
-    <article class="group relative flex gap-3 border-t border-line pt-3">
-      <span class="mt-2 size-2 shrink-0 rounded-full {{ card.area.color_classes.solid_bg|default:'bg-line' }}"
-            aria-hidden="true"></span>
-      <div>
-        <h3 class="font-display text-[1.0625rem] leading-snug font-semibold text-ink">
-          <a href="{{ card.url }}"
-             class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
-        </h3>
-        {% if card.published_at %}
-          <p class="mt-1 text-meta text-ink-3">
-            <time datetime="{{ card.published_at|date:'c' }}">{{ card.published_at|date:"j M Y"|lower }}</time>
-          </p>
-        {% endif %}
-      </div>
+    <article class="card-row card-row--mini group {{ classes.border|default:'border-line' }}">
+      <h3 class="font-display text-[1.0625rem] leading-snug font-bold text-ink">
+        <a href="{{ card.url }}"
+           class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
+      </h3>
+      {% if card.published_at %}
+        <p class="mt-1 text-meta text-ink-3">
+          <time datetime="{{ card.published_at|date:'c' }}">{{ card.published_at|date:"j M Y"|lower }}</time>
+        </p>
+      {% endif %}
     </article>
   {% else %}
-    <article class="group relative flex flex-col">
+    <article class="card group h-full p-4 sm:p-5">
       {% if card.image %}
-        <img src="{{ card.image.src }}"
-             {% if card.image.srcset %}srcset="{{ card.image.srcset }}" sizes="(min-width: 1024px) 384px, (min-width: 640px) 50vw, 100vw"{% endif %}
-             alt=""
-             {% if card.image.width %}width="{{ card.image.width }}" height="{{ card.image.height }}"{% endif %}
-             loading="lazy"
-             class="mb-4 aspect-[3/2] w-full rounded-card bg-paper-2 object-cover">
+        <div class="card-media mb-4 aspect-[3/2]">
+          <img src="{{ card.image.src }}"
+               {% if card.image.srcset %}srcset="{{ card.image.srcset }}" sizes="(min-width: 1024px) 384px, (min-width: 640px) 50vw, 100vw"{% endif %}
+               alt=""
+               {% if card.image.width %}width="{{ card.image.width }}" height="{{ card.image.height }}"{% endif %}
+               loading="lazy">
+        </div>
+      {% else %}
+        {# Sem capa: bloco na cor da área com o glifo, para o card não ficar com um buraco na grade #}
+        <div class="card-media card-media--blank mb-4 aspect-[3/2] bg-linear-to-br {{ classes.from_soft|default:'from-accent-soft' }} to-paper-3 {{ classes.text|default:'text-accent' }}"
+             aria-hidden="true">
+          {% include "components/glyph.html" with class="size-14" %}
+        </div>
       {% endif %}
-      <div class="border-t-[3px] {{ border }} pt-3">
+      <div class="flex flex-1 flex-col">
         {% include "components/card_tags.html" %}
-        <h3 class="mt-2 font-display text-h3 font-semibold text-balance text-ink">
+        <h3 class="mt-2.5 font-display text-h3 font-bold text-balance text-ink">
           <a href="{{ card.url }}"
              class="after:absolute after:inset-0 group-hover:text-accent">{{ card.title }}</a>
         </h3>
         {% if card.subtitle %}<p class="mt-1.5 line-clamp-3 text-ui text-ink-2">{{ card.subtitle }}</p>{% endif %}
-        <div class="mt-3">
+        <div class="mt-auto pt-4">
           {% include "components/byline.html" with people=card.people names=card.byline avatars=True size="sm" %}
+          {% include "components/card_meta.html" %}
         </div>
-        {% include "components/card_meta.html" %}
       </div>
     </article>
   {% endif %}

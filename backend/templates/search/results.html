@@ -8,11 +8,13 @@
   · {{ jornal.name }}
 {% endblock title %}
 {% block content %}
-  <div class="site-container pt-10 pb-16 sm:pt-14">
-    <header class="max-w-reading">
-      <h1 class="font-display text-h1 font-semibold">Buscar</h1>
-      <div class="mt-5">{% include "components/search_form.html" with query=query autofocus=query|yesno:",True" %}</div>
-    </header>
+  <header class="page-header bg-linear-to-b from-accent-soft to-paper">
+    <div class="site-container">
+      <h1 class="font-display text-h1 font-extrabold sm:text-display">Buscar</h1>
+      <div class="mt-5 max-w-reading">{% include "components/search_form.html" with query=query autofocus=query|yesno:",True" %}</div>
+    </div>
+  </header>
+  <div class="site-container pb-16">
     {% if rate_limited %}
       {% include "components/empty_state.html" with title="Muitas buscas em pouco tempo" text="Aguarde um minuto e tente de novo." %}
     {% elif not query %}
@@ -21,13 +23,14 @@
       </p>
       {% include "search/partials/areas.html" with title="Ou navegue por área" %}
     {% else %}
-      <div class="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
+      <div class="mt-4 grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
         <section id="{{ region_id }}"
                  aria-labelledby="search-articles-title"
                  class="min-w-0">
-          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line pb-2">
-            <h2 id="search-articles-title"
-                class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Publicações</h2>
+          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 id="search-articles-title" class="font-display text-h3 font-extrabold">
+              <span class="title-marker">Publicações</span>
+            </h2>
             <p class="text-meta text-ink-3" aria-live="polite">{% include "publications/partials/list_count.html" %}</p>
           </div>
           {% if cards or filters.has_choices %}
@@ -39,7 +42,7 @@
                 Nenhuma publicação tem exatamente “{{ query }}”. Mostrando títulos parecidos.
               </p>
             {% endif %}
-            <ul id="search-results" class="mt-6 grid gap-y-8">
+            <ul id="search-results" class="mt-6 grid gap-y-3">
               {% for card in cards %}
                 <li>{% include "components/card.html" with card=card variant="compact" %}</li>
               {% endfor %}
@@ -50,8 +53,10 @@
           {% elif people or taxonomy %}
             <p class="mt-6 text-ui text-ink-2">Nenhuma publicação encontrada para “{{ query }}”.</p>
           {% else %}
-            <div class="mx-auto max-w-md py-12 text-center">
-              <h3 class="font-display text-h3 font-semibold text-balance text-ink">Nada encontrado para “{{ query }}”</h3>
+            <div class="mx-auto flex max-w-md flex-col items-center py-12 text-center">
+              <span class="flex size-16 -rotate-6 items-center justify-center rounded-full bg-sun-soft text-accent"
+                    aria-hidden="true">{% include "components/glyph.html" with class="size-8" %}</span>
+              <h3 class="mt-5 font-display text-h3 font-bold text-balance text-ink">Nada encontrado para “{{ query }}”</h3>
               <p class="mt-2 text-ui text-ink-2">Tente termos mais gerais ou navegue por área.</p>
             </div>
             {% include "search/partials/areas.html" with title="Áreas do conhecimento" %}
@@ -62,11 +67,10 @@
             {% include "taxonomy/partials/writers_aside.html" with writers=people title="Pessoas da equipe" more_url="" %}
             {% if taxonomy %}
               <section aria-labelledby="search-taxonomy-title">
-                <h2 id="search-taxonomy-title"
-                    class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
-                  Disciplinas e tópicos
+                <h2 id="search-taxonomy-title" class="font-display text-h3 font-extrabold">
+                  <span class="title-marker">Disciplinas e tópicos</span>
                 </h2>
-                <ul class="mt-4 flex flex-wrap gap-2">
+                <ul class="mt-5 flex flex-wrap gap-2">
                   {% for area in taxonomy.areas %}
                     <li>{% include "components/tag.html" with kind="area" area=area label="" url=area.get_absolute_url size="md" %}</li>
                   {% endfor %}

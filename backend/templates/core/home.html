@@ -3,42 +3,47 @@
 {% block title %}{{ jornal.name }} · {{ jornal.tagline }}{% endblock title %}
 {% block content %}
   {% if not blocks.has_content %}
-    <section class="site-container py-16 sm:py-24">
-      <div class="max-w-reading">
-        <p class="text-meta font-medium tracking-[0.08em] text-accent uppercase">{{ jornal.tagline }}</p>
-        <h1 class="mt-4 font-display text-h1 font-semibold text-balance sm:text-display">O jornal está sendo preparado</h1>
-        <p class="mt-6 font-serif text-lead text-ink-2">As primeiras publicações aparecem aqui em breve.</p>
-        <hr class="mt-12 w-16 border-t-[3px] border-accent">
+    <section class="bg-linear-to-b from-accent-soft to-paper">
+      <div class="site-container flex flex-col items-center py-16 text-center sm:py-24">
+        <span class="flex size-24 -rotate-6 items-center justify-center rounded-full bg-sun-soft text-accent"
+              aria-hidden="true">{% include "components/glyph.html" with class="size-12" %}</span>
+        <p class="mt-8 text-meta font-semibold tracking-[0.08em] text-accent uppercase">{{ jornal.tagline }}</p>
+        <h1 class="mt-3 max-w-reading font-display text-h1 font-extrabold text-balance sm:text-display">O jornal está sendo preparado</h1>
+        <p class="mt-5 font-serif text-lead text-ink-2">As primeiras publicações aparecem aqui em breve.</p>
       </div>
     </section>
   {% else %}
     <h1 class="sr-only">{{ jornal.name }}: {{ jornal.tagline }}</h1>
-    <div class="site-container pt-8 pb-16 sm:pt-12">
-      {# Destaque #}
-      <section aria-label="Destaques" class="grid gap-10 lg:grid-cols-3 lg:gap-12">
-        {% with main=blocks.featured.0 %}
+    {# Destaque: faixa colorida na cor da área do destaque principal (docs/10) #}
+    {% with main=blocks.featured.0 %}
+      <section aria-label="Destaques"
+               class="bg-linear-to-b {{ main.area.color_classes.from_soft|default:'from-accent-soft' }} to-paper">
+        <div class="site-container grid gap-8 pt-8 pb-10 sm:pt-12 lg:grid-cols-3 lg:gap-12">
           <div class="lg:col-span-2">{% include "components/card.html" with card=main variant="hero" %}</div>
-        {% endwith %}
-        {% if blocks.featured|length > 1 %}
-          <ul class="grid gap-8 sm:grid-cols-2 lg:grid-cols-1 lg:content-start">
-            {% for card in blocks.featured|slice:"1:" %}
-              <li>{% include "components/card.html" with card=card variant="standard" %}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
+          {% if blocks.featured|length > 1 %}
+            <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-1 lg:content-start">
+              {% for card in blocks.featured|slice:"1:" %}
+                <li>{% include "components/card.html" with card=card variant="standard" %}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
       </section>
+    {% endwith %}
+    <div class="site-container pb-14">
       {# Hoje na escola, em uma linha: só no celular; no desktop fica na coluna lateral #}
-      {% weather_widget variant="line" css="mt-10 lg:hidden" %}
-      <div class="mt-16 grid gap-14 border-t border-line pt-10 lg:grid-cols-3 lg:gap-12">
+      {% weather_widget variant="line" css="mt-6 lg:hidden" %}
+      <div class="mt-10 grid gap-14 lg:grid-cols-3 lg:gap-12">
         {# Últimas publicações #}
         <section class="lg:col-span-2" aria-labelledby="latest-title">
-          <div class="flex items-baseline justify-between gap-4">
-            <h2 id="latest-title" class="font-display text-h2 font-semibold">Últimas publicações</h2>
-            <a href="{% url 'publications:list' %}"
-               class="shrink-0 text-meta font-medium text-ink-2 hover:text-accent hover:underline">ver todas <span aria-hidden="true">→</span></a>
+          <div class="flex items-center justify-between gap-4">
+            <h2 id="latest-title" class="font-display text-h2 font-extrabold">
+              <span class="title-marker">Últimas publicações</span>
+            </h2>
+            <a href="{% url 'publications:list' %}" class="btn-secondary btn-sm shrink-0">ver todas <span aria-hidden="true">→</span></a>
           </div>
           {% if latest %}
-            <ul id="latest-list" class="mt-6 space-y-8">
+            <ul id="latest-list" class="mt-6 space-y-3">
               {% for card in latest %}
                 <li>{% include "components/card.html" with card=card variant="compact" %}</li>
               {% endfor %}
@@ -54,18 +59,16 @@
           {# Agenda #}
           {% if blocks.events %}
             <section aria-labelledby="agenda-title">
-              <h2 id="agenda-title"
-                  class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
-                Agenda
+              <h2 id="agenda-title" class="font-display text-h3 font-extrabold">
+                <span class="title-marker">Agenda</span>
               </h2>
-              <ul class="mt-4 space-y-4">
+              <ul class="mt-5 space-y-5">
                 {% for event in blocks.events %}
                   <li>{% include "components/event_item.html" with event=event past=blocks.events_past size="sm" %}</li>
                 {% endfor %}
               </ul>
-              <p class="mt-4 text-meta">
-                <a href="{% url 'publications:agenda' %}"
-                   class="font-medium text-accent hover:underline">Ver agenda completa <span aria-hidden="true">→</span></a>
+              <p class="mt-5 text-ui">
+                <a href="{% url 'publications:agenda' %}" class="link-arrow">Ver agenda completa <span aria-hidden="true">→</span></a>
               </p>
             </section>
           {% endif %}
@@ -74,26 +77,29 @@
           {% include "taxonomy/partials/writers_aside.html" with writers=blocks.writers title="Quem escreve" more_url=team_url %}
         </div>
       </div>
-      {# Por área #}
-      {% for strip in blocks.strips %}
-        {% with classes=strip.area.color_classes %}
-          <section class="mt-16" aria-labelledby="area-{{ strip.area.slug }}">
-            <div class="flex items-baseline justify-between gap-4 border-b-[3px] pb-2 {{ classes.border }}">
+    </div>
+    {# Por área: uma faixa colorida por área, de borda a borda #}
+    {% for strip in blocks.strips %}
+      {% with classes=strip.area.color_classes %}
+        <section class="band {{ classes.soft_bg }} {% if not forloop.first %}mt-3{% endif %}"
+                 aria-labelledby="area-{{ strip.area.slug }}">
+          <div class="site-container">
+            <div class="flex flex-wrap items-center justify-between gap-4">
               <h2 id="area-{{ strip.area.slug }}"
-                  class="font-display text-h2 font-semibold {{ classes.text }}">{{ strip.area.name }}</h2>
+                  class="font-display text-h2 font-extrabold {{ classes.text }}">{{ strip.area.name }}</h2>
               <a href="{{ strip.area.get_absolute_url }}"
-                 class="shrink-0 text-meta font-medium text-ink-2 hover:text-accent hover:underline">ver tudo<span class="sr-only"> em {{ strip.area.name }}</span> <span aria-hidden="true">→</span></a>
+                 class="btn-secondary btn-sm shrink-0">ver tudo<span class="sr-only"> em {{ strip.area.name }}</span> <span aria-hidden="true">→</span></a>
             </div>
-            <ul class="-mx-4 mt-6 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0">
+            <ul class="-mx-4 mt-6 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0">
               {% for card in strip.cards %}
                 <li class="w-[80%] shrink-0 snap-start sm:w-auto">
                   {% include "components/card.html" with card=card variant="standard" %}
                 </li>
               {% endfor %}
             </ul>
-          </section>
-        {% endwith %}
-      {% endfor %}
-    </div>
+          </div>
+        </section>
+      {% endwith %}
+    {% endfor %}
   {% endif %}
 {% endblock content %}

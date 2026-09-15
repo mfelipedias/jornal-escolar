@@ -20,7 +20,7 @@ Rota: `/publicacoes/` · Nome: `publications:list` · Fase 1 (filtros completos 
 
 Rota: `/areas/<slug>/` · Nome: `taxonomy:area`
 
-- Cabeçalho na cor da área: nome, descrição curta, lista de disciplinas como chips (link para cada uma).
+- Cabeçalho na cor da área (faixa com gradiente `soft`→`paper`): nome, descrição curta, lista de disciplinas como chips (link para cada uma).
 - Destaque: publicação mais recente da área em card `hero` (se tiver capa).
 - Grade das demais, com a mesma barra de filtros pré-fixada na área (chip "Área: Ciências da Natureza" não removível).
 - Bloco "Professores desta área": avatares e nomes.
@@ -51,14 +51,14 @@ Rota: `/topicos/<slug>/` · Nome: `taxonomy:topic`
 Rota: `/agenda/` · Nome: `publications:agenda`
 
 - Lista cronológica de publicações com `event_at`, separadas em "Próximos" e "Já aconteceram".
-- Cada item: dia e mês em destaque, título, local, área. Link para a publicação.
+- Cada item: dia e mês em destaque, título, local, área, num cartão branco. Link para a publicação. Só os de "Já aconteceram" levam o selo "Aconteceu".
 - Botão "Assinar agenda" gera `.ics` com todos os eventos futuros (Evolução, Fase 6).
 
 ## Quem escreve
 
 Rota: `/professores/` · Nome: `accounts:teacher_list`
 
-- Grade de cards da equipe: avatar (ou iniciais), nome, cargo, headline, disciplinas (chips), número de publicações.
+- Grade de cards da equipe (cartões brancos que levantam no hover): avatar (ou iniciais) com anel `sun-soft`, nome, cargo, headline, disciplinas (chips), número de publicações.
 - Filtro por área e por cargo (chips no topo): Professores, Monitores, Coordenação e direção, Outros.
 - Ordenação padrão: publicação mais recente primeiro; alternativa alfabética.
 - Só perfis com `is_public = true`. Alunos não têm conta e não aparecem.
@@ -114,3 +114,4 @@ Rotas: `/sobre/`, `/privacidade/`, `/colaborar/` · Nome: `core:page`
   - Período: chips predefinidos ou duas datas; escolher um limpa o outro (sem JavaScript, as datas valem).
   - Ordem: a lista só tem "Mais recentes" até a E39 (a opção fica oculta); a busca oferece relevância e recentes.
   - No celular (< 640px) o painel abre como folha inferior com fundo escurecido, botão "Fechar" e ações fixas no rodapé.
+- 2026-09-15: R3 (redesign "Pátio"): todas as páginas de navegação (publicações, área, disciplina, tipo, agenda, busca, quem escreve) ganham o cabeçalho em faixa colorida (`.page-header`: cor da área, ou acento/amarelo nas páginas sem área) com título display; listas em grade de cartões brancos, títulos de grupo com marca-texto e chips em pílula. Corrigido: a agenda mostrava "Aconteceu" também nos próximos eventos (a variável `past` da página vazava para o `include` do item).

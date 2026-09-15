@@ -164,7 +164,7 @@ Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celula
 
 | Componente | Descrição | Variantes |
 |---|---|---|
-| `card` | Publicação: etiqueta de área (pílula), etiqueta de tipo, título, linha fina, byline, metadados (data, tempo de leitura), imagem opcional com cantos `radius-card`; levanta no hover | `hero` (imagem grande, título display), `standard` (imagem 3:2 acima), `compact` (sem imagem, lista), `mini` (título + data, para sidebar) |
+| `card` | Publicação: etiqueta de área (pílula `soft`, é onde a cor da área aparece), etiqueta de tipo, título em Bricolage, linha fina, byline, metadados; o filete superior de 3px saiu | `hero` (imagem `radius-hero`, título display; sem capa, bloco com gradiente `soft`→`paper-3` da área), `standard` (cartão branco `.card` com imagem 3:2 em `.card-media`; levanta 4px, sombra `shadow-card-hover` e zoom da imagem no hover; sem capa, bloco na cor da área com o glifo), `compact` (linha `.card-row` com barra lateral de 4px na cor da área, fundo `paper-2` no hover), `mini` (`.card-row--mini`: título + data) |
 | `byline` | Avatares empilhados (até 3) + nomes com papel: "Por Carla Souza e Rafael S." | com/sem avatar |
 | `tag` | Etiqueta de área (pílula `soft` + texto `area-x`), disciplina (contorno), tipo (pílula `paper-2`), tópico (texto com `#` discreto) | tamanho `sm`/`md` |
 | `status-badge` | Estado editorial: rascunho (cinza), em revisão (ocre), alterações (terracota), aprovado (azul), publicado (verde), arquivado (grafite) | |
@@ -188,6 +188,19 @@ Barra lateral fixa no desktop (colapsa em ícones no tablet, vira menu no celula
 | `event-item` | Item de agenda: dia grande em Bricolage sobre bloco `paper-2` (vira `sun-soft` no hover), mês em caixa alta, título, horário e local | `sm`, `md` |
 | `chip` | Opção de filtro (`.chip` + `.chip-label`): pílula branca; marcada em `accent-soft`; `.nav-chip` no masthead | |
 | `field` | Campo de formulário (`.field`): raio 12px, foco com anel `accent` a 25% | |
+
+### Utilitários de layout (R3)
+
+| Classe | Uso |
+|---|---|
+| `.page-header` | Cabeçalho de página em faixa colorida: só o espaçamento; a cor vem do template (`bg-linear-to-b` + `from_soft` da área, ou `from-accent-soft`/`from-sun-soft` nas páginas sem área, até `to-paper`) |
+| `.band` | Faixa de borda a borda com fundo `soft` da área (faixas por área da home) |
+| `.title-marker` | Marca-texto `sun` atrás do título de seção, que acompanha as quebras de linha (`box-decoration-break: clone`). Uso: `<h2><span class="title-marker">…</span></h2>`. É o único recurso de título de seção do site |
+| `.card`, `.card-media`, `.card-media--blank`, `.card-row`, `.card-row--mini` | Cards (ver `card` acima) |
+| `.btn-sm` | Botão pequeno ("ver todas", "ver tudo") |
+| `.link-arrow` | Link em acento com seta que desliza no hover ("Ver agenda completa", "Ver toda a equipe") |
+
+Classes por área usadas nesses blocos ficam escritas por extenso em `AREA_COLOR_CLASSES` (`apps/taxonomy/models.py`), porque o Tailwind só gera o que encontra no código: `text`, `soft_bg`, `solid_bg`, `border`, `bright_bg`, `from_soft` (início do gradiente) e `on_bright`.
 
 ## Estados vazios (textos de referência)
 
@@ -248,3 +261,4 @@ Fora do escopo por decisão do dono do projeto. Preparação sem custo: todas as
 - 2026-09-14: E36: busca no masthead é um ícone que abre um campo em popover. No celular, com sessão aberta, "Escrever" e "Admin" saem da linha 1. Termo encontrado no trecho usa `<mark>` com `accent-soft`.
 - 2026-09-15: **R1 (Fase 3b, redesign "Pátio")**, a pedido do dono ([27](27-decisoes-pendentes-e-perguntas.md), quarta rodada; plano em [26](26-plano-de-desenvolvimento.md)). Direção visual reescrita; revogadas as regras "nada de animação de entrada", "sem gradientes" e "sem sombras pesadas". Tipografia: Bricolage Grotesque para display e interface (Inter removida), Newsreader continua na leitura; classe `font-display` nos títulos; escala com display 52px e h2 32px. Tokens: `paper` mais claro, `paper-3` novo, acento framboesa `#C41260` (o `#D6156A` do briefing falhava AA sobre `paper-3` e `accent-soft`), `sun`/`sun-soft`, cores vivas `area-x-bright` com `on_bright` medido, raios 12/16/24 e pílula, `shadow-card-hover`, `--ease-snappy`. Marca nova: avião de papel de jornal (glifo, favicon SVG/ICO, ícones PNG, manifest, `og-default.png` e `logo.png` gerados por `scripts/brand.py`); wordmark com marca-texto. Carregamento sem salto: CSS como entrada própria do Vite carregada por `<link>` antes do JS, preload das fontes (`{% font_preloads %}`), fallbacks com métricas. `theme-color` passa a `#FFFDF7`.
 - 2026-09-15: **R2**: masthead fixo e translúcido com barra de chips (`.nav-chip`), botões de ícone (`.icon-btn`), busca em pílula; rodapé em faixa escura com marca, tagline e links; botões, chips, campos, etiquetas, selos e paginação em pílulas com hover que levanta e `active` que encolhe; reação ativa em `accent-soft`; toast com borda colorida deslizando de baixo; estado vazio com "adesivo" (`sun-soft` + glifo); avatares maiores com iniciais em `sun-soft`; clima como cartão `area-azul-soft`; `scroll-margin-top` em todo `id`. Vitrine `/dev/components/` com seção de tokens (cores, áreas soft/bright, tipografia), botões, chips, campos, agenda, clima, números e compartilhar.
+- 2026-09-15: **R3**: cards sem filete superior (cor da área na etiqueta e, nas listas, numa barra lateral), `standard` como cartão branco que levanta com zoom na imagem e bloco com o glifo quando não há capa; `hero` com `radius-hero`. Utilitários `.page-header`, `.band`, `.title-marker`, `.card*`, `.btn-sm`, `.link-arrow`; `from_soft` em `AREA_COLOR_CLASSES`. Títulos de seção passam de caixa alta pequena para Bricolage 800 com marca-texto.

@@ -23,7 +23,9 @@ def test_explicit_slug_is_kept():
 def test_every_area_color_has_tailwind_classes():
     assert set(AREA_COLOR_CLASSES) == set(AreaColor.values)
     for classes in AREA_COLOR_CLASSES.values():
-        assert set(classes) == {"text", "soft_bg", "solid_bg", "border", "bright_bg", "on_bright"}
+        assert set(classes) == {
+            "text", "soft_bg", "solid_bg", "border", "bright_bg", "from_soft", "on_bright"
+        }  # fmt: skip
         assert classes["on_bright"] in {"text-ink", "text-white"}
 
 

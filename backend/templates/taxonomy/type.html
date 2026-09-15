@@ -1,12 +1,14 @@
 {% extends "publications/list.html" %}
 {% block title %}{{ article_type.name }} · {{ jornal.name }}{% endblock title %}
 {% block list_header %}
-  <header class="site-container pt-10 sm:pt-14">
-    <p class="text-meta font-semibold tracking-wide text-accent uppercase">Tipo de publicação</p>
-    <h1 class="mt-2 font-display text-h1 font-semibold">{{ article_type.name }}</h1>
-    {% if article_type.description %}<p class="mt-3 max-w-reading font-serif text-lead text-ink-2">{{ article_type.description }}</p>{% endif %}
-    <p id="listing-count"
-       class="mt-3 text-meta text-ink-2"
-       aria-live="polite">{% include "publications/partials/list_count.html" %}</p>
+  <header class="page-header bg-linear-to-b from-accent-soft to-paper">
+    <div class="site-container">
+      <p class="text-meta font-semibold tracking-wide text-accent uppercase">Tipo de publicação</p>
+      <h1 class="mt-2 font-display text-h1 font-extrabold sm:text-display">{{ article_type.name }}</h1>
+      {% if article_type.description %}<p class="mt-3 max-w-reading font-serif text-lead text-ink-2">{{ article_type.description }}</p>{% endif %}
+      <p id="listing-count"
+         class="mt-3 text-meta text-ink-2"
+         aria-live="polite">{% include "publications/partials/list_count.html" %}</p>
+    </div>
   </header>
 {% endblock list_header %}

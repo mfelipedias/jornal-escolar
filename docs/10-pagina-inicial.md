@@ -56,12 +56,13 @@ No celular a ordem é: masthead, destaque (hero + dois compactos), clima em uma 
 
 - Até 3 publicações com `is_featured = true`, ordenadas por `featured_order`. Definidas por editor+ ([18](18-painel-administrativo.md)).
 - Se não houver destaques marcados, usa as 3 mais recentes.
-- O hero exige imagem de capa; se o primeiro destaque não tiver capa, usa layout tipográfico (título display sobre fundo `paper-2` com filete da área).
+- O hero exige imagem de capa; se o primeiro destaque não tiver capa, usa layout tipográfico (título display sobre gradiente `soft`→`paper-3` da área, cantos `radius-hero`).
+- O bloco inteiro fica numa faixa de borda a borda com gradiente da cor da área do destaque principal para `paper`; os dois destaques menores são cartões brancos.
 
 ### Últimas publicações
 
 - Publicadas, ordenadas por `published_at desc`, excluindo as do destaque. 6 por vez, "Carregar mais" via HTMX (`/x/articles/?pagina=2`).
-- Card `compact`: etiqueta de tipo, título, byline, data, tempo de leitura, contagem de leituras discreta (só se > 10).
+- Card `compact`: etiqueta de tipo, título, byline, data, tempo de leitura, contagem de leituras discreta (só se > 10). Barra lateral na cor da área; título da seção com marca-texto e "ver todas" como botão pequeno.
 
 ### Hoje na escola (Fase 3)
 
@@ -74,11 +75,11 @@ No celular a ordem é: masthead, destaque (hero + dois compactos), clima em uma 
 
 ### Quem escreve
 
-- 8 membros da equipe com perfil público, ordenados por publicação mais recente. Avatar + nome + headline curto. Link para `/professores/`.
+- 8 membros da equipe com perfil público, ordenados por publicação mais recente. Avatar + nome + headline curto, em pílulas brancas que levantam no hover. Link para `/professores/`.
 
 ### Por área
 
-- Uma faixa por área ativa com ao menos 1 publicação, na ordem configurada. 3 cards `standard` mais recentes da área. Título da faixa na cor da área, com "ver tudo" para `/areas/<slug>/`.
+- Uma faixa por área ativa com ao menos 1 publicação, na ordem configurada. 3 cards `standard` mais recentes da área. Faixa de borda a borda com fundo `soft` da área, título na cor da área, cards brancos e "ver tudo" (botão) para `/areas/<slug>/`. No celular os cards rolam na horizontal com encaixe, mantendo a margem de 16px.
 - Limite de 5 faixas na home; as demais ficam na navegação.
 
 ## Filtros na home
@@ -130,3 +131,4 @@ Editores não editam a home "in place"; usam o painel editorial. Isso mantém a 
   - `<title>` = nome · tagline; `h1` visualmente oculto com o nome do jornal. Lighthouse acessibilidade 100.
 - 2026-09-14: E26: meta description vem da nova configuração `site.description` (se vazia, a tagline). JSON-LD `WebSite` sem `SearchAction` por enquanto: a busca (`/busca/`) só existe na Fase 3, e apontar para uma URL inexistente seria erro. Acrescentar o `SearchAction` junto com a busca. Open Graph com `static/img/og-default.png`.
 - 2026-09-14: E36: JSON-LD `WebSite` ganhou o `SearchAction` (`/busca/?q={search_term_string}`).
+- 2026-09-15: R3 (redesign "Pátio"): destaque numa faixa com gradiente da cor da área, faixas por área de borda a borda com fundo suave, títulos de seção com marca-texto, "Quem escreve" em pílulas, estado vazio com o adesivo do glifo. Estrutura e dados não mudaram.

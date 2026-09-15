@@ -5,19 +5,21 @@
 {% endcomment %}
 {% block title %}Quem escreve · {{ jornal.name }}{% endblock title %}
 {% block content %}
-  <div class="site-container pt-10 pb-16 sm:pt-14">
-    <header class="max-w-reading">
-      <h1 class="font-display text-h1 font-semibold">Quem escreve</h1>
-      <p class="mt-2 font-serif text-lead text-ink-2">A equipe da escola que publica no jornal.</p>
-    </header>
-    <div class="mt-8 space-y-4">
+  <header class="page-header bg-linear-to-b from-accent-soft to-paper">
+    <div class="site-container">
+      <h1 class="font-display text-h1 font-extrabold sm:text-display">Quem escreve</h1>
+      <p class="mt-2 max-w-reading font-serif text-lead text-ink-2">A equipe da escola que publica no jornal.</p>
+    </div>
+  </header>
+  <div class="site-container pb-16">
+    <div class="space-y-4">
       <nav aria-label="Filtrar por área">
         <ul class="flex flex-wrap gap-2">
           {% for chip in area_chips %}
             <li>
               <a href="{{ chip.url }}"
-                 class="inline-flex min-h-9 items-center rounded-full border px-3 py-1 text-ui
-                        {% if chip.selected %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+                 class="nav-chip min-h-10 border
+                        {% if chip.selected %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white hover:border-accent hover:text-accent{% endif %}"
                  {% if chip.selected %}aria-current="page"{% endif %}>{{ chip.label }}</a>
             </li>
           {% endfor %}
@@ -28,8 +30,8 @@
           {% for chip in kind_chips %}
             <li>
               <a href="{{ chip.url }}"
-                 class="inline-flex min-h-9 items-center rounded-full border px-3 py-1 text-ui
-                        {% if chip.selected %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+                 class="nav-chip min-h-10 border
+                        {% if chip.selected %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white hover:border-accent hover:text-accent{% endif %}"
                  {% if chip.selected %}aria-current="page"{% endif %}>{{ chip.label }}</a>
             </li>
           {% endfor %}
@@ -53,20 +55,20 @@
       <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {% for card in cards %}
           <li>
-            <article class="group relative flex h-full gap-4 rounded-card border border-line bg-white p-5 hover:border-accent">
+            <article class="card group h-full !flex-row gap-4 p-5">
               {% if card.person.avatar_url %}
                 <img src="{{ card.person.avatar_url }}"
                      alt=""
                      width="64"
                      height="64"
                      loading="lazy"
-                     class="size-16 shrink-0 rounded-full bg-paper-2 object-cover">
+                     class="size-16 shrink-0 rounded-full bg-paper-2 object-cover ring-4 ring-sun-soft">
               {% else %}
-                <span class="flex size-16 shrink-0 items-center justify-center rounded-full bg-paper-2 font-display text-h3 font-semibold text-ink-2"
+                <span class="flex size-16 shrink-0 items-center justify-center rounded-full bg-sun-soft font-display text-h3 font-bold text-ink-2"
                       aria-hidden="true">{{ card.person.initials }}</span>
               {% endif %}
               <div class="min-w-0">
-                <h2 class="font-display text-h3 font-semibold text-ink">
+                <h2 class="font-display text-h3 font-bold text-ink">
                   <a href="{{ card.person.url }}"
                      class="after:absolute after:inset-0 group-hover:text-accent">{{ card.person.name }}</a>
                 </h2>

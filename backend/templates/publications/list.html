@@ -6,16 +6,18 @@
 {% block title %}Publicações · {{ jornal.name }}{% endblock title %}
 {% block content %}
   {% block list_header %}
-    <header class="site-container pt-10 sm:pt-14">
-      <h1 class="font-display text-h1 font-semibold">Publicações</h1>
-      <p id="listing-count" class="mt-2 text-ui text-ink-2" aria-live="polite">
-        {% include "publications/partials/list_count.html" %}
-      </p>
+    <header class="page-header bg-linear-to-b from-accent-soft to-paper">
+      <div class="site-container">
+        <h1 class="font-display text-h1 font-extrabold sm:text-display">Publicações</h1>
+        <p id="listing-count" class="mt-2 text-ui text-ink-2" aria-live="polite">
+          {% include "publications/partials/list_count.html" %}
+        </p>
+      </div>
     </header>
   {% endblock list_header %}
   {# Região trocada pelo HTMX quando um filtro muda (listing.REGION_ID). #}
   <div id="listing-region" class="site-container pb-16">
-    <div class="mt-6">{% include "components/filter_bar.html" %}</div>
+    <div class="mt-2">{% include "components/filter_bar.html" %}</div>
     {% block list_before %}
     {% endblock list_before %}
     <div class="{% block list_layout %}mt-10{% endblock list_layout %}">
@@ -23,7 +25,7 @@
         <h2 id="list-title" class="sr-only">Lista de publicações</h2>
         {% if cards %}
           <ul id="article-grid"
-              class="grid gap-x-8 gap-y-12 sm:grid-cols-2
+              class="grid gap-6 sm:grid-cols-2
                      {% block grid_columns %}lg:grid-cols-3{% endblock grid_columns %}">
             {% for card in cards %}
               <li>{% include "components/card.html" with card=card variant="standard" %}</li>

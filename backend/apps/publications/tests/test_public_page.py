@@ -189,7 +189,7 @@ def test_related_articles(client, published, author):
     assert "Leia também" in html
     assert "Robótica na escola" in html
     assert "Sem relação" not in html
-    assert "border-area-verde" in html  # card com filete da área
+    assert "bg-area-verde-soft" in html  # etiqueta da área no card
 
 
 def test_card_from_article(published):

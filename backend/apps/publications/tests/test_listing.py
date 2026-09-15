@@ -266,6 +266,9 @@ def test_agenda_splits_upcoming_and_past(client, author, taxonomy):
     assert upcoming.index("Feira") < upcoming.index("Sarau")
     assert "Formatura" in past
     assert "Ciências Humanas" in upcoming  # etiqueta da área
+    # Só os que já aconteceram levam o selo (a lista "past" da página não pode vazar para o item).
+    assert "Aconteceu" not in upcoming
+    assert "Aconteceu" in past
 
 
 def test_agenda_empty(client):

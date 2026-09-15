@@ -12,22 +12,22 @@
       </p>
     </div>
   {% endif %}
-  <div class="site-container pt-10 pb-16 sm:pt-14">
-    <header class="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+  <header class="page-header bg-linear-to-b {% if area %}{{ area.color_classes.from_soft }}{% else %}from-accent-soft{% endif %} to-paper">
+    <div class="site-container flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
       {% if avatar_url %}
         <img src="{{ avatar_url }}"
              alt=""
              width="160"
              height="160"
-             class="size-28 shrink-0 rounded-full bg-paper-2 object-cover sm:size-40">
+             class="size-24 shrink-0 rounded-full bg-paper-2 object-cover ring-4 ring-sun sm:size-32">
       {% else %}
-        <span class="flex size-28 shrink-0 items-center justify-center rounded-full font-display text-h1 font-semibold sm:size-40
-                     {% if area %}{{ area.color_classes.soft_bg }} {{ area.color_classes.text }}{% else %}bg-paper-2 text-ink-2{% endif %}"
+        <span class="flex size-24 shrink-0 items-center justify-center rounded-full bg-white font-display text-h1 font-extrabold ring-4 ring-sun sm:size-32
+                     {% if area %}{{ area.color_classes.text }}{% else %}text-ink-2{% endif %}"
               aria-hidden="true">{{ initials }}</span>
       {% endif %}
       <div class="min-w-0">
         <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <h1 class="font-display text-h1 font-semibold text-balance sm:text-display">{{ name }}</h1>
+          <h1 class="font-display text-h1 font-extrabold text-balance sm:text-display">{{ name }}</h1>
           {% if edit_url %}
             <a href="{{ edit_url }}"
                class="text-meta text-ink-3 underline-offset-2 hover:text-accent hover:underline">Editar perfil</a>
@@ -55,14 +55,16 @@
           <p class="mt-3 text-meta text-ink-3">Na escola desde {{ profile.since_year|stringformat:"d" }}</p>
         {% endif %}
       </div>
-    </header>
+    </div>
+  </header>
+  <div class="site-container pb-16">
     {% if show_details %}
       {% if profile.bio or education or profile.topics.all or links %}
-        <div class="mt-10 grid gap-10 border-t border-line pt-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
+        <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
           <div class="min-w-0">
             {% if profile.bio %}
               <section aria-labelledby="about-title">
-                <h2 id="about-title" class="font-display text-h3 font-semibold">Sobre</h2>
+                <h2 id="about-title" class="font-display text-h3 font-extrabold"><span class="title-marker">Sobre</span></h2>
                 <div class="mt-3 max-w-reading font-serif text-lead text-ink-2">{{ profile.bio|linebreaks }}</div>
               </section>
             {% endif %}
@@ -70,8 +72,7 @@
           <div class="space-y-8">
             {% if education %}
               <section aria-labelledby="education-title">
-                <h2 id="education-title"
-                    class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Formação</h2>
+                <h2 id="education-title" class="font-display text-ui font-extrabold tracking-wide uppercase">Formação</h2>
                 <ul class="mt-3 space-y-2 text-ui text-ink-2">
                   {% for line in education %}<li>{{ line }}</li>{% endfor %}
                 </ul>
@@ -79,8 +80,7 @@
             {% endif %}
             {% if profile.topics.all %}
               <section aria-labelledby="topics-title">
-                <h2 id="topics-title"
-                    class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Interesses</h2>
+                <h2 id="topics-title" class="font-display text-ui font-extrabold tracking-wide uppercase">Interesses</h2>
                 <ul class="mt-3 flex flex-wrap gap-x-3 gap-y-1">
                   {% for topic in profile.topics.all %}
                     <li>{% include "components/tag.html" with kind="topic" label=topic.name area=None url="" size="md" %}</li>
@@ -90,8 +90,7 @@
             {% endif %}
             {% if links %}
               <section aria-labelledby="links-title">
-                <h2 id="links-title"
-                    class="text-meta font-semibold tracking-wide text-ink-2 uppercase">Links</h2>
+                <h2 id="links-title" class="font-display text-ui font-extrabold tracking-wide uppercase">Links</h2>
                 <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-ui">
                   {% for link in links %}
                     <li>
@@ -112,8 +111,8 @@
              class="mt-12 border-t border-line pt-8"
              aria-labelledby="publications-title">
       <div class="flex flex-wrap items-end justify-between gap-4">
-        <h2 id="publications-title" class="font-display text-h2 font-semibold">
-          Publicações <span class="text-ink-3">({{ total }})</span>
+        <h2 id="publications-title" class="font-display text-h2 font-extrabold">
+          <span class="title-marker">Publicações</span> <span class="text-ink-3">({{ total }})</span>
         </h2>
         {% if total %}
           <nav aria-label="Filtrar publicações por participação">
@@ -121,8 +120,8 @@
               {% for item in tabs %}
                 <li>
                   <a href="{{ item.url }}#publicacoes"
-                     class="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1 text-ui
-                            {% if item.key == tab %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+                     class="nav-chip min-h-10 border
+                            {% if item.key == tab %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white hover:border-accent hover:text-accent{% endif %}"
                      {% if item.key == tab %}aria-current="page"{% endif %}>
                     {{ item.label }} <span class="text-meta
               {% if item.key != tab %}text-ink-3{% endif %}">{{ item.count }}</span>
@@ -134,7 +133,7 @@
         {% endif %}
       </div>
       {% if cards %}
-        <ul id="profile-articles" class="mt-8 max-w-[48rem] space-y-8">
+        <ul id="profile-articles" class="mt-8 max-w-[48rem] space-y-3">
           {% for card in cards %}
             <li>{% include "components/card.html" with card=card variant="compact" %}</li>
           {% endfor %}

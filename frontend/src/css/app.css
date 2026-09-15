@@ -291,6 +291,121 @@
     }
   }
 
+  /* Título de seção com marca-texto (docs/09, R3): faixa `sun` atrás do texto, que acompanha
+     as quebras de linha. Uso: <h2 class="font-display ..."><span class="title-marker">…</span></h2> */
+  .title-marker {
+    background-image: linear-gradient(var(--color-sun), var(--color-sun));
+    background-repeat: no-repeat;
+    background-size: 100% 0.36em;
+    background-position: 0 86%;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding-inline: 0.08em;
+    margin-inline: -0.08em;
+  }
+
+  /* Cabeçalho de página em faixa colorida (docs/12): a cor vem das classes de área
+     (from_soft + to-paper) no template; aqui só o espaçamento. */
+  .page-header {
+    padding-block: 2.5rem 2rem;
+    @media (width >= 40rem) {
+      padding-block: 3.5rem 2.5rem;
+    }
+  }
+
+  /* Cards (docs/09, R3): cartão branco que levanta no hover, com a imagem dando um zoom. */
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-card);
+    background-color: white;
+    transition:
+      transform 200ms var(--ease-snappy),
+      box-shadow 200ms var(--ease-snappy);
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card-hover);
+    }
+  }
+  .card-media {
+    overflow: hidden;
+    border-radius: calc(var(--radius-card) - 4px);
+    background-color: var(--color-paper-2);
+
+    & img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 300ms var(--ease-snappy);
+    }
+  }
+  .card:hover .card-media img {
+    transform: scale(1.04);
+  }
+  .card-media--blank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    & svg {
+      opacity: 0.55;
+      transition: transform 300ms var(--ease-snappy);
+    }
+  }
+  .card:hover .card-media--blank svg {
+    transform: rotate(-8deg) scale(1.08);
+  }
+  /* Linha de lista (variantes compact e mini): barra lateral na cor da área (classe
+     border-area-x no template), fundo paper-2 no hover. */
+  .card-row {
+    position: relative;
+    border-left: 4px solid var(--color-line);
+    border-radius: 6px var(--radius-card) var(--radius-card) 6px;
+    padding: 0.75rem 1rem;
+    transition:
+      background-color 150ms,
+      transform 200ms var(--ease-snappy);
+
+    &:hover {
+      background-color: var(--color-paper-2);
+      transform: translateX(2px);
+    }
+  }
+  .card-row--mini {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Botão pequeno e link com seta que desliza no hover ("ver todas"). */
+  .btn-sm {
+    padding: 0.3rem 0.85rem;
+    font-size: var(--text-meta);
+  }
+  .link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+    color: var(--color-accent);
+
+    & > [aria-hidden] {
+      transition: transform 200ms var(--ease-snappy);
+    }
+    &:hover > [aria-hidden] {
+      transform: translateX(3px);
+    }
+  }
+
+  /* Faixa por área na home (docs/10): fundo suave de borda a borda; os cards dentro rolam
+     na horizontal no celular. */
+  .band {
+    padding-block: 2.5rem;
+    @media (width >= 40rem) {
+      padding-block: 3.5rem;
+    }
+  }
+
   /* Corpo das publicações: o mesmo no editor e na página pública (docs/09, docs/11). */
   .article-body {
     font-family: var(--font-serif);

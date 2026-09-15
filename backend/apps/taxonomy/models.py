@@ -22,6 +22,7 @@ class AreaColor(models.TextChoices):
 
 # Classes do Tailwind escritas por extenso: o Tailwind só gera classes que encontra no código.
 # on_bright: cor do texto sobre o fundo vivo (bright_bg), a que passa 4,5:1 (docs/09, R1).
+# from_soft: início de gradiente (bg-linear-to-b ... to-paper) das faixas e cabeçalhos (R3).
 AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
     "coral": {
         "text": "text-area-coral",
@@ -29,6 +30,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-coral",
         "border": "border-area-coral",
         "bright_bg": "bg-area-coral-bright",
+        "from_soft": "from-area-coral-soft",
         "on_bright": "text-ink",
     },
     "verde": {
@@ -37,6 +39,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-verde",
         "border": "border-area-verde",
         "bright_bg": "bg-area-verde-bright",
+        "from_soft": "from-area-verde-soft",
         "on_bright": "text-ink",
     },
     "azul": {
@@ -45,6 +48,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-azul",
         "border": "border-area-azul",
         "bright_bg": "bg-area-azul-bright",
+        "from_soft": "from-area-azul-soft",
         "on_bright": "text-white",
     },
     "ambar": {
@@ -53,6 +57,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-ambar",
         "border": "border-area-ambar",
         "bright_bg": "bg-area-ambar-bright",
+        "from_soft": "from-area-ambar-soft",
         "on_bright": "text-ink",
     },
     "violeta": {
@@ -61,6 +66,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-violeta",
         "border": "border-area-violeta",
         "bright_bg": "bg-area-violeta-bright",
+        "from_soft": "from-area-violeta-soft",
         "on_bright": "text-ink",
     },
     "petroleo": {
@@ -69,6 +75,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-petroleo",
         "border": "border-area-petroleo",
         "bright_bg": "bg-area-petroleo-bright",
+        "from_soft": "from-area-petroleo-soft",
         "on_bright": "text-ink",
     },
     "magenta": {
@@ -77,6 +84,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-magenta",
         "border": "border-area-magenta",
         "bright_bg": "bg-area-magenta-bright",
+        "from_soft": "from-area-magenta-soft",
         "on_bright": "text-white",
     },
     "grafite": {
@@ -85,6 +93,7 @@ AREA_COLOR_CLASSES: dict[str, dict[str, str]] = {
         "solid_bg": "bg-area-grafite",
         "border": "border-area-grafite",
         "bright_bg": "bg-area-grafite-bright",
+        "from_soft": "from-area-grafite-soft",
         "on_bright": "text-white",
     },
 }

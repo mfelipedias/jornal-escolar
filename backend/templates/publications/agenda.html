@@ -1,19 +1,23 @@
 {% extends "layouts/public.html" %}
 {% block title %}Agenda · {{ jornal.name }}{% endblock title %}
 {% block content %}
-  <div class="site-container pt-10 pb-16 sm:pt-14">
-    <header class="max-w-reading">
-      <h1 class="font-display text-h1 font-semibold">Agenda</h1>
-      <p class="mt-2 font-serif text-lead text-ink-2">O que vai acontecer na escola e o que já aconteceu.</p>
-    </header>
+  <header class="page-header bg-linear-to-b from-sun-soft to-paper">
+    <div class="site-container">
+      <h1 class="font-display text-h1 font-extrabold sm:text-display">Agenda</h1>
+      <p class="mt-2 max-w-reading font-serif text-lead text-ink-2">O que vai acontecer na escola e o que já aconteceu.</p>
+    </div>
+  </header>
+  <div class="site-container pb-16">
     {% if page_obj.number == 1 %}
-      <section class="mt-10" aria-labelledby="upcoming-title">
-        <h2 id="upcoming-title"
-            class="border-b border-line pb-2 font-display text-h2 font-semibold">Próximos</h2>
+      <section class="mt-4" aria-labelledby="upcoming-title">
+        <h2 id="upcoming-title" class="font-display text-h2 font-extrabold">
+          <span class="title-marker">Próximos</span>
+        </h2>
         {% if upcoming %}
-          <ul class="mt-6 grid gap-8 md:grid-cols-2">
+          <ul class="mt-6 grid gap-5 md:grid-cols-2">
             {% for event in upcoming %}
-              <li>{% include "components/event_item.html" with event=event size="md" show_area=True %}</li>
+              {# past=False explícito: a variável "past" da página (lista) vazaria para o include #}
+              <li class="card p-4 sm:p-5">{% include "components/event_item.html" with event=event past=False size="md" show_area=True %}</li>
             {% endfor %}
           </ul>
         {% else %}
@@ -23,11 +27,12 @@
     {% endif %}
     {% if past %}
       <section class="mt-14" aria-labelledby="past-title">
-        <h2 id="past-title"
-            class="border-b border-line pb-2 font-display text-h2 font-semibold">Já aconteceram</h2>
-        <ul class="mt-6 grid gap-8 md:grid-cols-2">
+        <h2 id="past-title" class="font-display text-h2 font-extrabold">
+          <span class="title-marker">Já aconteceram</span>
+        </h2>
+        <ul class="mt-6 grid gap-5 md:grid-cols-2">
           {% for event in past %}
-            <li>{% include "components/event_item.html" with event=event size="md" show_area=True %}</li>
+            <li class="card p-4 sm:p-5">{% include "components/event_item.html" with event=event past=True size="md" show_area=True %}</li>
           {% endfor %}
         </ul>
         {% include "components/pagination.html" with page_obj=page_obj mode="numbers" %}

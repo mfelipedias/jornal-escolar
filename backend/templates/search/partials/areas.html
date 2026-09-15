@@ -1,16 +1,15 @@
 {% comment %}Sugestão de áreas quando a busca não tem termo ou não achou nada. Parâmetros: areas, title.{% endcomment %}
 {% if areas %}
   <nav aria-labelledby="search-areas-title" class="mt-10 max-w-reading">
-    <h2 id="search-areas-title"
-        class="border-b border-line pb-2 text-meta font-semibold tracking-wide text-ink-2 uppercase">
-      {{ title }}
+    <h2 id="search-areas-title" class="font-display text-h3 font-extrabold">
+      <span class="title-marker">{{ title }}</span>
     </h2>
-    <ul class="mt-4 flex flex-wrap gap-2">
+    <ul class="mt-5 flex flex-wrap gap-2">
       {% for area in areas %}
         <li>
           <a href="{{ area.get_absolute_url }}"
-             class="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-ui text-ink-2 hover:border-accent hover:text-accent">
-            <span class="size-2 shrink-0 rounded-full {{ area.color_classes.solid_bg }}"
+             class="nav-chip min-h-10 border border-line bg-white hover:border-accent hover:text-accent">
+            <span class="size-2.5 shrink-0 rounded-full {{ area.color_classes.bright_bg }}"
                   aria-hidden="true"></span>
             {{ area.name }}
           </a>

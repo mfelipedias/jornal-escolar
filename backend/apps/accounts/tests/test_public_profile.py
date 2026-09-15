@@ -149,7 +149,7 @@ def test_profile_shows_public_data_and_never_email(client, carla):
     assert 'rel="noopener nofollow"' in html
     assert "javascript:" not in html
     assert 'href="/disciplinas/' in html
-    assert "bg-area-verde-soft" in html  # iniciais na cor da área principal
+    assert "from-area-verde-soft" in html  # cabeçalho na cor da área principal
     assert "carla@professor" not in html
     assert "Equipe" not in html  # papel no sistema
     assert "Ainda não há publicações" in html
