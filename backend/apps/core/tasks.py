@@ -55,7 +55,7 @@ def _when(timestamp: int) -> str:
     return datetime.fromtimestamp(timestamp, tz=UTC).isoformat()
 
 
-def _run[T](name: str, timestamp: int, job: Callable[[], T]) -> T:
+def _run[T](name: str, timestamp: int | None, job: Callable[[], T]) -> T:
     """Roda uma regra síncrona do Django fechando conexões velhas antes e depois (o worker é um
     processo que fica ligado dias seguidos). Dentro de uma transação (nos testes) não mexe."""
     managed = not connection.in_atomic_block
@@ -66,7 +66,10 @@ def _run[T](name: str, timestamp: int, job: Callable[[], T]) -> T:
     finally:
         if managed:
             close_old_connections()
-    logger.info("Tarefa %s (agendada para %s): %s", name, _when(timestamp), result)
+    if timestamp is None:
+        logger.info("Tarefa %s: %s", name, result)
+    else:
+        logger.info("Tarefa %s (agendada para %s): %s", name, _when(timestamp), result)
     return result
 
 

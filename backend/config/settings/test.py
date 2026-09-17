@@ -12,3 +12,6 @@ DJANGO_VITE["default"]["dev_mode"] = True
 
 # Os testes nunca chamam a API de clima; quem precisa do bloco simula a resposta.
 WEATHER_API_BASE = ""
+
+# A coleta de notícias nos testes usa httpx.MockTransport e endereços falsos, sem DNS.
+CURATION_BLOCK_PRIVATE_HOSTS = False

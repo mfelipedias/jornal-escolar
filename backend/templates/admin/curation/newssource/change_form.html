@@ -1,0 +1,18 @@
+{% extends "admin/change_form.html" %}
+{% comment %}
+  Fonte de notícias (docs/21, docs/18): botão "Buscar agora" ao lado de "Histórico".
+  Coleta só esta fonte e volta para a página com o resultado.
+{% endcomment %}
+{% block object-tools-items %}
+  {% if original.pk %}
+    <li>
+      <form method="post"
+            action="{% url 'admin:curation_newssource_fetch' original.pk %}"
+            class="curation-fetch-now">
+        {% csrf_token %}
+        <button type="submit" class="historylink">Buscar agora</button>
+      </form>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock object-tools-items %}

@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "apps.editorial",
     "apps.dashboard",
     "apps.engagement",
+    "apps.curation",
 ]
 
 MIDDLEWARE = [
@@ -265,6 +266,10 @@ COMMENTS_RETENTION_DAYS = 30
 # Cron do batimento do worker, em UTC. Para testar o agendamento, "* * * * *" (a cada minuto).
 WORKER_HEARTBEAT_CRON = env.str("WORKER_HEARTBEAT_CRON", default="0 * * * *")
 
+# Curadoria de notícias (E45, docs/21): a coleta recusa endereços de rede interna (localhost,
+# 10.x, 192.168.x...). Os testes desligam, porque usam endereços falsos sem consultar DNS.
+CURATION_BLOCK_PRIVATE_HOSTS = True
+
 # O que o worker faz aparece nos logs dele (docker compose logs worker). Produção redefine
 # LOGGING inteiro em prod.py, com tudo em nível INFO.
 LOGGING = {
@@ -273,6 +278,7 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {
         "apps.core.tasks": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "apps.curation": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "procrastinate": {"handlers": ["console"], "level": "INFO", "propagate": False},
         # Sem isto, todo manage.py listaria as tarefas registradas ao ligar.
         "procrastinate.blueprints": {"level": "WARNING"},

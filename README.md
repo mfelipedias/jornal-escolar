@@ -51,6 +51,8 @@ Cada serviço tem seu próprio container, como em produção: dá para atualizar
 | `docker compose exec web uv run python manage.py access_link email@escola` | Gera um link para a pessoa criar ou redefinir a senha |
 | `docker compose exec web uv run python manage.py seed_site` | Cria as configurações do site e as páginas Sobre, Como participar e Privacidade |
 | `docker compose exec web uv run python manage.py seed_taxonomy` | Cria áreas, disciplinas, tópicos e tipos iniciais (pode repetir; não apaga edições) |
+| `docker compose exec web uv run python manage.py seed_news_sources` | Cadastra as fontes de notícias sugeridas para as pautas (pode repetir) |
+| `docker compose exec web uv run python manage.py fetch_news` | Coleta as notícias das fontes agora, sem esperar o worker |
 | `docker compose exec web uv run python manage.py seed_demo` | **Só no desenvolvimento:** equipe e publicações fictícias, capas, agenda e destaques para ver o site cheio. Recusa rodar em produção |
 | `docker compose exec web uv run python manage.py seed_demo --apagar` | Apaga tudo o que o `seed_demo` criou (pessoas fictícias, publicações e imagens) |
 | `docker compose exec web uv run pytest` | Roda os testes |

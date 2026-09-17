@@ -149,6 +149,14 @@ docker compose -f infra/docker-compose.yml --env-file infra/env/.env logs worker
 
 Uma vez por hora aparece a linha `Worker vivo`.
 
+O worker também lê as fontes de notícias usadas nas sugestões de pauta. Para cadastrar as fontes sugeridas (só uma vez; repetir não duplica):
+
+```
+docker compose -f infra/docker-compose.yml --env-file infra/env/.env exec web python manage.py seed_news_sources
+```
+
+Elas aparecem no Django Admin em "Curadoria de notícias", onde dá para desligar alguma ou clicar em "Buscar agora" para testar.
+
 ## Passo 6 — Primeiro administrador
 
 ```

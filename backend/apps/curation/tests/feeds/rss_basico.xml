@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Ciência Exemplo</title>
+    <link>https://ciencia.exemplo.org/</link>
+    <description>Notícias de ciência</description>
+    <item>
+      <title>Pesquisadores criam sensor de baixo custo para medir o ar - Ciência Exemplo</title>
+      <link>https://ciencia.exemplo.org/sensor-ar/?utm_source=rss&amp;utm_medium=feed#comentarios</link>
+      <description><![CDATA[<p>Um <strong>sensor</strong> feito com Arduino mede partículas.</p><p>O projeto começou numa escola.</p><script>alert(1)</script>]]></description>
+      <pubDate>Thu, 17 Sep 2026 10:30:00 -0300</pubDate>
+      <media:thumbnail url="https://ciencia.exemplo.org/img/sensor.jpg"/>
+    </item>
+    <item>
+      <title>Eclipse &amp; lua: o que ver no céu em outubro</title>
+      <link>https://ciencia.exemplo.org/eclipse/</link>
+      <description>Guia do céu. The post Eclipse appeared first on Ciência Exemplo.</description>
+    </item>
+    <item>
+      <title></title>
+      <link>https://ciencia.exemplo.org/sem-titulo/</link>
+    </item>
+  </channel>
+</rss>

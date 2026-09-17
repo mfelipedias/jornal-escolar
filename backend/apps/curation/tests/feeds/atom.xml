@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Tech Example</title>
+  <id>urn:example:tech</id>
+  <updated>2026-09-16T12:00:00Z</updated>
+  <entry>
+    <title>Robots learn to sort recycling</title>
+    <link rel="alternate" href="https://tech.example.com/robots"/>
+    <link rel="enclosure" type="image/png" href="https://tech.example.com/robots.png"/>
+    <id>urn:example:robots</id>
+    <updated>2026-09-16T12:00:00Z</updated>
+    <summary type="html">&lt;p&gt;Machine learning helps.&lt;/p&gt;</summary>
+  </entry>
+</feed>

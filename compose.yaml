@@ -7,7 +7,7 @@
 # Serviços, um container para cada, como em produção (docs/24):
 #   db   -> PostgreSQL 17 (porta 5433 no computador)
 #   web  -> Django com recarga automática: http://localhost:8000
-#   worker -> tarefas agendadas (limpezas e avisos diários; apps/core/tasks.py). Não recarrega
+#   worker -> tarefas agendadas (limpezas, avisos e coleta de notícias; apps/*/tasks.py). Não recarrega
 #             sozinho: depois de mexer numa tarefa, rode "docker compose restart worker"
 #   vite -> CSS e JS com recarga automática (porta 5173, usada pelas páginas do Django)
 #

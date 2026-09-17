@@ -99,7 +99,8 @@ Comandos de gerenciamento para o admin:
 | `cleanup` | Apaga leituras antigas e comentários rejeitados, e limpa dados técnicos dos comentários (worker, todo dia às 4h30) | 3 → 4 |
 | `notify_pending_comments` | Avisa os editores de comentários de leitores pendentes há mais de 3 dias (worker, todo dia às 7h) | 3 → 4 |
 | `notify_stale_reviews` | Avisa revisor e autores de revisões paradas há mais de 5 dias (worker, todo dia às 7h10) | 4 |
-| `fetch_news` | Coleta fontes (também agendado) | 4 |
+| `seed_news_sources` | Cadastra as fontes de notícias sugeridas em [21](21-curadoria-de-noticias.md); pode repetir | 4 |
+| `fetch_news` | Coleta as fontes de notícias ativas agora (`--fonte ID`, `--vencidas`); o worker faz o mesmo a cada 30 minutos | 4 |
 | `export_user_data <email>` | Exporta dados de um usuário | 2 |
 | `anonymize_user <email>` | Anonimiza | 2 |
 
@@ -120,3 +121,4 @@ Comandos de gerenciamento para o admin:
 - 2026-09-15: E41. Visão geral ganha o contador "Comentários de leitores pendentes" (link para a fila) e o alerta "Comentários de leitores pendentes" (há mais de 3 dias, um item por publicação, com link para a fila filtrada). A fila do editor é a mesma `/painel/comentarios/` da equipe, que para editores já mostra todas as publicações; não há aba "Comentários" dentro do editorial. Comando `notify_pending_comments`.
 - 2026-09-15: áreas "Artes" e "Tecnologia" no seed e no menu, a pedido do dono (a disciplina "Arte" de Linguagens e "Tecnologia e Inovação" de Projetos continuam onde estão). As cores magenta e grafite deixam de ser reservadas.
 - 2026-09-17: E44. `cleanup` e `notify_pending_comments` passam a rodar sozinhos no worker; novo comando `notify_stale_reviews` para o aviso de revisão parada. Notificações lidas, rascunhos vazios e erros antigos continuam fora do `cleanup` (ainda não há regra definida para eles).
+- 2026-09-17: E45. "Curadoria de notícias" no admin: `NewsSource` com botão e ação "Buscar agora" (coleta na hora e mostra o resultado), aviso e filtro para fontes com 5 falhas seguidas; `NewsItem` só leitura, com ações "Ocultar das sugestões" e "Mostrar de novo" (classificações entram na E47). Comandos `seed_news_sources` e `fetch_news`.

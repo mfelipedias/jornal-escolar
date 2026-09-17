@@ -167,3 +167,11 @@ Rodapé da página: "As notícias pertencem às fontes. O jornal exibe apenas t�
 
 - 2026-09-12: versão inicial.
 - 2026-09-12: inglês ligado por padrão; só fontes gratuitas; avisos no painel em vez de e-mail; métodos de IA marcados como congelados.
+- 2026-09-17: **E45** feita (app `curation`: `NewsSource`, `NewsItem`, coleta, normalização, canonicalização, admin com "Buscar agora", comandos `seed_news_sources` e `fetch_news`). Decisões e desvios:
+  - Agendador: a tarefa `fetch_news` passa a cada 30 minutos (5 e 35 de cada hora) e enfileira `fetch_news_source` só para as fontes cujo intervalo (`fetch_interval_minutes`, padrão 120, mínimo 30) já passou, com 10 minutos de tolerância. Assim o "a cada 2h" do diagrama vira o padrão por fonte.
+  - Fontes iniciais conferidas em 2026-09-17 (`apps/curation/seed_data.py`, 15 fontes, criadas ativas): Agência Brasil (Últimas notícias e Educação), Pesquisa FAPESP, Jornal da USP, Agência Bori, INPE, Revista Galileu, Porvir, BBC News Brasil, Nexo Jornal, Olhar Digital, Tecnoblog, Canaltech, Nature e MIT Technology Review. Ficaram de fora: Agência FAPESP (feed com erro 500), Nova Escola e MEC (sem feed encontrado), IBGE e Instituto Butantan (recusam o acesso com 403), Ciência Hoje (feed parado em 2017) e Fiocruz (feed parado em 2025). O admin pode cadastrar outras a qualquer momento.
+  - HEAD para seguir redirecionamentos só nos links ainda desconhecidos (até 8 em paralelo, 5 s cada); se o site recusar HEAD, fica o link do feed. Até 50 itens por coleta.
+  - `url_hash` é calculado sem o esquema e sem `www.`, para http e https do mesmo endereço contarem como uma notícia. `title_hash` já é gravado, mas só passa a descartar repetidos na E46.
+  - Resumo também perde o rodapé do WordPress ("O post … apareceu primeiro em …") e HTML escapado duas vezes; imagem guarda só o endereço (`image_url`) quando o feed informa.
+  - Segurança: só http e https, feed de até 5 MB, 15 s de tempo limite, até 5 redirecionamentos e nenhum pedido para endereços de rede interna, nem em redirecionamentos. `User-Agent` com o nome do jornal, o site e o e-mail de contato das configurações.
+  - Falhas: cada coleta com erro soma em `consecutive_failures` e grava `last_error`; com 5 ou mais, a fonte aparece com aviso na lista do admin. Sucesso zera a contagem. Nenhuma fonte é desativada sozinha.

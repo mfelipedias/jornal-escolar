@@ -31,7 +31,12 @@ EXPECTED = {
 
 
 def periodic_crons() -> dict[str, str]:
-    return {name: task.cron for (name, _), task in app.periodic_registry.periodic_tasks.items()}
+    """Tarefas periódicas deste módulo (outros apps registram as suas, como a curadoria)."""
+    return {
+        name: task.cron
+        for (name, _), task in app.periodic_registry.periodic_tasks.items()
+        if task.task.func.__module__ == tasks.__name__
+    }
 
 
 def next_local_run(cron: str, start: datetime) -> datetime:
