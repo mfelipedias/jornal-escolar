@@ -6,6 +6,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-09-17
+
 ### Adicionado
 
 - Base da busca (E35): extensões `unaccent` e `pg_trgm`, função `f_unaccent` e configuração `pt_unaccent` criadas por migração (também no banco de testes e na imagem postgres:17). Publicações ganham `search_vector` com índice GIN e pesos (título; linha fina e nomes de disciplinas, tópicos e créditos; corpo), atualizado pelos services ao criar, editar, mexer em metadados e créditos, publicar e anonimizar; renomear disciplina ou tópico também reindexa. Selector `search_published` (sem acento, por radical, aspas e `-palavra`, ranking com desempate pela data): "fisica" encontra "Física". Comando `reindex_search`, idempotente. Nome anonimizado sai do índice.
