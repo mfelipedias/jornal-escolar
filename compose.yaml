@@ -7,6 +7,8 @@
 # Serviços, um container para cada, como em produção (docs/24):
 #   db   -> PostgreSQL 17 (porta 5433 no computador)
 #   web  -> Django com recarga automática: http://localhost:8000
+#   worker -> tarefas agendadas (limpezas e avisos diários; apps/core/tasks.py). Não recarrega
+#             sozinho: depois de mexer numa tarefa, rode "docker compose restart worker"
 #   vite -> CSS e JS com recarga automática (porta 5173, usada pelas páginas do Django)
 #
 # Os valores abaixo servem só para desenvolvimento local. Para mudar algo, crie
@@ -44,7 +46,7 @@ services:
       && uv run python manage.py runserver 0.0.0.0:8000"
     env_file:
       - *dev-env
-    environment:
+    environment: &web-env
       # Têm prioridade sobre infra/env/.env.
       DATABASE_URL: postgres://jornal:jornal-dev@db:5432/jornal
       SECRET_KEY: ${SECRET_KEY:-chave-insegura-somente-para-desenvolvimento-local}
@@ -62,6 +64,29 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  worker:
+    image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+    working_dir: /app/backend
+    # Espera o web instalar as dependências e aplicar as migrações antes de ligar.
+    command: >
+      sh -c "until uv run --no-sync python manage.py migrate --check >/dev/null 2>&1;
+      do echo 'worker: esperando as migrações do web...'; sleep 3; done
+      && uv run --no-sync python manage.py procrastinate worker"
+    env_file:
+      - *dev-env
+    environment:
+      <<: *web-env
+      # Batimento do worker, em UTC. Para ver o agendamento funcionando a cada minuto:
+      #   WORKER_HEARTBEAT_CRON="* * * * *" docker compose up -d worker
+      WORKER_HEARTBEAT_CRON: ${WORKER_HEARTBEAT_CRON:-0 * * * *}
+    volumes:
+      - .:/app
+      - venv_dev:/opt/venv
+      - uv_cache:/root/.cache/uv
+    depends_on:
+      - web
+    restart: unless-stopped
 
   vite:
     image: node:24-slim

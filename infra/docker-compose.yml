@@ -8,6 +8,7 @@
 # Serviços:
 #   db          PostgreSQL 17 (os dados ficam no volume "pgdata")
 #   web         Django + Gunicorn, imagem própria (infra/Dockerfile)
+#   worker      tarefas agendadas (limpezas e avisos diários), mesma imagem do web
 #   caddy       entrega /static/ e /media/ e repassa o resto para o web
 #   cloudflared túnel da Cloudflare: publica o site sem abrir portas (perfil "tunel")
 #   backup      cópia diária do banco e das fotos para o Cloudflare R2 (infra/backup)
@@ -23,6 +24,23 @@ x-logging: &logging
   options:
     max-size: "10m"
     max-file: "5"
+
+# Configuração do Django, igual para o site (web) e para as tarefas agendadas (worker).
+x-django-env: &django-env
+  DJANGO_SETTINGS_MODULE: config.settings.prod
+  SECRET_KEY: ${SECRET_KEY:?Defina SECRET_KEY em infra/env/.env}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:?Defina ALLOWED_HOSTS em infra/env/.env}
+  CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:?Defina CSRF_TRUSTED_ORIGINS em infra/env/.env}
+  SITE_URL: ${SITE_URL:?Defina SITE_URL em infra/env/.env}
+  DATABASE_URL: postgres://${POSTGRES_USER:-jornal}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-jornal}
+  MEDIA_ROOT: /data/media
+  MEDIA_URL: /media/
+  SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-True}
+  SECURE_HSTS_SECONDS: ${SECURE_HSTS_SECONDS:-2592000}
+  TRUSTED_CLIENT_IP_HEADER: ${TRUSTED_CLIENT_IP_HEADER:-}
+  MS_CLIENT_ID: ${MS_CLIENT_ID:-}
+  MS_CLIENT_SECRET: ${MS_CLIENT_SECRET:-}
+  AUTH_ALLOWED_DOMAINS: ${AUTH_ALLOWED_DOMAINS:-professor.educacao.sp.gov.br,educacao.sp.gov.br}
 
 services:
   db:
@@ -48,26 +66,37 @@ services:
     image: jornal-escolar:latest
     restart: unless-stopped
     environment:
-      DJANGO_SETTINGS_MODULE: config.settings.prod
-      SECRET_KEY: ${SECRET_KEY:?Defina SECRET_KEY em infra/env/.env}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:?Defina ALLOWED_HOSTS em infra/env/.env}
-      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:?Defina CSRF_TRUSTED_ORIGINS em infra/env/.env}
-      SITE_URL: ${SITE_URL:?Defina SITE_URL em infra/env/.env}
-      DATABASE_URL: postgres://${POSTGRES_USER:-jornal}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-jornal}
-      MEDIA_ROOT: /data/media
-      MEDIA_URL: /media/
-      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-True}
-      SECURE_HSTS_SECONDS: ${SECURE_HSTS_SECONDS:-2592000}
-      TRUSTED_CLIENT_IP_HEADER: ${TRUSTED_CLIENT_IP_HEADER:-}
-      MS_CLIENT_ID: ${MS_CLIENT_ID:-}
-      MS_CLIENT_SECRET: ${MS_CLIENT_SECRET:-}
-      AUTH_ALLOWED_DOMAINS: ${AUTH_ALLOWED_DOMAINS:-professor.educacao.sp.gov.br,educacao.sp.gov.br}
+      <<: *django-env
       GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
     volumes:
       - media:/data/media
       - static:/data/static
     depends_on:
       db:
+        condition: service_healthy
+    logging: *logging
+
+  worker:
+    # Programa que fica ligado executando as tarefas agendadas (apps/core/tasks.py): limpezas,
+    # avisos diários no sino do painel e, na Fase 4, a coleta de notícias. A fila fica no banco.
+    image: jornal-escolar:latest
+    restart: unless-stopped
+    command: ["python", "manage.py", "procrastinate", "worker"]
+    environment:
+      <<: *django-env
+      WORKER_HEARTBEAT_CRON: ${WORKER_HEARTBEAT_CRON:-0 * * * *}
+    volumes:
+      - media:/data/media
+    # O teste de saúde da imagem pergunta ao Gunicorn, que não roda aqui; este confere o banco.
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "procrastinate", "healthchecks"]
+      interval: 60s
+      timeout: 20s
+      start_period: 30s
+      retries: 3
+    depends_on:
+      # O web aplica as migrações ao ligar; o worker espera por isso.
+      web:
         condition: service_healthy
     logging: *logging
 

@@ -45,5 +45,8 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": env.str("LOG_LEVEL", default="INFO")},
     "loggers": {
         "django": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        # O worker registra cada tarefa ao ligar (e o teste de saúde liga a cada minuto).
+        "procrastinate.blueprints": {"level": "WARNING"},
+        "procrastinate.periodic": {"level": "WARNING"},
     },
 }

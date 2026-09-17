@@ -6,6 +6,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- Tarefas agendadas (E44): um **worker**, programa que fica ligado ao lado do site executando sozinho as tarefas de rotina na hora marcada, com a fila guardada no próprio banco (Procrastinate). Sobe junto com `docker compose up` no desenvolvimento e com `make deploy` no servidor. Horários (de Brasília): a limpeza de leituras e comentários antigos (o mesmo do comando `cleanup`) todo dia às 4h30, depois do backup; o aviso de comentários de leitores pendentes há 3 dias todo dia às 7h; e, aos domingos às 5h, a limpeza do próprio histórico de tarefas com mais de 30 dias. Uma tarefa de teste escreve "Worker vivo" no log a cada hora. As execuções aparecem no Django Admin, em "Procrastinate", e em `docker compose logs worker`.
+- Aviso de revisão parada: todo dia às 7h10, o revisor e os autores de um texto em revisão sem movimento há mais de 5 dias recebem um aviso no sino do painel ("A revisão de … está parada há 7 dias"), com link para a tela de revisão. Um aviso por revisão parada, sem repetir a cada dia; se a revisão andar e parar de novo, sai outro. Também pelo comando `notify_stale_reviews`.
+
 ## [1.2.0] - 2026-09-17
 
 ### Adicionado

@@ -10,7 +10,7 @@ class Command(BaseCommand):
         "Apaga dados que já cumpriram o prazo (docs/18, docs/20): registros diários de leitura "
         "com mais de 90 dias (o total de cada publicação continua), comentários rejeitados há "
         "mais de 30 dias e o hash do IP e o código anônimo dos comentários com mais de 30 dias. "
-        "Pode rodar quantas vezes quiser; o agendamento mensal chega com o worker (E44)."
+        "Pode rodar quantas vezes quiser; o worker roda isto todo dia às 4h30 (apps/core/tasks.py)."
     )
 
     def handle(self, *args: Any, **options: Any) -> None:

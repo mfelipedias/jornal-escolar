@@ -21,13 +21,14 @@ docker compose up
 
 Abra http://localhost:8000. Pronto.
 
-Sobe três containers, agrupados no Docker Desktop como `jornal_escolar_dev`:
+Sobe quatro containers, agrupados no Docker Desktop como `jornal_escolar_dev`:
 
 | Container | Função | Endereço |
 |---|---|---|
 | `db` | PostgreSQL 17 | `localhost:5433` |
 | `web` | Django, recarrega ao salvar arquivos Python e templates | http://localhost:8000 |
 | `vite` | CSS e JS, recarrega ao salvar templates e estilos | `localhost:5173` (usado pelas páginas) |
+| `worker` | Tarefas agendadas: limpezas e avisos diários (`apps/core/tasks.py`). Não recarrega sozinho: `docker compose restart worker` | — |
 
 - A primeira vez demora alguns minutos (baixa imagens e instala dependências); depois é rápido.
 - Pronto quando o log mostrar `Starting development server at http://0.0.0.0:8000/`.
@@ -44,6 +45,7 @@ Cada serviço tem seu próprio container, como em produção: dá para atualizar
 | `docker compose up` | Sobe tudo (mostra os logs; `Ctrl+C` para parar) |
 | `docker compose up -d` | Sobe tudo em segundo plano |
 | `docker compose logs -f web` | Acompanha os logs do Django |
+| `docker compose logs -f worker` | Acompanha as tarefas agendadas |
 | `docker compose down` | Para e remove os containers (o banco fica guardado) |
 | `docker compose exec web uv run python manage.py createsuperuser` | Cria um administrador |
 | `docker compose exec web uv run python manage.py access_link email@escola` | Gera um link para a pessoa criar ou redefinir a senha |

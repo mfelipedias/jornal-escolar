@@ -10,7 +10,7 @@ class Command(BaseCommand):
         "Avisa os editores, no sino do painel, das publicações com comentários de leitores "
         "aguardando aprovação há mais de 3 dias (docs/04, docs/20). Pode rodar quantas vezes "
         "quiser: cada editor recebe um aviso por publicação até chegar um novo pendente "
-        "atrasado. O agendamento diário chega com o worker (E44)."
+        "atrasado. O worker roda isto todo dia às 7h (apps/core/tasks.py)."
     )
 
     def handle(self, *args: Any, **options: Any) -> None:

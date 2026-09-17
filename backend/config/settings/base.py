@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "django.contrib.sitemaps",
     "django.contrib.postgres",  # busca: SearchVector, unaccent, trigramas (docs/19)
+    "procrastinate.contrib.django",  # tarefas agendadas no worker (docs/24, E44)
     "django_vite",
     "allauth",
     "allauth.account",
@@ -259,3 +260,22 @@ COMMENTS_PER_HOUR_PER_IP = 60
 COMMENTS_PER_HOUR_PER_KEY = 10
 COMMENTS_PENDING_PER_KEY = 3
 COMMENTS_RETENTION_DAYS = 30
+
+# Tarefas agendadas (E44, docs/24): worker do Procrastinate, fila no PostgreSQL.
+# Cron do batimento do worker, em UTC. Para testar o agendamento, "* * * * *" (a cada minuto).
+WORKER_HEARTBEAT_CRON = env.str("WORKER_HEARTBEAT_CRON", default="0 * * * *")
+
+# O que o worker faz aparece nos logs dele (docker compose logs worker). Produção redefine
+# LOGGING inteiro em prod.py, com tudo em nível INFO.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "apps.core.tasks": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "procrastinate": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        # Sem isto, todo manage.py listaria as tarefas registradas ao ligar.
+        "procrastinate.blueprints": {"level": "WARNING"},
+        "procrastinate.periodic": {"level": "WARNING"},
+    },
+}

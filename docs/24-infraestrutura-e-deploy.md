@@ -22,10 +22,10 @@ Decisão: o **banco vive em um só lugar**. Não há replicação entre os dois 
 | `web` | imagem própria (Python 3.13 slim) | 1 | Gunicorn + Django |
 | `db` | `postgres:17` (Fase 5: `pgvector/pgvector:pg17`) | 1 | Banco |
 | `backup` | imagem própria (`python:3.13-alpine` + `postgresql17-client` + `rclone` + `supercronic`) | 1 | Backup diário |
-| `worker` | mesma imagem de `web`, `procrastinate worker` | 4 | Tarefas em segundo plano (coleta RSS, limpezas) |
+| `worker` | mesma imagem de `web`, `python manage.py procrastinate worker` | 4 | Tarefas agendadas (limpezas, avisos diários; coleta RSS a partir da E45) |
 | `ollama` | `ollama/ollama:rocm` | 5 (congelada) | Modelos locais |
 
-Volumes: `pgdata`, `media`, `static`, `caddy_data`. Perfis: `tunel` (liga o `cloudflared`), `worker`, `ai`.
+Volumes: `pgdata`, `media`, `static`, `caddy_data`. Perfis: `tunel` (liga o `cloudflared`), `ai`. O `worker` sobe sempre, sem perfil (E44).
 
 Arquivos (E27): `infra/docker-compose.yml`, `infra/Dockerfile`, `infra/caddy/Caddyfile`, `infra/scripts/{entrypoint.sh,healthcheck.py}`, `infra/backup/` (Dockerfile, `backup.py`, `restore.py`, `comum.py`, `crontab`) e `infra/env/.env.producao.example`. Guia para o dono em [34](34-guia-deploy.md).
 
@@ -62,6 +62,25 @@ Variáveis de ambiente (`django-environ`), documentadas em `infra/env/.env.examp
 ### Cache
 
 O cache do Django (limites por minuto, configurações do site, blocos da home e listas) fica, em produção, numa tabela do próprio PostgreSQL (`DatabaseCache`, tabela `django_cache`, em `config/settings/prod.py`). O Gunicorn roda vários workers, e cada um é um processo separado: com o cache em memória, cada worker teria o seu, e um limite de 60 por minuto viraria 60 por worker; publicar limparia o cache de um worker só. A tabela resolve isso sem serviço novo (sem Redis). O `entrypoint.sh` roda `createcachetable` depois do `migrate`, então o `make deploy` cria a tabela sozinho. Em desenvolvimento e nos testes o cache continua em memória. Se um dia o volume de acessos pedir, trocar por Redis é mudar só `CACHES`.
+
+## Tarefas agendadas
+
+Desde a E44, as tarefas que rodam sozinhas ficam num **worker**: um programa que fica ligado ao lado do site, olha a fila e executa o que chegou a hora de executar. É o [Procrastinate](https://procrastinate.readthedocs.io/), com a fila no próprio PostgreSQL (sem Redis), como decidido em [05](05-arquitetura-tecnica.md) D8.
+
+- Código em `backend/apps/core/tasks.py`, descoberto pelo app `procrastinate.contrib.django`; as tabelas da fila (`procrastinate_jobs` e outras) vêm pelas migrações. Cada tarefa só chama a regra que já existe nos services, a mesma dos comandos de gerenciamento, e pode rodar de novo sem estrago.
+- Serviço `worker` nos dois Compose, com a mesma imagem e configuração do `web`. Em produção, espera o `web` ficar saudável (é o `web` que aplica as migrações) e tem teste de saúde próprio (`manage.py procrastinate healthchecks`), porque o da imagem pergunta ao Gunicorn. Em dev, espera as migrações e não recarrega ao salvar: `docker compose restart worker` depois de mexer numa tarefa.
+- O Procrastinate lê o cron em UTC; `local_cron` escreve os horários no horário de Brasília. Se o worker ficar desligado, a tarefa atrasada até 10 minutos ainda roda ao religar; atrasos maiores esperam o próximo horário.
+- O registro das tarefas fica no banco e aparece no Django Admin ("Procrastinate"), só leitura. Os logs (`docker compose logs worker` ou `make prod-logs`) mostram cada execução e o resultado.
+
+| Tarefa | Quando (Brasília) | O que faz | Comando equivalente |
+|---|---|---|---|
+| `heartbeat` | a cada hora, minuto 0 | tarefa de teste: registra "Worker vivo" no log | — |
+| `cleanup` | todo dia, 4h30 | leituras com mais de 90 dias, comentários rejeitados há 30 dias, dados técnicos de comentários com 30 dias | `cleanup` |
+| `remind_pending_comments` | todo dia, 7h | avisa editores de comentários de leitores pendentes há 3 dias | `notify_pending_comments` |
+| `remind_stale_reviews` | todo dia, 7h10 | avisa revisor e autores de revisões paradas há 5 dias ([04](04-fluxo-editorial.md)) | `notify_stale_reviews` |
+| `purge_worker_history` | domingo, 5h | apaga o registro das tarefas concluídas há mais de 30 dias (as que falharam ficam) | — |
+
+A limpeza das 4h30 fica depois do backup das 3h. `WORKER_HEARTBEAT_CRON` (em UTC) troca o horário do batimento; `* * * * *` serve para ver o agendamento funcionando.
 
 ## Backups
 
@@ -127,3 +146,4 @@ GitHub Actions: `ruff`, `djlint`, `pytest` com PostgreSQL, build do frontend e b
 - 2026-09-12: domínio `jornal.projetosrosa.com.br`, Cloudflare Tunnel decidido, Oracle Free Tier como alvo alternativo (ARM), sem e-mail, variáveis de Microsoft e clima, versão no healthz.
 - 2026-09-14: E27. `/static/` passa a ser entregue pelo Caddy a partir de um volume preenchido pelo entrypoint, em vez do WhiteNoise: uma dependência a menos e o mesmo caminho da mídia. Backup criptografado com o `crypt` do rclone em vez do `age`, porque o `age` só aceita senha digitada no terminal e o backup roda sozinho; mídia espelhada com `rclone sync --backup-dir` em vez de `tar` incremental (restauração sem cadeia de arquivos, e fotos apagadas somem de vez após 6 meses). Scripts de backup em Python, não shell. Node 24 no build, igual ao dev. `cloudflared` no perfil `tunel`. A retenção diária guarda todos os backups dos 7 últimos dias, para que um backup manual não substitua o das 3h.
 - 2026-09-14: E39. Cache compartilhado em produção com `DatabaseCache` (seção "Cache"); `createcachetable` no entrypoint.
+- 2026-09-17: E44. Seção "Tarefas agendadas": worker do Procrastinate nos dois Compose. O `worker` deixa de ter perfil próprio e sobe sempre, porque as limpezas e os avisos diários dependem dele desde já, não só a coleta da Fase 4. O cron do host previsto para a Fase 3 não chegou a existir: os comandos continuam para rodar à mão. A limpeza passa de mensal para diária (é leve e cumpre melhor o prazo de 30 dias dos dados técnicos dos comentários).

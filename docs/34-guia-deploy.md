@@ -141,6 +141,14 @@ Mostra verificações de segurança do Django. Avisos `security.W005` e `securit
 
 Abra no navegador `https://jornal.projetosrosa.com.br/healthz/`. Deve aparecer `{"status": "ok", "version": "..."}`.
 
+O `make deploy` também liga o **worker**, o programa que roda sozinho as tarefas de rotina: apagar dados antigos de madrugada e deixar no sino do painel, de manhã, os avisos de comentários e revisões esquecidos. Não precisa configurar nada. Para conferir que ele está vivo:
+
+```
+docker compose -f infra/docker-compose.yml --env-file infra/env/.env logs worker
+```
+
+Uma vez por hora aparece a linha `Worker vivo`.
+
 ## Passo 6 — Primeiro administrador
 
 ```
@@ -189,6 +197,7 @@ O `/healthz/` responde "ok" só quando o site, o banco e as migrações estão e
 |---|---|
 | Atualizar o site para a versão nova do GitHub | `make deploy` |
 | Ver o que está acontecendo / erros | `make prod-logs` (sai com `Ctrl+C`) |
+| Ver as tarefas agendadas (limpezas e avisos) | Django Admin → "Procrastinate"; ou as linhas de `worker` no `make prod-logs` |
 | Fazer um backup agora (antes de algo arriscado) | `make backup` |
 | Desligar o site | `make prod-down` |
 | Ver quanto disco o Docker usa | `docker system df` |
@@ -206,6 +215,7 @@ Os dados ficam em "volumes" do Docker e **sobrevivem** a `make deploy`, `make pr
 | `/healthz/` com `"status": "error"` | Banco fora do ar ou migração pendente | `make prod-logs`; normalmente `make deploy` resolve |
 | Página "Bad Request (400)" | Domínio diferente do `ALLOWED_HOSTS` | Confira `ALLOWED_HOSTS` e `CSRF_TRUSTED_ORIGINS` |
 | Links compartilhados apontam para `localhost` | `SITE_URL` errado | Corrija e `make deploy` |
+| Avisos de revisão parada ou de comentários pendentes não chegam | `worker` parado | `make prod-logs` e procure linhas de `worker`; `make deploy` religa |
 | `make backup` diz que a senha não confere | `BACKUP_PASSPHRASE` diferente da do primeiro backup | Recoloque a senha original; nunca troque a senha de um bucket em uso |
 
 ## Como foi testado (E27)

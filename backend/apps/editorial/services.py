@@ -3,7 +3,11 @@
 Criar (geral ou ancorado), responder (um nível), resolver e reabrir. Cada ação grava um
 EditorialEvent (os comentários ficam no histórico, docs/04) e confere a permissão em
 editorial/permissions.py. As decisões da revisão ficam em publications/services.py.
+
+No fim, o aviso diário de revisões paradas (remind_stale_reviews), rodado pelo worker (E44).
 """
+
+from datetime import datetime, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -12,8 +16,8 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.publications.models import Article
 
-from . import anchors, events, notifications, permissions
-from .models import EditorialComment
+from . import alerts, anchors, events, notifications, permissions
+from .models import EditorialComment, Notification
 
 Kind = events.Kind
 Status = EditorialComment.Status
@@ -163,3 +167,37 @@ def resolve(user: User, comment: EditorialComment) -> EditorialComment:
 @transaction.atomic
 def reopen(user: User, comment: EditorialComment) -> EditorialComment:
     return _set_status(user, comment, Status.OPEN)
+
+
+# --- aviso de revisão parada (docs/04, "Notificações"; E44) ---
+
+
+def remind_stale_reviews(now: datetime | None = None) -> int:
+    """Avisa revisor e autores das revisões sem movimento há mais de 5 dias.
+
+    Usa o mesmo critério do alerta do painel editorial (alerts.stale_reviews). Quem já recebeu
+    (ou teve atualizado) o aviso dessa publicação depois que ela ficou parada não recebe outro:
+    rodar várias vezes não repete avisos, e um novo aviso só sai se a revisão andar e parar de
+    novo. Devolve quantos avisos foram criados ou atualizados.
+    """
+    now = now or timezone.now()
+    days = alerts.STALE_REVIEW_DAYS
+    sent = 0
+    for alert in alerts.stale_reviews(now).items:
+        article = alert.article
+        stale_since = alert.since + timedelta(days=days)
+        already = set(
+            Notification.objects.filter(
+                kind=Notification.Kind.REVIEW_STALE,
+                article=article,
+                updated_at__gte=stale_since,
+            ).values_list("user_id", flat=True)
+        )
+        people = list(notifications.article_team(article))
+        credit = permissions.reviewer_credit(article)
+        if credit is not None and credit.user.is_active:
+            people.append(credit.user)
+        targets = {user.pk: user for user in people if user.pk not in already}
+        idle = max((now - alert.since).days, days)
+        sent += notifications.review_stale(article, idle, targets.values())
+    return sent

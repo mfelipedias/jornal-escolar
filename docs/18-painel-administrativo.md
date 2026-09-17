@@ -96,8 +96,9 @@ Comandos de gerenciamento para o admin:
 | `create_admin` | Cria o primeiro superusuário a partir de variáveis de ambiente | 1 |
 | `access_link <email>` | Gera link de primeiro acesso ou redefinição | 1 |
 | `rebuild_search_index` | Recalcula `search_vector` | 3 |
-| `cleanup` | Apaga leituras antigas, comentários rejeitados, notificações lidas, rascunhos vazios, erros antigos | 3 (cron do host) → 4 (worker) |
-| `notify_pending_comments` | Avisa os editores de comentários de leitores pendentes há mais de 3 dias | 3 (cron do host, diário) → 4 (worker) |
+| `cleanup` | Apaga leituras antigas e comentários rejeitados, e limpa dados técnicos dos comentários (worker, todo dia às 4h30) | 3 → 4 |
+| `notify_pending_comments` | Avisa os editores de comentários de leitores pendentes há mais de 3 dias (worker, todo dia às 7h) | 3 → 4 |
+| `notify_stale_reviews` | Avisa revisor e autores de revisões paradas há mais de 5 dias (worker, todo dia às 7h10) | 4 |
 | `fetch_news` | Coleta fontes (também agendado) | 4 |
 | `export_user_data <email>` | Exporta dados de um usuário | 2 |
 | `anonymize_user <email>` | Anonimiza | 2 |
@@ -118,3 +119,4 @@ Comandos de gerenciamento para o admin:
 - 2026-09-14: E39. Comando `cleanup` criado (em `apps/core`); por enquanto apaga só os registros diários de leitura com mais de 90 dias. As outras limpezas entram com as etapas delas.
 - 2026-09-15: E41. Visão geral ganha o contador "Comentários de leitores pendentes" (link para a fila) e o alerta "Comentários de leitores pendentes" (há mais de 3 dias, um item por publicação, com link para a fila filtrada). A fila do editor é a mesma `/painel/comentarios/` da equipe, que para editores já mostra todas as publicações; não há aba "Comentários" dentro do editorial. Comando `notify_pending_comments`.
 - 2026-09-15: áreas "Artes" e "Tecnologia" no seed e no menu, a pedido do dono (a disciplina "Arte" de Linguagens e "Tecnologia e Inovação" de Projetos continuam onde estão). As cores magenta e grafite deixam de ser reservadas.
+- 2026-09-17: E44. `cleanup` e `notify_pending_comments` passam a rodar sozinhos no worker; novo comando `notify_stale_reviews` para o aviso de revisão parada. Notificações lidas, rascunhos vazios e erros antigos continuam fora do `cleanup` (ainda não há regra definida para eles).

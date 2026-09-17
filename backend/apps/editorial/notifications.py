@@ -259,6 +259,23 @@ def review_comment_replied(article: Article, actor: User, parent) -> int:
     )
 
 
+def review_stale(article: Article, days: int, users: Iterable[User]) -> int:
+    """Revisão sem movimento há mais de 5 dias: avisa revisor e autores (docs/04, tarefa diária
+    da E44). Um aviso não lido da mesma publicação é atualizado em vez de empilhar."""
+    message = f"A revisão de “{article.title}” está parada há {days} dias."
+    count = 0
+    for user in users:
+        notify(
+            user,
+            Notification.Kind.REVIEW_STALE,
+            message,
+            article=article,
+            url=_review_url(article),
+        )
+        count += 1
+    return count
+
+
 def _reviewer_user(article: Article) -> User | None:
     credit = article.contributors.filter(
         role=ArticleContributor.Role.REVIEWER, user__isnull=False
