@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from apps.accounts.models import TeacherProfile
 from apps.publications.models import Article, ArticleContributor
-from apps.taxonomy.models import ArticleType, Discipline, KnowledgeArea
+from apps.taxonomy.models import ArticleType, Discipline, KnowledgeArea, Topic
 
 from .models import StaticPage
 
@@ -72,6 +72,10 @@ class TaxonomySitemap(SiteUrlSitemap):
             *KnowledgeArea.objects.filter(is_active=True),
             *Discipline.objects.filter(is_active=True, area__is_active=True).select_related("area"),
             *ArticleType.objects.filter(is_active=True),
+            # Tópicos só com publicação no ar: página vazia não interessa a buscadores.
+            *Topic.objects.filter(
+                is_active=True, articles__status=Article.Status.PUBLISHED
+            ).distinct(),
         ]
 
 

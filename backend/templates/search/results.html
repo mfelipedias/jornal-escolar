@@ -79,13 +79,10 @@
                       {% include "components/tag.html" with kind="discipline" label=discipline.name area=None url=discipline.get_absolute_url size="md" %}
                     </li>
                   {% endfor %}
-                  {% url 'search:results' as search_url %}
                   {% for topic in taxonomy.topics %}
-                    {% with q=topic.name|urlencode %}
-                      <li class="flex items-center">
-                        {% include "components/tag.html" with kind="topic" label=topic.name area=None url=search_url|add:"?q="|add:q size="md" %}
-                      </li>
-                    {% endwith %}
+                    <li class="flex items-center">
+                      {% include "components/tag.html" with kind="topic" label=topic.name area=None url=topic.get_absolute_url size="md" %}
+                    </li>
                   {% endfor %}
                 </ul>
               </section>

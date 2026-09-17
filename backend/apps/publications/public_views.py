@@ -28,6 +28,14 @@ def _reaction_bar(request: HttpRequest, article: Article):
     return engagement_presentation.reaction_bar(article, current)
 
 
+def _related_cards(article: Article) -> list[presentation.ArticleCard]:
+    """Leia também, em cache por 60s com a versão do conteúdo público (publicar invalida)."""
+    return listing.cached(
+        f"leia-tambem|{article.pk}",
+        lambda: [presentation.card(item) for item in selectors.related_articles(article)],
+    )
+
+
 def _render_article(request: HttpRequest, article: Article, *, preview: bool) -> HttpResponse:
     context = {
         "article": article,
@@ -36,11 +44,8 @@ def _render_article(request: HttpRequest, article: Article, *, preview: bool) ->
         "byline": presentation.byline(article),
         "byline_people": presentation.byline_people(article),
         "credit_groups": presentation.credit_groups(article),
-        "related": (
-            [presentation.card(item) for item in selectors.related_articles(article)]
-            if not preview
-            else []
-        ),
+        "topics": selectors.public_topics(article),
+        "related": [] if preview else _related_cards(article),
         "reaction_bar": None if preview else _reaction_bar(request, article),
         "show_reads": not preview and engagement_presentation.show_reads(article),
         "comments": (

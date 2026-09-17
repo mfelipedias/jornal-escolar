@@ -1,0 +1,38 @@
+{% extends "publications/list.html" %}
+{% comment %}
+  Página de tópico (docs/12, E43). Fora do menu: chega-se pelas etiquetas de tópico da
+  publicação e da busca.
+{% endcomment %}
+{% block title %}{{ topic.name }} · {{ jornal.name }}{% endblock title %}
+{% block list_header %}
+  <header class="page-header bg-linear-to-b from-sun-soft to-paper">
+    <div class="site-container">
+      <p class="text-meta font-semibold tracking-wide text-accent-2 uppercase">Tópico</p>
+      <h1 class="mt-2 font-display text-h1 font-extrabold text-balance sm:text-display">
+        <span class="text-accent" aria-hidden="true">#</span>{{ topic.name }}
+      </h1>
+      {% if disciplines %}
+        <ul class="mt-4 flex flex-wrap gap-2" aria-label="Disciplinas relacionadas">
+          {% for discipline in disciplines %}
+            <li>
+              {% include "components/tag.html" with kind="discipline" label=discipline.name area=None url=discipline.get_absolute_url %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      <p id="listing-count"
+         class="mt-3 text-meta text-ink-2"
+         aria-live="polite">{% include "publications/partials/list_count.html" %}</p>
+    </div>
+  </header>
+{% endblock list_header %}
+{% block list_empty %}
+  {% if filters.has_user_filters %}
+    {% include "components/empty_state.html" with title="Nenhuma publicação com esses filtros" text="Tente tirar um dos filtros." action_url=request.path action_label="Limpar filtros" %}
+  {% else %}
+    {% url 'publications:list' as list_url %}
+    {% with title="Ainda não há publicações sobre "|add:topic.name %}
+      {% include "components/empty_state.html" with title=title text="Veja as outras publicações do jornal." action_url=list_url action_label="Ver publicações" %}
+    {% endwith %}
+  {% endif %}
+{% endblock list_empty %}

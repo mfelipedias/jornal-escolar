@@ -40,7 +40,11 @@ def article_changed(sender: type[Article], instance: Article, **kwargs: Any) -> 
 @receiver(
     m2m_changed, sender=Article.disciplines.through, dispatch_uid="publications_disc_public_cache"
 )
-def article_disciplines_changed(instance: Any, **kwargs: Any) -> None:
+@receiver(
+    m2m_changed, sender=Article.topics.through, dispatch_uid="publications_topic_public_cache"
+)
+def article_taxonomy_changed(instance: Any, **kwargs: Any) -> None:
+    """Disciplinas e tópicos mudam listas, página de tópico e "Leia também"."""
     if isinstance(instance, Article) and instance.published_at:
         _bump()
 
@@ -69,6 +73,13 @@ def user_changed(sender: type[User], instance: User, created: bool, **kwargs) ->
     if created or (update_fields is not None and set(update_fields) <= {"last_login", "password"}):
         return
     _bump()
+
+
+@receiver(post_save, sender=Topic, dispatch_uid="publications_topic_public_cache_save")
+def topic_changed(sender: type[Topic], instance: Topic, created: bool, **kwargs) -> None:
+    """Nome e "ativo" do tópico aparecem nas etiquetas e na página de tópico."""
+    if not created:
+        _bump()
 
 
 @receiver(post_save, sender=Discipline, dispatch_uid="publications_discipline_search")

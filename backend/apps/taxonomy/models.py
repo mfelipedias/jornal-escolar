@@ -209,6 +209,9 @@ class Topic(SluggedModel):
         verbose_name_plural = "tópicos"
         ordering = ["name"]
 
+    def get_absolute_url(self) -> str:
+        return reverse("taxonomy:topic", args=[self.slug])
+
 
 class ArticleType(OrderedSluggedModel):
     """Tipo editorial da publicação (Notícia, Reportagem, Evento...)."""

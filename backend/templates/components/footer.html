@@ -1,6 +1,6 @@
 {% comment %}
   Rodapé público (docs/09, "Rodapé"): faixa escura com a marca, a tagline, os links das
-  páginas institucionais publicadas (RSS entra na E43), o crédito e a versão.
+  páginas institucionais publicadas, o feed RSS, o crédito e a versão.
   Sem nome, endereço ou logotipo da escola.
 {% endcomment %}
 <footer class="mt-24 bg-ink text-paper">
@@ -40,8 +40,10 @@
              class="break-all text-accent-soft underline decoration-accent-soft/40 underline-offset-4 hover:text-sun hover:decoration-sun">{{ jornal.contact_email }}</a>
         {% endif %}
       </p>
-      <p class="text-paper/50">
-        <span class="sr-only">Versão do sistema</span>v{{ app_version }}
+      <p class="flex items-center gap-4">
+        <a href="{% url 'publications:feed' %}"
+           class="font-medium text-accent-soft underline-offset-4 hover:text-sun hover:underline">RSS</a>
+        <span class="text-paper/50"><span class="sr-only">Versão do sistema</span>v{{ app_version }}</span>
       </p>
     </div>
   </div>

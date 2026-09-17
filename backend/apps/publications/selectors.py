@@ -9,7 +9,7 @@ from django.contrib.postgres.search import (
     TrigramSimilarity,
     TrigramWordSimilarity,
 )
-from django.db.models import F, Max, Prefetch, Q, QuerySet, Value
+from django.db.models import Count, F, Max, Prefetch, Q, QuerySet, Value
 from django.db.models.functions import Coalesce, Greatest, NullIf
 from django.utils import timezone
 
@@ -65,20 +65,73 @@ def article_for_page(**lookup) -> Article | None:
     )
 
 
+# Pesos do "Leia também" (docs/11, E43): um tópico em comum vale duas disciplinas.
+RELATED_TOPIC_WEIGHT = 2
+RELATED_DISCIPLINE_WEIGHT = 1
+
+
+def _count_common(relation: str, ids: list[int]) -> Count | Value:
+    """Quantos itens da relação estão em ids (lista vazia: zero, sem IN () no SQL)."""
+    if not ids:
+        return Value(0)
+    return Count(relation, filter=Q(**{f"{relation}__in": ids}), distinct=True)
+
+
 def related_articles(article: Article, limit: int = 3) -> list[Article]:
-    """Leia também: publicadas que compartilham disciplina ou tópico, mais recentes (docs/11)."""
+    """Leia também (docs/11): publicadas que compartilham tópico ou disciplina.
+
+    Pontuação: tópicos em comum valem 2, disciplinas em comum valem 1; empate vai para a mais
+    recente. Se faltar, completa com as mais recentes da mesma área. Nunca inclui a própria.
+    """
     discipline_ids = [d.pk for d in article.disciplines.all()]
     topic_ids = [t.pk for t in article.topics.all()]
+    area_ids = {d.area_id for d in article.disciplines.all()}
     if not discipline_ids and not topic_ids:
         return []
-    related = (
-        Article.objects.filter(status=Article.Status.PUBLISHED)
-        .filter(Q(disciplines__in=discipline_ids) | Q(topics__in=topic_ids))
+    scored = (
+        published()
         .exclude(pk=article.pk)
-        .distinct()
-        .order_by("-published_at")
+        .annotate(
+            common_topics=_count_common("topics", topic_ids),
+            common_disciplines=_count_common("disciplines", discipline_ids),
+        )
+        .annotate(
+            score=F("common_topics") * RELATED_TOPIC_WEIGHT
+            + F("common_disciplines") * RELATED_DISCIPLINE_WEIGHT
+        )
+        .filter(score__gt=0)
+        .order_by("-score", "-published_at", "-pk")
     )
-    return list(for_cards(related)[:limit])
+    chosen = list(for_cards(scored)[:limit])
+    missing = limit - len(chosen)
+    if missing > 0 and area_ids:
+        same_area = Article.objects.filter(disciplines__area__in=area_ids).values("pk")
+        fallback = (
+            published()
+            .filter(pk__in=same_area)
+            .exclude(pk__in=[article.pk, *(a.pk for a in chosen)])
+            .order_by("-published_at", "-pk")
+        )
+        chosen += list(for_cards(fallback)[:missing])
+    return chosen
+
+
+def public_topics(article: Article) -> list[Topic]:
+    """Tópicos ativos da publicação, para as etiquetas que levam à página de tópico."""
+    return [topic for topic in article.topics.all() if topic.is_active]
+
+
+def topic_disciplines(topic: Topic) -> list[Discipline]:
+    """Disciplinas relacionadas ao tópico: as sugeridas e as das publicações no ar com ele."""
+    used = Article.objects.filter(status=Article.Status.PUBLISHED, topics=topic).values(
+        "disciplines"
+    )
+    return list(
+        Discipline.objects.filter(is_active=True, area__is_active=True)
+        .filter(Q(topics=topic) | Q(pk__in=used))
+        .select_related("area")
+        .distinct()
+    )
 
 
 def published() -> QuerySet[Article]:

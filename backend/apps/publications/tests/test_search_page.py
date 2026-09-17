@@ -281,7 +281,7 @@ def test_taxonomy_group_with_area_discipline_and_topic(client):
 
     assert "Disciplinas e tópicos" in html
     assert f'href="{discipline.get_absolute_url()}"' in html
-    assert 'href="/busca/?q=F%C3%ADsica%20no%20cotidiano"' in html
+    assert 'href="/topicos/fisica-cotidiano/"' in html  # E43: tópico leva à página dele
     assert "Física inativa" not in html
 
     html = page(client, q="natureza")

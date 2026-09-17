@@ -1,4 +1,4 @@
-"""Páginas públicas de área, disciplina e tipo (docs/12, E21).
+"""Páginas públicas de área, disciplina, tipo (docs/12, E21) e tópico (E43).
 
 São a lista de publicações com um filtro fixo e um cabeçalho próprio.
 """
@@ -11,7 +11,7 @@ from django.views.decorators.http import require_GET
 from apps.core import seo
 from apps.publications import listing, presentation, selectors
 
-from .models import ArticleType, Discipline, KnowledgeArea
+from .models import ArticleType, Discipline, KnowledgeArea, Topic
 
 
 @require_GET
@@ -90,3 +90,21 @@ def article_type(request: HttpRequest, slug: str) -> HttpResponse:
         filters,
         context={"article_type": article_type, "seo": meta},
     )
+
+
+@require_GET
+def topic(request: HttpRequest, slug: str) -> HttpResponse:
+    """/topicos/<slug>/: fora do menu; chega-se pelas etiquetas de tópico (docs/12)."""
+    topic = get_object_or_404(Topic, slug=slug, is_active=True)
+    filters = listing.parse(request.GET, fixed_topic=topic)
+    meta = seo.PageMeta(
+        title=topic.name,
+        description=f"Publicações sobre {topic.name}.",
+        path=seo.listing_path(request),
+    )
+    context = {
+        "topic": topic,
+        "disciplines": [] if listing.is_load_more(request) else selectors.topic_disciplines(topic),
+        "seo": meta,
+    }
+    return listing.render_listing(request, "taxonomy/topic.html", filters, context=context)

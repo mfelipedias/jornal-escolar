@@ -1,7 +1,7 @@
 """Listas de publicações com filtros por GET (docs/12, docs/19; E21 e E37).
 
-Usado por /publicacoes/, pelas páginas de área, disciplina e tipo (que chegam com um filtro
-fixo) e pela busca. Parâmetros da URL: area (um), disciplina e tipo (vários), professor
+Usado por /publicacoes/, pelas páginas de área, disciplina, tipo e tópico (que chegam com um
+filtro fixo) e pela busca. Parâmetros da URL: area (um), disciplina e tipo (vários), professor
 (endereço do perfil), periodo (30-dias, semestre, ano) ou de/ate (AAAA-MM-DD), ordem e
 pagina. Sem JavaScript o formulário faz GET na própria página; com HTMX só a região da lista
 é trocada e a URL vai para o histórico, então a URL sempre reproduz o filtro.
@@ -26,7 +26,7 @@ from django.utils.formats import date_format
 
 from apps.accounts import selectors as account_selectors
 from apps.accounts.models import TeacherProfile
-from apps.taxonomy.models import ArticleType, Discipline, KnowledgeArea
+from apps.taxonomy.models import ArticleType, Discipline, KnowledgeArea, Topic
 
 from . import presentation, selectors
 from .cache import public_version
@@ -77,6 +77,7 @@ class ListingFilters:
     fixed_area: KnowledgeArea | None = None
     fixed_discipline: Discipline | None = None
     fixed_type: ArticleType | None = None
+    fixed_topic: Topic | None = None
 
     @property
     def effective_area(self) -> KnowledgeArea | None:
@@ -126,6 +127,7 @@ class ListingFilters:
             f"area={self.effective_area.slug if self.effective_area else ''}",
             f"disciplina={slugs(self.effective_disciplines)}",
             f"tipo={slugs(self.effective_types)}",
+            f"topico={self.fixed_topic.slug if self.fixed_topic else ''}",
             f"professor={self.professor.slug if self.professor else ''}",
             f"de={self.date_from or ''}",
             f"ate={self.date_to or ''}",
@@ -159,6 +161,7 @@ def parse(
     fixed_area: KnowledgeArea | None = None,
     fixed_discipline: Discipline | None = None,
     fixed_type: ArticleType | None = None,
+    fixed_topic: Topic | None = None,
     orders: dict[str, str] | None = None,
 ) -> ListingFilters:
     """Lê a URL ignorando valores desconhecidos e o que a página já fixa."""
@@ -166,6 +169,7 @@ def parse(
         fixed_area=fixed_area,
         fixed_discipline=fixed_discipline,
         fixed_type=fixed_type,
+        fixed_topic=fixed_topic,
         orders=orders or LIST_ORDERS,
     )
     if not (fixed_area or fixed_discipline) and query.get("area"):
@@ -221,6 +225,8 @@ def apply(queryset: QuerySet[Article], filters: ListingFilters) -> QuerySet[Arti
         conditions &= Q(disciplines__in=disciplines)
     if types := filters.effective_types:
         conditions &= Q(type__in=types)
+    if filters.fixed_topic:
+        conditions &= Q(topics=filters.fixed_topic)
     if not conditions:
         return queryset
     matching = Article.objects.filter(conditions).values("pk")
@@ -265,6 +271,8 @@ def chips(filters: ListingFilters, query: QueryDict) -> list[Chip]:
         result.append(Chip(f"Disciplina: {filters.fixed_discipline.name}"))
     if filters.fixed_type:
         result.append(Chip(f"Tipo: {filters.fixed_type.name}"))
+    if filters.fixed_topic:
+        result.append(Chip(f"Tópico: {filters.fixed_topic.name}"))
     if filters.area:
         result.append(Chip(f"Área: {filters.area.name}", _without(query, "area")))
     for discipline in filters.disciplines:

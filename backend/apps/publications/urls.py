@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import editor_views, public_views, views
+from . import editor_views, feeds, public_views, views
 
 app_name = "publications"
 
@@ -8,6 +8,7 @@ urlpatterns = [
     # Público
     path("publicacoes/", public_views.article_list, name="list"),
     path("agenda/", public_views.agenda, name="agenda"),
+    path("feed/", feeds.latest, name="feed"),
     path("publicacoes/previa/<int:pk>/", public_views.preview, name="preview"),
     path("publicacoes/<slug:slug>/", public_views.detail, name="detail"),
     # Painel
