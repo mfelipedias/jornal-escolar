@@ -47,7 +47,7 @@ class NewsSourceAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "language", "trust_level", HealthFilter)
     search_fields = ("name", "feed_url")
     filter_horizontal = ("default_topics", "default_disciplines")
-    actions = ["fetch_now"]
+    actions = ["fetch_now", "delete_items"]
     readonly_fields = (
         "last_fetched_at",
         "last_success_at",
@@ -84,6 +84,18 @@ class NewsSourceAdmin(admin.ModelAdmin):
     @admin.action(description="Buscar agora")
     def fetch_now(self, request: HttpRequest, queryset: QuerySet[NewsSource]) -> None:
         _report(request, services.fetch_sources(list(queryset)))
+
+    @admin.action(
+        description="Apagar as notícias coletadas (pedido de remoção do veículo)",
+        permissions=["delete"],
+    )
+    def delete_items(self, request: HttpRequest, queryset: QuerySet[NewsSource]) -> None:
+        deleted = sum(services.delete_source_items(source) for source in queryset)
+        self.message_user(
+            request,
+            f"{deleted} notícia(s) apagada(s). Desative a fonte para não coletar de novo.",
+            messages.SUCCESS,
+        )
 
     def get_urls(self):
         view = self.admin_site.admin_view(require_POST(self.fetch_now_view))

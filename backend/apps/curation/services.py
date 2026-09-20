@@ -1,10 +1,14 @@
 """Coleta de notícias dos feeds (docs/21, "Pipeline de coleta" e "Higiene").
 
 fetch_source(fonte) baixa o feed com ETag/Last-Modified, lê com feedparser, normaliza cada item
-(normalize.py) e grava só os que ainda não existem (url_hash único). Erros de uma fonte ficam
-registrados nela (último erro, falhas seguidas) e nunca derrubam a coleta das outras.
+(normalize.py) e grava só as notícias novas. Erros de uma fonte ficam registrados nela (último
+erro, falhas seguidas) e nunca derrubam a coleta das outras.
 
-Deduplicação por título e retenção de 60 dias são da E46; classificação, da E47.
+Deduplicação (E46), valendo entre fontes diferentes:
+- mesmo endereço: url_hash único (o link limpo, depois dos redirecionamentos);
+- mesmo título: title_hash igual ao de outra notícia publicada até 7 dias antes ou depois, só
+  para títulos marcantes (normalize.is_distinctive_title). Fica a que chegou primeiro.
+Retenção (E46): purge_old_items apaga o que foi coletado há mais de 60 dias. Classificação: E47.
 
 Segurança (docs/23): só http e https, tempo limite, feed de no máximo 5 MB, no máximo
 5 redirecionamentos e nenhum pedido para endereços de rede interna (protege o servidor se alguém
@@ -16,18 +20,18 @@ import logging
 import socket
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import feedparser
 import httpx
 from django.conf import settings
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
 
 from apps.core.site_settings import get_setting
 
 from . import normalize
-from .models import NewsItem, NewsSource
+from .models import RETENTION_DAYS, TITLE_DEDUP_WINDOW, NewsItem, NewsSource
 from .seed_data import SOURCES
 
 logger = logging.getLogger(__name__)
@@ -40,6 +44,9 @@ MAX_REDIRECTS = 5
 MAX_ITEMS_PER_FETCH = 50
 # Pedidos HEAD simultâneos para descobrir o endereço final dos links novos.
 HEAD_WORKERS = 8
+# Primeira chave das travas do PostgreSQL que impedem duas coletas simultâneas de gravarem o
+# mesmo título (a segunda chave vem do title_hash).
+TITLE_LOCK_NAMESPACE = 4621
 FEED_ACCEPT = (
     "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.5"
 )
@@ -57,6 +64,7 @@ class FetchResult:
     source: NewsSource
     new: int = 0
     known: int = 0
+    repeated: int = 0
     skipped: int = 0
     not_modified: bool = False
     error: str = ""
@@ -70,7 +78,10 @@ class FetchResult:
             return f"{self.source.name}: erro — {self.error}"
         if self.not_modified:
             return f"{self.source.name}: nada mudou desde a última coleta"
-        return f"{self.source.name}: {self.new} nova(s), {self.known} já conhecida(s)"
+        text = f"{self.source.name}: {self.new} nova(s), {self.known} já conhecida(s)"
+        if self.repeated:
+            text += f", {self.repeated} com título repetido"
+        return text
 
 
 def user_agent() -> str:
@@ -169,12 +180,51 @@ class _Candidate:
     link: str
     title: str
     entry: dict
+    published_at: datetime
+    title_hash: str
+    distinctive: bool
+
+
+def _title_window(published_at: datetime) -> tuple[datetime, datetime]:
+    return published_at - TITLE_DEDUP_WINDOW, published_at + TITLE_DEDUP_WINDOW
+
+
+def _drop_repeated_titles(candidates: list[_Candidate]) -> list[_Candidate]:
+    """Tira, antes do HEAD, os que repetem o título de uma notícia já gravada."""
+    hashes = {c.title_hash for c in candidates if c.distinctive}
+    if not hashes:
+        return candidates
+    earliest = min(c.published_at for c in candidates) - TITLE_DEDUP_WINDOW
+    stored: dict[str, list[datetime]] = {}
+    rows = NewsItem.objects.filter(title_hash__in=hashes, published_at__gte=earliest)
+    for digest, published_at in rows.values_list("title_hash", "published_at"):
+        stored.setdefault(digest, []).append(published_at)
+
+    def repeated(c: _Candidate) -> bool:
+        start, end = _title_window(c.published_at)
+        return c.distinctive and any(start <= p <= end for p in stored.get(c.title_hash, ()))
+
+    return [c for c in candidates if not repeated(c)]
+
+
+def _title_taken(candidate: _Candidate) -> bool:
+    """Confere de novo na hora de gravar, com uma trava por título: pega também o que outra
+    coleta (ou este mesmo feed) acabou de gravar. A trava dura até o fim da transação."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT pg_advisory_xact_lock(%s, %s)",
+            [TITLE_LOCK_NAMESPACE, int(candidate.title_hash[:7], 16)],
+        )
+    return NewsItem.objects.filter(
+        title_hash=candidate.title_hash, published_at__range=_title_window(candidate.published_at)
+    ).exists()
 
 
 def _store_entries(
     client: httpx.Client, source: NewsSource, parsed: feedparser.FeedParserDict, now: datetime
-) -> tuple[int, int, int]:
-    """Grava os itens novos. Devolve (novos, já conhecidos, ignorados por falta de título/link)."""
+) -> tuple[int, int, int, int]:
+    """Grava os itens novos. Devolve (novos, já conhecidos, com título repetido, ignorados por
+    falta de título/link)."""
     outlet_names = (source.name, parsed.feed.get("title", ""))
     candidates: list[_Candidate] = []
     skipped = 0
@@ -184,7 +234,16 @@ def _store_entries(
         if not title or not normalize.is_web_url(link) or len(link) > 1000:
             skipped += 1
             continue
-        candidates.append(_Candidate(link, title, entry))
+        candidates.append(
+            _Candidate(
+                link=link,
+                title=title,
+                entry=entry,
+                published_at=normalize.entry_datetime(entry, now),
+                title_hash=normalize.title_hash(title),
+                distinctive=normalize.is_distinctive_title(title),
+            )
+        )
 
     # Já conhecidos pelo link do feed ou pelo link limpo: não precisam do HEAD.
     cleaned = {c.link: normalize.canonicalize_url(c.link) for c in candidates}
@@ -200,6 +259,9 @@ def _store_entries(
         if c.link not in known_links and normalize.url_hash(cleaned[c.link]) not in known_hashes
     ]
     known = len(candidates) - len(pending)
+    unique_titles = _drop_repeated_titles(pending)
+    repeated = len(pending) - len(unique_titles)
+    pending = unique_titles
 
     links = list(dict.fromkeys(c.link for c in pending))
     with ThreadPoolExecutor(max_workers=HEAD_WORKERS) as pool:
@@ -224,23 +286,28 @@ def _store_entries(
             "title": candidate.title,
             "url": candidate.link,
             "canonical_url": canonical,
-            "title_hash": normalize.title_hash(candidate.title),
+            "title_hash": candidate.title_hash,
             "summary": normalize.clean_summary(entry.get("summary", "")),
             "image_url": normalize.entry_image_url(entry),
-            "published_at": normalize.entry_datetime(entry, now),
+            "published_at": candidate.published_at,
             "fetched_at": now,
             "language": source.language,
         }
+        title_taken = False
         try:
             with transaction.atomic():
-                _, created = NewsItem.objects.get_or_create(url_hash=digest, defaults=defaults)
+                title_taken = candidate.distinctive and _title_taken(candidate)
+                if not title_taken:
+                    _, created = NewsItem.objects.get_or_create(url_hash=digest, defaults=defaults)
         except IntegrityError:
             created = False
-        if created:
+        if title_taken:
+            repeated += 1
+        elif created:
             new += 1
         else:
             known += 1
-    return new, known, skipped
+    return new, known, repeated, skipped
 
 
 def _record(
@@ -278,7 +345,9 @@ def fetch_source(source: NewsSource, client: httpx.Client | None = None) -> Fetc
             result.not_modified = True
         else:
             parsed = parse_feed(body, headers)
-            result.new, result.known, result.skipped = _store_entries(client, source, parsed, now)
+            result.new, result.known, result.repeated, result.skipped = _store_entries(
+                client, source, parsed, now
+            )
     except FetchError as exc:
         result.error = str(exc)
     except Exception:
@@ -302,6 +371,25 @@ def due_sources(now: datetime | None = None) -> list[NewsSource]:
 def fetch_sources(sources: list[NewsSource]) -> list[FetchResult]:
     with build_client() as client:
         return [fetch_source(source, client) for source in sources]
+
+
+def purge_old_items(now: datetime | None = None) -> int:
+    """Apaga as notícias coletadas há mais de 60 dias (docs/21, "Higiene"). Conta a data da
+    coleta, que nunca é anterior à de publicação: assim uma notícia antiga que ainda aparece no
+    feed não é apagada e coletada de novo a cada meia hora. Pode rodar quantas vezes quiser.
+
+    Na E48, as notícias salvas, marcadas como interessantes ou que viraram pauta passam a ficar.
+    """
+    cutoff = (now or timezone.now()) - timedelta(days=RETENTION_DAYS)
+    _, per_model = NewsItem.objects.filter(fetched_at__lt=cutoff).delete()
+    return per_model.get(NewsItem._meta.label, 0)
+
+
+def delete_source_items(source: NewsSource) -> int:
+    """Apaga tudo o que foi coletado de uma fonte, para quando o veículo pede a remoção
+    (docs/21, "Confiabilidade e direitos"). A fonte continua cadastrada."""
+    _, per_model = NewsItem.objects.filter(source=source).delete()
+    return per_model.get(NewsItem._meta.label, 0)
 
 
 @dataclass

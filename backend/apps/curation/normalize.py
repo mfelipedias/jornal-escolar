@@ -7,6 +7,8 @@
 - url_hash: SHA-256 da URL canônica sem o esquema e sem "www.", para http e https do mesmo
   endereço contarem como a mesma notícia.
 - title_hash: SHA-256 do título em minúsculas, sem acentos e sem pontuação.
+- Título marcante: com pelo menos 4 palavras. Só esses entram na deduplicação por título, porque
+  títulos curtos ("Editorial", "Podcast da semana") se repetem sem ser a mesma notícia.
 """
 
 import hashlib
@@ -62,6 +64,7 @@ _WORDPRESS_NOTE = re.compile(
 _READ_MORE = re.compile(r"\s*\[(?:…|\.\.\.)\]\s*$")
 _TITLE_SEPARATORS = (" - ", " – ", " — ", " | ")  # noqa: RUF001 (hífen, meia-risca, travessão)
 _PUNCTUATION = re.compile(r"[^\w\s]")
+TITLE_DEDUP_MIN_WORDS = 4
 
 
 def strip_html(value: str) -> str:
@@ -134,9 +137,16 @@ def url_hash(canonical_url: str) -> str:
     return hashlib.sha256(key.encode()).hexdigest()
 
 
+def title_key(title: str) -> str:
+    return _SPACES.sub(" ", _PUNCTUATION.sub(" ", fold(title))).strip()
+
+
 def title_hash(title: str) -> str:
-    key = _SPACES.sub(" ", _PUNCTUATION.sub(" ", fold(title))).strip()
-    return hashlib.sha256(key.encode()).hexdigest()
+    return hashlib.sha256(title_key(title).encode()).hexdigest()
+
+
+def is_distinctive_title(title: str) -> bool:
+    return len(title_key(title).split()) >= TITLE_DEDUP_MIN_WORDS
 
 
 def is_web_url(url: str) -> bool:

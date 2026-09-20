@@ -13,7 +13,7 @@ O Procrastinate lê o cron em UTC. Os horários abaixo são escritos no horário
 | Tarefa | Quando (Brasília) | O que faz |
 |---|---|---|
 | heartbeat | a cada hora, no minuto 0 (*) | registra no log que o worker está vivo |
-| cleanup | todo dia às 4h30 | leituras e comentários com prazo vencido (comando `cleanup`) |
+| cleanup | todo dia às 4h30 | leituras, comentários e notícias com prazo vencido (`cleanup`) |
 | remind_pending_comments | todo dia às 7h | comentários de leitores pendentes há 3 dias |
 | remind_stale_reviews | todo dia às 7h10 | revisões paradas há 5 dias |
 | purge_worker_history | domingo às 5h | histórico de tarefas do worker com mais de 30 dias |
@@ -31,6 +31,7 @@ from django.db import close_old_connections, connection
 from procrastinate import JobContext
 from procrastinate.contrib.django import app
 
+from apps.curation import services as curation
 from apps.editorial import services as editorial
 from apps.engagement import services as engagement
 
@@ -90,6 +91,7 @@ def cleanup(timestamp: int) -> dict[str, int]:
             "leituras": engagement.purge_old_reads(),
             "comentarios_rejeitados": rejected,
             "comentarios_sem_dados_tecnicos": cleared,
+            "noticias_antigas": curation.purge_old_items(),
         }
 
     return _run("cleanup", timestamp, job)

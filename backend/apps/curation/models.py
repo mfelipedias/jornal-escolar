@@ -1,8 +1,9 @@
 """Curadoria de notícias externas (docs/21, docs/06 "curation.*").
 
-A E45 cria as fontes e os itens coletados. Classificação, recomendação e pautas chegam nas
-etapas seguintes da Fase 4. Só guardamos metadados: título, resumo curto do próprio feed, link e
-data. Nunca o texto integral, nunca imagens (só o endereço delas).
+A E45 cria as fontes e os itens coletados; a E46, a deduplicação por título e a retenção.
+Classificação, recomendação e pautas chegam nas etapas seguintes da Fase 4. Só guardamos
+metadados: título, resumo curto do próprio feed, link e data. Nunca o texto integral, nunca
+imagens (só o endereço delas).
 """
 
 from datetime import datetime, timedelta
@@ -15,6 +16,10 @@ from apps.core.models import TimeStampedModel
 SUMMARY_MAX_LENGTH = 600
 # Fonte com este número de falhas seguidas aparece em alerta no admin (não é desativada).
 FAILURES_ALERT = 5
+# Notícia com o mesmo título de outra publicada até 7 dias antes ou depois é descartada.
+TITLE_DEDUP_WINDOW = timedelta(days=7)
+# Notícias coletadas há mais tempo que isto são apagadas pelo cleanup diário (docs/21, "Higiene").
+RETENTION_DAYS = 60
 
 
 class NewsSource(TimeStampedModel):

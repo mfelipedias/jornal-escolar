@@ -2,6 +2,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand
 
+from apps.curation import services as curation
 from apps.engagement import services as engagement
 
 
@@ -9,7 +10,8 @@ class Command(BaseCommand):
     help = (
         "Apaga dados que já cumpriram o prazo (docs/18, docs/20): registros diários de leitura "
         "com mais de 90 dias (o total de cada publicação continua), comentários rejeitados há "
-        "mais de 30 dias e o hash do IP e o código anônimo dos comentários com mais de 30 dias. "
+        "mais de 30 dias, o hash do IP e o código anônimo dos comentários com mais de 30 dias e "
+        "as notícias coletadas há mais de 60 dias (docs/21). "
         "Pode rodar quantas vezes quiser; o worker roda isto todo dia às 4h30 (apps/core/tasks.py)."
     )
 
@@ -21,3 +23,5 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(f"Comentários com dados técnicos removidos: {cleared}.")
         )
+        news = curation.purge_old_items()
+        self.stdout.write(self.style.SUCCESS(f"Notícias coletadas antigas apagadas: {news}."))

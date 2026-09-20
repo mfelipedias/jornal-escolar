@@ -114,6 +114,7 @@ def test_cleanup_apaga_leituras_antigas_e_pode_rodar_de_novo():
         "leituras": 0,
         "comentarios_rejeitados": 0,
         "comentarios_sem_dados_tecnicos": 0,
+        "noticias_antigas": 0,
     }
     assert ArticleRead.objects.count() == 1
 
@@ -136,7 +137,10 @@ def job_statuses(connector: InMemoryConnector) -> dict[str, str]:
     return {job["task_name"]: job["status"] for job in connector.jobs.values()}
 
 
-def test_worker_executa_tarefas_enfileiradas(in_memory):
+def test_worker_executa_tarefas_enfileiradas(in_memory, monkeypatch):
+    # Sem o agendador: perto do horário de uma tarefa periódica (a coleta de notícias roda a cada
+    # meia hora), o worker a enfileiraria e executaria também.
+    monkeypatch.setattr(app.periodic_registry, "periodic_tasks", {})
     tasks.heartbeat.defer(timestamp=0)
     tasks.purge_worker_history.defer(timestamp=0)
 
