@@ -1,11 +1,13 @@
 {% load permissions %}
 {% comment %}
   Abas do painel editorial (docs/18, E33): visão geral, todas as publicações, destaques e
-  páginas. Destaques e Páginas mantêm os endereços da E25. Parâmetro: section
-  ("overview", "articles", "featured" ou "pages").
+  páginas; "Contas novas" (Fase 4b) para quem aprova cadastros. Destaques e Páginas mantêm os
+  endereços da E25. Parâmetro: section ("overview", "articles", "featured", "pages" ou
+  "accounts").
 {% endcomment %}
 {% can "feature" as show_featured %}
 {% can "edit_pages" as show_pages %}
+{% can "approve_accounts" as show_accounts %}
 <nav class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0"
      aria-label="Seções do editorial">
   <ul class="flex min-w-max gap-1 border-b border-line">
@@ -13,6 +15,7 @@
     {% url 'editorial:articles' as articles_url %}
     {% url 'editorial:featured' as featured_url %}
     {% url 'core:page_list' as pages_url %}
+    {% url 'editorial:accounts' as accounts_url %}
     {% include "editorial/partials/editorial_tab.html" with key="overview" label="Visão geral" url=overview_url %}
     {% include "editorial/partials/editorial_tab.html" with key="articles" label="Todas as publicações" url=articles_url %}
     {% if show_featured %}
@@ -20,6 +23,9 @@
     {% endif %}
     {% if show_pages %}
       {% include "editorial/partials/editorial_tab.html" with key="pages" label="Páginas" url=pages_url %}
+    {% endif %}
+    {% if show_accounts %}
+      {% include "editorial/partials/editorial_tab.html" with key="accounts" label="Contas novas" url=accounts_url %}
     {% endif %}
   </ul>
 </nav>

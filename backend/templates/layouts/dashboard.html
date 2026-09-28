@@ -64,8 +64,10 @@
           </button>
           <p class="hidden text-ui text-ink-3 md:block">Painel</p>
           <div class="ml-auto flex items-center gap-2 text-meta sm:gap-4">
-            <a href="{% url 'publications:create' %}"
-               class="btn-primary hidden sm:inline-flex">Escrever</a>
+            {% if user.is_approved %}
+              <a href="{% url 'publications:create' %}"
+                 class="btn-primary hidden sm:inline-flex">Escrever</a>
+            {% endif %}
             {% include "components/notification_bell.html" %}
             <a href="{% url 'accounts:profile_edit' %}"
                class="hidden max-w-48 truncate text-ink-2 hover:text-accent sm:inline"

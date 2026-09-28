@@ -69,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "apps.accounts.middleware.PendingApprovalMiddleware",
     "apps.core.middleware.SecurityHeadersMiddleware",
     "apps.core.middleware.HtmxMessagesMiddleware",
     "apps.core.middleware.AppVersionHeaderMiddleware",

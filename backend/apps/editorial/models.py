@@ -150,6 +150,8 @@ class Notification(models.Model):
         REVIEW_STALE = "review_stale", "Revisão parada"
         SUGGESTIONS = "suggestions", "Sugestões de pauta"
         STORY_IDEA = "story_idea", "Pauta"
+        ACCOUNT_PENDING = "account_pending", "Conta aguardando aprovação"
+        ACCOUNT_APPROVED = "account_approved", "Conta aprovada"
         SYSTEM = "system", "Sistema"
 
     user = models.ForeignKey(

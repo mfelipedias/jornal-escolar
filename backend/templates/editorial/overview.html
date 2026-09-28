@@ -11,6 +11,13 @@
     O jornal inteiro em uma olhada: o que está parado, o que precisa de correção e em que pé estão os textos.
   </p>
   <div class="mt-6">{% include "editorial/partials/editorial_nav.html" %}</div>
+  {% if pending_accounts %}
+    <p class="mt-6 rounded-card border border-line border-l-4 border-l-warn bg-white px-4 py-3 text-ui"
+       data-pending-accounts-callout>
+      {{ pending_accounts }} conta{{ pending_accounts|pluralize }} nova{{ pending_accounts|pluralize }} aguardando aprovação.
+      <a href="{% url 'editorial:accounts' %}" class="font-medium text-accent hover:underline">Ver contas novas</a>
+    </p>
+  {% endif %}
   <section aria-labelledby="sec-alertas" class="mt-8" data-alerts>
     <h2 id="sec-alertas" class="font-display text-h3 font-semibold">
       Alertas

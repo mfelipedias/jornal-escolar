@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.core.http import attachment
 from apps.publications.media import MediaError
@@ -162,6 +162,8 @@ def onboarding_done(request: HttpRequest) -> HttpResponse:
         )
     else:
         messages.success(request, "Perfil pronto. Boas-vindas ao jornal!")
+    if not request.user.is_approved:
+        return redirect("accounts:pending")
     return redirect("core:home")
 
 
@@ -296,3 +298,14 @@ def account_settings(request: HttpRequest) -> HttpResponse:
         "deletion_request": privacy.last_deletion_request(user),
     }
     return render(request, "accounts/account_settings.html", context)
+
+
+@never_cache
+@require_GET
+@login_required
+def pending(request: HttpRequest) -> HttpResponse:
+    """/painel/aguardando/: conta do cadastro próprio esperando um editor (Fase 4b, C2)."""
+    if request.user.is_approved:
+        return redirect("dashboard:home")
+    context = {"missing": selectors.missing_profile_items(request.user)}
+    return render(request, "accounts/pending.html", context)

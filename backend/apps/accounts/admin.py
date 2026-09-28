@@ -16,7 +16,7 @@ from django.utils.html import format_html, format_html_join
 from apps.core import audit
 from apps.core.http import attachment
 
-from . import privacy, services
+from . import approval, privacy, services
 from .models import AccessLink, TeacherProfile, User
 
 
@@ -68,14 +68,16 @@ class UserAdmin(DjangoUserAdmin):
         "role",
         "staff_kind",
         "is_active",
+        "is_approved",
         "login_method",
         "last_login",
     )
-    list_filter = ("role", "staff_kind", "is_active")
+    list_filter = ("is_approved", "role", "staff_kind", "is_active")
     search_fields = ("full_name", "display_name", "email")
     ordering = ("full_name",)
     readonly_fields = ("is_staff", "last_login", "date_joined", "deactivated_at", "anonymized_at")
     actions = [
+        "approve_users",
         "generate_access_links",
         "deactivate_users",
         "reactivate_users",
@@ -88,7 +90,16 @@ class UserAdmin(DjangoUserAdmin):
         ("Identificação", {"fields": ("full_name", "display_name", "staff_kind")}),
         (
             "Acesso",
-            {"fields": ("role", "is_active", "deactivated_at", "anonymized_at", "is_staff")},
+            {
+                "fields": (
+                    "role",
+                    "is_active",
+                    "is_approved",
+                    "deactivated_at",
+                    "anonymized_at",
+                    "is_staff",
+                )
+            },
         ),
         ("Datas", {"fields": ("last_login", "date_joined")}),
     )
@@ -149,6 +160,14 @@ class UserAdmin(DjangoUserAdmin):
     @admin.display(description="entra com")
     def login_method(self, obj: User) -> str:
         return "Senha" if obj.has_usable_password() else "Microsoft ou link"
+
+    @admin.action(description="Aprovar contas do cadastro próprio")
+    def approve_users(self, request: HttpRequest, queryset: QuerySet[User]) -> None:
+        count = 0
+        for user in queryset.filter(is_approved=False, is_active=True):
+            approval.approve(request.user, user, request)
+            count += 1
+        self.message_user(request, f"{count} conta(s) aprovada(s).", messages.SUCCESS)
 
     @admin.action(description="Gerar link de acesso (criar ou redefinir senha)")
     def generate_access_links(self, request: HttpRequest, queryset: QuerySet[User]) -> None:

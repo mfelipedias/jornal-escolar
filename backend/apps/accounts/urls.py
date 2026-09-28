@@ -14,6 +14,7 @@ urlpatterns = [
     path("cadastro/", views.signup_request, name="signup"),
     path("cadastro/confirmar/", views.signup_confirm, name="signup_confirm"),
     path("painel/perfil/", panel_views.profile_edit, name="profile_edit"),
+    path("painel/aguardando/", panel_views.pending, name="pending"),
     path("painel/conta/", panel_views.account_settings, name="account_settings"),
     path("painel/primeiro-acesso/<int:step>/", panel_views.onboarding, name="onboarding"),
     path(

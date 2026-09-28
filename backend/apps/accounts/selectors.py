@@ -79,7 +79,9 @@ def credited_profiles() -> list[TeacherProfile]:
         user__contributions__article__status=Article.Status.PUBLISHED,
     ) & (Q(user__contributions__role__in=not_reviewer) | Q(show_reviewer_credit=True))
     profiles = (
-        TeacherProfile.objects.filter(visible, is_public=True, user__is_active=True)
+        TeacherProfile.objects.filter(
+            visible, is_public=True, user__is_active=True, user__is_approved=True
+        )
         .select_related("user")
         .distinct()
     )

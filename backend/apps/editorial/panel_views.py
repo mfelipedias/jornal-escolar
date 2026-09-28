@@ -1,5 +1,6 @@
 """Painel editorial (docs/18, E33): visão geral com alertas, todas as publicações e ações em
-massa. Só editor e admin (permissions.can_access_editorial)."""
+massa. Só editor e admin (permissions.can_access_editorial). Contas novas do cadastro próprio
+(Fase 4b, C2): aprovar ou recusar."""
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -12,6 +13,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.accounts import approval
 from apps.accounts.models import User
 from apps.core import audit
 from apps.core.templatetags.ui import PAGE_PARAM
@@ -51,6 +53,7 @@ def overview(request: HttpRequest) -> HttpResponse:
         "alert_groups": groups,
         "alert_total": alerts.alert_count(groups),
         "can_anonymize": permissions.can_anonymize(request.user),
+        "pending_accounts": approval.pending_count(),
     }
     return render(request, "editorial/overview.html", context)
 
@@ -182,3 +185,42 @@ def bulk_action(request: HttpRequest) -> HttpResponse:
     if failed:
         messages.error(request, "Não foi possível em " + " ".join(failed))
     return redirect(back)
+
+
+# --- contas novas (Fase 4b, C2) ---
+
+ACCOUNT_ACTIONS = {
+    "aprovar": (approval.approve, "Conta de {name} aprovada. A pessoa foi avisada."),
+    "recusar": (approval.reject, "Cadastro de {name} recusado e apagado."),
+}
+
+
+@never_cache
+@require_GET
+@login_required
+def accounts(request: HttpRequest) -> HttpResponse:
+    """/painel/editorial/contas/: cadastros próprios aguardando aprovação."""
+    if not permissions.can_approve_accounts(request.user):
+        raise PermissionDenied
+    context = {"section": "accounts", "people": approval.pending_accounts()}
+    return render(request, "editorial/accounts.html", context)
+
+
+@require_POST
+@login_required
+def account_action(request: HttpRequest, pk: int, action: str) -> HttpResponse:
+    if action not in ACCOUNT_ACTIONS:
+        raise PermissionDenied
+    person = User.objects.filter(pk=pk).first()
+    if person is None:
+        messages.info(request, "Esta conta já foi decidida por outra pessoa.")
+        return redirect("editorial:accounts")
+    service, message = ACCOUNT_ACTIONS[action]
+    name = person.public_name
+    try:
+        service(request.user, person, request)
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+    else:
+        messages.success(request, message.format(name=name))
+    return redirect("editorial:accounts")

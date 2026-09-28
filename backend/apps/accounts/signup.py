@@ -31,7 +31,7 @@ from apps.core import audit, mail
 from apps.core.ratelimit import hit
 from apps.core.site_settings import get_setting
 
-from . import services
+from . import approval, services
 from .models import EmailCode, User, normalize_email
 
 Purpose = EmailCode.Purpose
@@ -126,14 +126,14 @@ def request_signup(email: str, full_name: str, request: HttpRequest | None = Non
             send_email(
                 email,
                 "account_exists",
-                {"name": existing.public_name, "login_url": _absolute("accounts:login")},
+                {"name": existing.public_name, "login_url": absolute_url("accounts:login")},
             )
         return
     code = issue_code(email, Purpose.SIGNUP, full_name)
     send_email(email, "signup_code", {"name": full_name, "code": code, "minutes": 15})
 
 
-def _absolute(name: str) -> str:
+def absolute_url(name: str) -> str:
     return f"{settings.SITE_URL.rstrip('/')}{reverse(name)}"
 
 
@@ -194,6 +194,7 @@ def complete_signup(
             changes={"dominio": user.email.rpartition("@")[2]},
             request=request,
         )
+        approval.notify_new_signup(user)
     return user
 
 

@@ -1,0 +1,23 @@
+{% extends "layouts/dashboard.html" %}
+{% comment %}
+  Conta do cadastro próprio aguardando aprovação (Fase 4b, C2). A pessoa pode completar o
+  perfil e ajustar a conta enquanto espera.
+{% endcomment %}
+{% block title %}Aguardando aprovação · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <div class="max-w-reading" data-pending>
+    <h1 class="font-display text-h1 font-semibold">Quase lá, {{ request.user.public_name }}!</h1>
+    <p class="mt-3 text-body text-ink-2">
+      Sua conta foi criada e está aguardando a aprovação da coordenação do jornal. Assim que ela for aprovada, você recebe um aviso aqui no sino e no seu e-mail, e já pode escrever e publicar.
+    </p>
+    {% if missing %}
+      <p class="mt-6 rounded-card border border-line bg-paper-2 px-4 py-3 text-ui text-ink-2">
+        Enquanto isso, que tal completar o seu perfil? Falta: {{ missing|join:", " }}.
+      </p>
+    {% endif %}
+    <div class="mt-6 flex flex-wrap gap-2">
+      <a href="{% url 'accounts:profile_edit' %}" class="btn-primary">Completar o perfil</a>
+      <a href="{% url 'core:home' %}" class="btn-secondary">Ler o jornal</a>
+    </div>
+  </div>
+{% endblock content %}

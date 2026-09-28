@@ -104,6 +104,10 @@ Comandos de gerenciamento para o admin:
 | `export_user_data <email>` | Exporta dados de um usuário | 2 |
 | `anonymize_user <email>` | Anonimiza | 2 |
 
+## Contas novas (Fase 4b)
+
+`/painel/editorial/contas/` (`editorial:accounts`), aba "Contas novas" do editorial, para editor e admin: cadastros próprios aguardando aprovação, com nome, e-mail, data, apresentação e disciplinas do perfil. **Aprovar** libera escrever e publicar e avisa a pessoa no sino e por e-mail; **Recusar** apaga a conta (ela ainda não tem nada no jornal) e deixa o e-mail livre. Cada cadastro gera aviso no sino de editores e admin; o item "Editorial" do menu e a visão geral mostram quantos esperam. No Django Admin, a lista de usuários filtra por "aprovada" e tem a ação "Aprovar contas do cadastro próprio". Auditoria: `user_signed_up`, `user_approved`, `user_rejected`.
+
 ## Histórico
 
 - 2026-09-12: versão inicial.
@@ -122,3 +126,4 @@ Comandos de gerenciamento para o admin:
 - 2026-09-15: áreas "Artes" e "Tecnologia" no seed e no menu, a pedido do dono (a disciplina "Arte" de Linguagens e "Tecnologia e Inovação" de Projetos continuam onde estão). As cores magenta e grafite deixam de ser reservadas.
 - 2026-09-17: E44. `cleanup` e `notify_pending_comments` passam a rodar sozinhos no worker; novo comando `notify_stale_reviews` para o aviso de revisão parada. Notificações lidas, rascunhos vazios e erros antigos continuam fora do `cleanup` (ainda não há regra definida para eles).
 - 2026-09-17: E45. "Curadoria de notícias" no admin: `NewsSource` com botão e ação "Buscar agora" (coleta na hora e mostra o resultado), aviso e filtro para fontes com 5 falhas seguidas; `NewsItem` só leitura, com ações "Ocultar das sugestões" e "Mostrar de novo" (classificações entram na E47). Comandos `seed_news_sources` e `fetch_news`.
+- 2026-09-28: C2: aba "Contas novas" no painel editorial.

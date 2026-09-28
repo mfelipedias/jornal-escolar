@@ -1,0 +1,10 @@
+{% autoescape off %}Sua conta no {{ site_name }} foi aprovada
+Olá, {{ name }}!
+
+Sua conta no {{ site_name }} foi aprovada. Você já pode escrever e publicar.
+
+Para entrar: {{ login_url }}
+
+{{ site_name }}
+{{ site_url }}
+{% endautoescape %}

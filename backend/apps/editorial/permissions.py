@@ -24,9 +24,20 @@ from apps.publications.models import Article, ArticleContributor, MediaAsset
 AnyUser = User | AnonymousUser
 
 
-def is_staff_member(user: AnyUser) -> bool:
-    """Tem conta ativa na equipe (qualquer papel)."""
+def has_account(user: AnyUser) -> bool:
+    """Tem conta ativa, aprovada ou não: entra, edita o próprio perfil e a conta."""
     return bool(user.is_authenticated and user.is_active)
+
+
+def is_staff_member(user: AnyUser) -> bool:
+    """Membro da equipe com conta ativa e aprovada (qualquer papel). Conta do cadastro próprio
+    ainda sem aprovação (Fase 4b) não escreve, não modera e não recebe sugestões."""
+    return has_account(user) and bool(getattr(user, "is_approved", False))
+
+
+def can_approve_accounts(user: AnyUser) -> bool:
+    """Aprovar ou recusar contas do cadastro próprio: editores e admin (docs/27)."""
+    return is_editor(user)
 
 
 # --- conta, perfil e administração ---
@@ -38,15 +49,16 @@ def can_log_in(user: AnyUser) -> bool:
 
 
 def can_view_profile(user: AnyUser, profile: TeacherProfile) -> bool:
-    """Perfil público: todo mundo. Perfil oculto: só o próprio dono."""
-    if profile.is_public:
+    """Perfil público de conta aprovada: todo mundo. Perfil oculto ou de conta aguardando
+    aprovação: só o próprio dono."""
+    if profile.is_public and profile.user.is_approved:
         return True
-    return is_staff_member(user) and user.pk == profile.user_id
+    return has_account(user) and user.pk == profile.user_id
 
 
 def can_edit_profile(user: AnyUser, person: User) -> bool:
     """Cada um edita o próprio perfil; o administrador edita qualquer um (no Django Admin)."""
-    if not is_staff_member(user):
+    if not has_account(user):
         return False
     return user.pk == person.pk or is_admin(user)
 

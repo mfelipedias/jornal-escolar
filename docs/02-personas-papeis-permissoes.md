@@ -90,6 +90,7 @@ Notas da matriz:
 - Ninguém revisa o próprio texto ([04](04-fluxo-editorial.md)): em "Aprovar / solicitar alterações", o ✅ de editor e admin vale para textos de outras pessoas.
 - 🟡 em "Editar rascunho" vale enquanto o texto está em revisão com a pessoa. O revisor não mexe nos créditos nem duplica o texto; se achar erro, comenta.
 - Contas, papéis, taxonomia e configurações ficam no Django Admin, liberado só para o papel `admin`.
+- **Conta aguardando aprovação** (Fase 4b): quem se cadastra sozinho tem papel "Equipe", mas até um editor ou o admin aprovar só entra, completa o perfil e a conta e vê os avisos. Na matriz, vale a coluna "Visitante" para todo o resto (`permissions.is_staff_member` exige `is_approved`). O perfil dela não aparece no site. Aprovar ou recusar cadastros: editor e admin.
 - A matriz é testada célula a célula em `backend/apps/editorial/tests/test_matrix.py`, que copia esta tabela e falha se as duas divergirem. Linhas de recursos futuros (reações, comentários públicos, busca, pautas, fontes) aparecem lá como fora do escopo até a etapa delas.
 
 ## Política editorial
@@ -118,3 +119,4 @@ Em qualquer valor: **alunos não têm conta e nunca publicam**; o professor resp
 - 2026-09-14: E30: notas da matriz (ninguém revisa o próprio texto, alcance do revisor, Django Admin), tag `{% can %}` e teste célula a célula.
 - 2026-09-14: E40: linhas "Comentar" (`can_comment`, que respeita `comments.enabled` e `comments_enabled`) e "Responder comentários como autor" (`can_reply_comment`) testadas na matriz.
 - 2026-09-15: E41: linha "Moderar comentários públicos" (`can_moderate_comments`) testada na matriz; `can_toggle_comments` (abrir/fechar comentários) segue a mesma regra.
+- 2026-09-28: C2: conta do cadastro próprio aguardando aprovação; editores e admin aprovam ou recusam.

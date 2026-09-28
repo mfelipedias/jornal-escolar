@@ -352,7 +352,7 @@ def writers(limit: int | None = 8, queryset: QuerySet[User] | None = None) -> Qu
     """
     base = queryset if queryset is not None else User.objects.all()
     people = (
-        base.filter(is_active=True, profile__is_public=True)
+        base.filter(is_active=True, is_approved=True, profile__is_public=True)
         .select_related("profile", "avatar")
         .annotate(
             last_published=Max(
