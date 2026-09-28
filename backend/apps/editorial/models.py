@@ -149,6 +149,7 @@ class Notification(models.Model):
         REVIEW_COMMENT = "review_comment", "Comentário na revisão"
         REVIEW_STALE = "review_stale", "Revisão parada"
         SUGGESTIONS = "suggestions", "Sugestões de pauta"
+        STORY_IDEA = "story_idea", "Pauta"
         SYSTEM = "system", "Sistema"
 
     user = models.ForeignKey(

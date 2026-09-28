@@ -1,0 +1,61 @@
+{% comment %}
+  Campos da pauta (E49): título, notas, tópicos, disciplinas e, conforme o formulário,
+  "Fico com esta pauta" (criação) ou "Com quem está" (editores). Parâmetro: form.
+{% endcomment %}
+{% if form.non_field_errors %}
+  <p class="text-meta font-medium text-danger" role="alert">{{ form.non_field_errors|join:" " }}</p>
+{% endif %}
+{% include "components/form_field.html" with field=form.title %}
+<div>
+  <label for="{{ form.notes.id_for_label }}"
+         class="block text-ui font-semibold text-ink">{{ form.notes.label }}</label>
+  <textarea id="{{ form.notes.id_for_label }}"
+            name="{{ form.notes.html_name }}"
+            rows="4"
+            maxlength="2000"
+            aria-describedby="{{ form.notes.id_for_label }}-ajuda"
+            class="field mt-1.5">{{ form.notes.value|default:"" }}</textarea>
+  <p id="{{ form.notes.id_for_label }}-ajuda" class="mt-1.5 text-meta text-ink-3">{{ form.notes.help_text }}</p>
+</div>
+<div class="grid gap-4 sm:grid-cols-2">
+  {% for field in form %}
+    {% if field.name == "topics" or field.name == "disciplines" %}
+      <fieldset>
+        <legend class="text-ui font-semibold text-ink">{{ field.label }}</legend>
+        <div class="mt-1.5 max-h-48 space-y-1 overflow-y-auto rounded-card border border-line bg-white px-3 py-2">
+          {% for option in field %}
+            <label class="flex items-center gap-2 text-ui text-ink-2">
+              {{ option.tag }}
+              {{ option.choice_label }}
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+    {% endif %}
+  {% endfor %}
+</div>
+{% if form.assigned_to %}
+  <div>
+    <label for="{{ form.assigned_to.id_for_label }}"
+           class="block text-ui font-semibold text-ink">{{ form.assigned_to.label }}</label>
+    <select id="{{ form.assigned_to.id_for_label }}"
+            name="{{ form.assigned_to.html_name }}"
+            class="field mt-1.5">
+      {% for value, label in form.assigned_to.field.choices %}
+        <option value="{{ value }}"
+                {% if value|stringformat:"s" == form.assigned_to.value|stringformat:"s" %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+{% endif %}
+{% if form.keep %}
+  <label class="flex items-center gap-2 text-ui text-ink">
+    <input type="checkbox"
+           name="{{ form.keep.html_name }}"
+           class="accent-accent"
+           {% if form.keep.value %}checked{% endif %}>
+    {{ form.keep.label }}
+  </label>
+{% endif %}

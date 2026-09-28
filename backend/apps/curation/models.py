@@ -1,7 +1,7 @@
 """Curadoria de notícias externas (docs/21, docs/06 "curation.*").
 
 A E45 cria as fontes e os itens coletados; a E46, a deduplicação por título e a retenção; a E47,
-a classificação por tópico e disciplina; a E48, as sugestões por professor. Pautas: E49.
+a classificação por tópico e disciplina; a E48, as sugestões por professor; a E49, as pautas.
 Só guardamos metadados: título, resumo curto do próprio feed, link e data. Nunca o texto
 integral, nunca imagens (só o endereço delas).
 """
@@ -220,6 +220,14 @@ class NewsRecommendation(TimeStampedModel):
     status = models.CharField(
         "situação", max_length=12, choices=Status.choices, default=Status.SUGGESTED
     )
+    story_idea = models.ForeignKey(
+        "StoryIdea",
+        verbose_name="pauta",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="recommendations",
+    )
     acted_at = models.DateTimeField(
         "ação do professor em",
         null=True,
@@ -240,3 +248,67 @@ class NewsRecommendation(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.item} → {self.user} ({self.get_status_display()})"
+
+
+class StoryIdea(TimeStampedModel):
+    """Pauta: uma ideia de texto para o jornal, nascida de uma sugestão ou escrita à mão
+    (docs/15 "Sugestões e Pautas", docs/21 "Da sugestão à publicação")."""
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Aberta"
+        ASSIGNED = "assigned", "Atribuída"
+        IN_PROGRESS = "in_progress", "Em produção"
+        DONE = "done", "Concluída"
+
+    title = models.CharField("título", max_length=200)
+    notes = models.TextField("notas", max_length=2000, blank=True)
+    proposed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="proposta por",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="proposed_story_ideas",
+    )
+    item = models.ForeignKey(
+        NewsItem,
+        verbose_name="notícia de origem",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="story_ideas",
+    )
+    disciplines = models.ManyToManyField(
+        "taxonomy.Discipline", verbose_name="disciplinas", related_name="story_ideas", blank=True
+    )
+    topics = models.ManyToManyField(
+        "taxonomy.Topic", verbose_name="tópicos", related_name="story_ideas", blank=True
+    )
+    status = models.CharField(
+        "situação", max_length=12, choices=Status.choices, default=Status.OPEN, db_index=True
+    )
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="com quem está",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_story_ideas",
+    )
+    article = models.ForeignKey(
+        "publications.Article",
+        verbose_name="publicação",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="story_ideas",
+    )
+    done_at = models.DateTimeField("concluída em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "pauta"
+        verbose_name_plural = "pautas"
+        ordering = ["-updated_at"]
+
+    def __str__(self) -> str:
+        return self.title

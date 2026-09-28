@@ -142,7 +142,7 @@ Substitui convite por e-mail. Gerado pelo admin e entregue manualmente.
 | event_at | timestamp nullable | |
 | event_location | varchar(120) | |
 | sources | JSONB | Lista de `{title, url, publisher}` |
-| origin_news_item | FK NewsItem nullable (Fase 4) | |
+| origin_news_item | FK NewsItem nullable (Fase 4) | Preenchida no "Criar rascunho" de uma pauta (E49); a checklist exige fonte |
 | reading_minutes | smallint | |
 | is_featured, featured_order | bool, smallint nullable | |
 | comments_enabled | bool | Padrão true |

@@ -30,6 +30,7 @@ from django.utils import timezone
 from apps.core import audit
 from apps.core.models import AuditLog
 from apps.core.site_settings import get_setting
+from apps.curation.models import StoryIdea
 
 from . import services
 from .models import AccessLink, TeacherProfile, User
@@ -132,6 +133,19 @@ def export_user_data(user: User) -> dict[str, Any]:
         for rec in user.news_recommendations.filter(acted_at__isnull=False)
         .select_related("item")
         .order_by("acted_at")
+    ]
+    data["pautas"] = [
+        {
+            "titulo": idea.title,
+            "notas": idea.notes,
+            "situacao": idea.get_status_display(),
+            "proposta_por_mim": idea.proposed_by_id == user.pk,
+            "comigo": idea.assigned_to_id == user.pk,
+            "criada_em": _date(idea.created_at),
+        }
+        for idea in StoryIdea.objects.filter(Q(proposed_by=user) | Q(assigned_to=user)).order_by(
+            "created_at"
+        )
     ]
     data["publicacoes_criadas"] = [
         {**_article_ref(article), "criada_em": _date(article.created_at)}

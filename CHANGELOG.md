@@ -25,6 +25,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Editores veem nas sugestões quantos colegas acharam cada notícia interessante.
 - Perfil: nova opção "Incluir fontes de menor confiança" (fontes com confiança 1 ou 2, desligada). "Aceito sugestões em inglês" passa a valer.
 - Notícias salvas, interessantes ou que viraram pauta não são apagadas pela limpeza dos 60 dias. A exportação de dados inclui o que a pessoa fez com as sugestões, e anonimizar uma conta apaga as sugestões dela.
+- Pautas (E49, docs/21): no painel, o item **Pautas** abre o quadro da redação, com as colunas Abertas, Atribuídas, Em produção e Concluídas. Qualquer pessoa da equipe cria uma pauta (título, notas, tópicos, disciplinas), pega uma aberta para si ou devolve. Editores escolhem com quem a pauta fica, e a pessoa recebe um aviso no sino.
+- Nas sugestões, o botão **Virar pauta** cria a pauta já com você, com a notícia de origem, os tópicos e as disciplinas.
+- **Criar rascunho** numa pauta abre o editor com o título, a notícia nas fontes (título, link e veículo), as disciplinas e os tópicos preenchidos, e a dica "Escreva com suas palavras. Cite a fonte. Pergunte: o que isso significa para a nossa escola?". Um texto que nasceu de uma notícia só é publicado com ao menos uma fonte citada. Ao publicar, a pauta vai para "Concluídas".
+- Ao corrigir os tópicos ou disciplinas de uma pauta, a classificação da notícia de origem também é corrigida, e a correção não se perde quando o sistema classifica de novo.
 
 ## [1.2.0] - 2026-09-17
 

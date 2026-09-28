@@ -1,0 +1,7 @@
+{% comment %}Botão de ação de uma pauta. Parâmetros: idea, action, label, style, next_url.{% endcomment %}
+<form method="post"
+      action="{% url 'curation:story_idea_action' idea.pk action %}">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next_url }}">
+  <button type="submit" class="{{ style }} min-h-11 sm:min-h-0">{{ label }}</button>
+</form>

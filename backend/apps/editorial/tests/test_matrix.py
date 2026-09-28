@@ -67,7 +67,6 @@ MATRIZ = [
 
 FORA_DO_ESCOPO = {
     "Buscar e filtrar": "busca e filtros completos: E35 a E37",
-    "Criar pauta a partir de sugestão (Fase 4)": "pautas: E49",
 }
 
 
@@ -124,6 +123,7 @@ REGRAS = {
     "Gerenciar áreas, disciplinas, tópicos, tipos": Regra("can_access_admin"),
     "Configurações, auditoria, anonimização": Regra("can_access_admin"),
     "Ver sugestões de pauta (Fase 4)": Regra("can_view_suggestions"),
+    "Criar pauta a partir de sugestão (Fase 4)": Regra("can_create_story_idea"),
     # Fontes de notícia são cadastradas no Django Admin (E45).
     "Gerenciar fontes de notícia (Fase 4)": Regra("can_access_admin"),
 }

@@ -18,6 +18,7 @@ from django.contrib.auth.models import AnonymousUser
 
 from apps.accounts.models import TeacherProfile, User
 from apps.core.site_settings import get_setting
+from apps.curation.models import StoryIdea
 from apps.publications.models import Article, ArticleContributor, MediaAsset
 
 AnyUser = User | AnonymousUser
@@ -314,3 +315,52 @@ def can_edit_pages(user: AnyUser) -> bool:
 def can_view_suggestions(user: AnyUser) -> bool:
     """Ver as próprias sugestões de pauta e agir sobre elas: toda a equipe."""
     return is_staff_member(user)
+
+
+def can_create_story_idea(user: AnyUser) -> bool:
+    """Criar pauta (à mão ou com "Virar pauta" numa sugestão): toda a equipe. O quadro de
+    pautas é da redação inteira: todos veem todas."""
+    return is_staff_member(user)
+
+
+def _idea_open(idea: StoryIdea) -> bool:
+    return idea.status != StoryIdea.Status.DONE
+
+
+def can_edit_story_idea(user: AnyUser, idea: StoryIdea) -> bool:
+    """Título, notas, tópicos e disciplinas: quem propôs, quem está com ela e editores."""
+    if not is_staff_member(user) or not _idea_open(idea):
+        return False
+    return is_editor(user) or user.pk in (idea.proposed_by_id, idea.assigned_to_id)
+
+
+def can_assign_story_idea(user: AnyUser, idea: StoryIdea) -> bool:
+    """Escolher com quem a pauta fica (docs/15, coluna "Atribuídas"): editores."""
+    return is_editor(user) and _idea_open(idea) and idea.article_id is None
+
+
+def can_take_story_idea(user: AnyUser, idea: StoryIdea) -> bool:
+    """Pegar uma pauta aberta para si."""
+    return is_staff_member(user) and idea.status == StoryIdea.Status.OPEN
+
+
+def can_release_story_idea(user: AnyUser, idea: StoryIdea) -> bool:
+    """Devolver ao quadro (volta a "Aberta") antes de haver rascunho."""
+    if idea.status != StoryIdea.Status.ASSIGNED or not is_staff_member(user):
+        return False
+    return is_editor(user) or idea.assigned_to_id == user.pk
+
+
+def can_start_draft(user: AnyUser, idea: StoryIdea) -> bool:
+    """Criar rascunho: quem está com a pauta, ou qualquer um numa pauta aberta (e fica com ela).
+    Também quando o rascunho anterior foi apagado."""
+    if not can_create_article(user) or not _idea_open(idea) or idea.article_id:
+        return False
+    return idea.assigned_to_id in (None, user.pk)
+
+
+def can_delete_story_idea(user: AnyUser, idea: StoryIdea) -> bool:
+    """Excluir: editores, ou quem propôs enquanto não há rascunho."""
+    if not is_staff_member(user):
+        return False
+    return is_editor(user) or (idea.proposed_by_id == user.pk and idea.article_id is None)

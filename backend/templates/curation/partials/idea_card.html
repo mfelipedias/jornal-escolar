@@ -1,0 +1,66 @@
+{% comment %}
+  Uma pauta no quadro (E49). Parâmetros: card (curation/selectors.py, IdeaCard), next_url.
+{% endcomment %}
+{% with idea=card.idea %}
+  <li class="rounded-card border border-line bg-white p-4
+             {% if card.is_mine %}ring-1 ring-accent/40{% endif %}"
+      data-idea="{{ idea.pk }}"
+      data-status="{{ idea.status }}">
+    <p class="font-display text-body font-semibold text-balance text-ink">{{ idea.title }}</p>
+    {% if idea.notes %}<p class="mt-1 line-clamp-3 text-meta text-ink-2">{{ idea.notes }}</p>{% endif %}
+    {% if idea.item %}
+      <p class="mt-2 text-meta text-ink-3">
+        Notícia:
+        <a href="{{ idea.item.canonical_url }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="text-accent hover:underline">{{ idea.item.source.name }}<span aria-hidden="true"> ↗</span></a>
+      </p>
+    {% endif %}
+    {% if idea.topics.all %}
+      <p class="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+        {% for topic in idea.topics.all %}
+          {% include "components/tag.html" with kind="topic" label=topic.name %}
+        {% endfor %}
+      </p>
+    {% endif %}
+    <p class="mt-2 text-meta text-ink-3">
+      {% if idea.assigned_to %}
+        Com <span class="font-medium text-ink-2">{% if card.is_mine %}você{% else %}{{ idea.assigned_to.public_name }}{% endif %}</span>
+        ·
+      {% endif %}
+      {% if idea.proposed_by %}proposta por {{ idea.proposed_by.public_name }}{% endif %}
+    </p>
+    <div class="mt-3 flex flex-wrap gap-2">
+      {% if idea.status == "done" and idea.article %}
+        <a href="{{ idea.article.get_absolute_url }}" class="btn-ghost">Ver publicação</a>
+      {% elif idea.article and card.is_mine %}
+        <a href="{% url 'publications:edit' idea.article.pk %}"
+           class="btn-secondary min-h-11 sm:min-h-0">Abrir rascunho</a>
+      {% endif %}
+      {% if card.can_start_draft %}
+        {% include "curation/partials/idea_button.html" with action="rascunho" label="Criar rascunho" style="btn-primary" %}
+      {% endif %}
+      {% if card.can_take %}
+        {% include "curation/partials/idea_button.html" with action="pegar" label="Pegar para mim" style="btn-secondary" %}
+      {% endif %}
+      {% if card.can_release %}
+        {% include "curation/partials/idea_button.html" with action="devolver" label="Devolver" style="btn-ghost" %}
+      {% endif %}
+      {% if card.can_edit %}
+        <a href="{% url 'curation:story_idea_edit' idea.pk %}"
+           class="btn-ghost min-h-11 sm:min-h-0">Editar</a>
+      {% endif %}
+      {% if card.can_delete %}
+        <form method="post"
+              action="{% url 'curation:story_idea_action' idea.pk 'excluir' %}"
+              x-data
+              @submit="if (!confirm('Excluir esta pauta?')) $event.preventDefault()">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="btn-ghost min-h-11 text-danger sm:min-h-0">Excluir</button>
+        </form>
+      {% endif %}
+    </div>
+  </li>
+{% endwith %}

@@ -1,0 +1,61 @@
+{% extends "layouts/dashboard.html" %}
+{% comment %}
+  Quadro de pautas (docs/15 "Sugestões e Pautas", docs/21; E49): Abertas, Atribuídas, Em
+  produção e Concluídas. É da redação inteira: todos veem todas as pautas.
+{% endcomment %}
+{% block title %}Pautas · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <div class="flex flex-wrap items-baseline justify-between gap-3">
+    <h1 class="font-display text-h1 font-semibold">Pautas</h1>
+    <nav aria-label="Filtro de pautas" class="flex gap-2 text-ui">
+      <a href="{% url 'curation:story_ideas' %}"
+         class="rounded-full border px-3 py-1
+                {% if not only_mine %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent{% endif %}"
+         {% if not only_mine %}aria-current="true"{% endif %}>Todas</a>
+      <a href="{% url 'curation:story_ideas' %}?minhas=1"
+         class="rounded-full border px-3 py-1
+                {% if only_mine %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent{% endif %}"
+         {% if only_mine %}aria-current="true"{% endif %}>Minhas</a>
+    </nav>
+  </div>
+  <p class="mt-2 max-w-reading text-ui text-ink-2">
+    Ideias de texto da equipe. Pegue uma aberta, crie o rascunho e, ao publicar, ela vai para as concluídas. Para achar ideias, veja as <a href="{% url 'curation:suggestions' %}" class="text-accent hover:underline">sugestões</a>.
+  </p>
+  <details class="mt-6 rounded-card border border-line bg-paper-2"
+           {% if form_open %}open{% endif %}
+           data-new-idea>
+    <summary class="cursor-pointer px-4 py-3 text-ui font-semibold text-ink">Nova pauta</summary>
+    <form method="post"
+          action="{% url 'curation:story_idea_create' %}"
+          class="space-y-4 border-t border-line px-4 py-4">
+      {% csrf_token %}
+      {% include "curation/partials/idea_form_fields.html" %}
+      <button type="submit" class="btn-primary">Criar pauta</button>
+    </form>
+  </details>
+  <div class="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4" data-board>
+    {% with next_url=request.get_full_path %}
+      {% for column in columns %}
+        <section aria-labelledby="col-{{ column.key }}"
+                 class="min-w-0"
+                 data-column="{{ column.key }}">
+          <h2 id="col-{{ column.key }}"
+              class="flex items-baseline gap-2 border-b border-line pb-2 font-display text-h3 font-semibold">
+            {{ column.label }}
+            <span class="text-meta font-normal text-ink-3">{{ column.cards|length }}</span>
+          </h2>
+          <p class="mt-1 text-meta text-ink-3">{{ column.help }}</p>
+          {% if column.cards %}
+            <ul class="mt-3 space-y-3">
+              {% for card in column.cards %}
+                {% include "curation/partials/idea_card.html" %}
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="mt-3 rounded-card border border-dashed border-line px-4 py-6 text-center text-meta text-ink-3">Nenhuma pauta aqui.</p>
+          {% endif %}
+        </section>
+      {% endfor %}
+    {% endwith %}
+  </div>
+{% endblock content %}

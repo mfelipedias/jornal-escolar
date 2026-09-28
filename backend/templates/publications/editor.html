@@ -37,6 +37,21 @@
                   placeholder="Linha fina: uma frase que resume a publicação"
                   class="mt-4 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-lead text-ink-2 placeholder:text-ink-3/60 focus:ring-0 focus:outline-none"></textarea>
         {% include "publications/partials/toolbar.html" %}
+        {% if article.origin_news_item and not article.body_text %}
+          {% comment %}Dica da pauta (docs/21): fica fora do texto e some quando há texto salvo.{% endcomment %}
+          <aside class="mt-6 rounded-card border border-line bg-paper-2 px-4 py-3 text-ui text-ink-2"
+                 data-origin-hint>
+            <p class="font-medium text-ink">Escreva com suas palavras. Cite a fonte. Pergunte: o que isso significa para a nossa escola?</p>
+            <p class="mt-1 text-meta text-ink-3">
+              Notícia de origem:
+              <a href="{{ article.origin_news_item.canonical_url }}"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="text-accent hover:underline">{{ article.origin_news_item.title }}</a>
+              ({{ article.origin_news_item.source.name }}). Ela já está nas fontes.
+            </p>
+          </aside>
+        {% endif %}
         <div id="editor-body" class="article-body mt-8" data-editor-body></div>
         <p class="mt-10 border-t border-line pt-3 text-meta text-ink-3"
            data-editor-count></p>

@@ -63,6 +63,15 @@ class Article(TimeStampedModel):
     sources = models.JSONField(
         "fontes", default=list, blank=True, help_text="Lista de {title, url, publisher}."
     )
+    origin_news_item = models.ForeignKey(
+        "curation.NewsItem",
+        verbose_name="notícia de origem",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="derived_articles",
+        help_text="Preenchida quando o rascunho nasce de uma pauta (docs/21).",
+    )
     reading_minutes = models.PositiveSmallIntegerField("minutos de leitura", default=1)
     is_featured = models.BooleanField("destaque na home", default=False, db_index=True)
     featured_order = models.PositiveSmallIntegerField("ordem do destaque", null=True, blank=True)

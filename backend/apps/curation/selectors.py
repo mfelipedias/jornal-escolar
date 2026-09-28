@@ -10,14 +10,14 @@ from apps.editorial import permissions
 from apps.taxonomy.models import Discipline, Topic
 
 from .classify import VISIBLE_SCORE
-from .models import NewsItemClassification, NewsRecommendation, NewsSource
+from .models import NewsItemClassification, NewsRecommendation, NewsSource, StoryIdea
 
 Status = NewsRecommendation.Status
 
 # aba → (rótulo, filtro)
 TABS: dict[str, tuple[str, Q]] = {
     "para-voce": ("Para você", Q(status=Status.SUGGESTED)),
-    "salvas": ("Salvas", Q(status__in=(Status.SAVED, Status.INTERESTING))),
+    "salvas": ("Salvas", Q(status__in=(Status.SAVED, Status.INTERESTING, Status.CONVERTED))),
     # As que expiraram sozinhas não aparecem: a pessoa não as ignorou.
     "ignoradas": ("Ignoradas", Q(status=Status.IGNORED, acted_at__isnull=False)),
 }
@@ -128,6 +128,10 @@ class Card:
         return self.rec.item
 
     @property
+    def discipline_names(self) -> str:
+        return ", ".join(d.name for d in self.disciplines)
+
+    @property
     def trust_dots(self) -> list[bool]:
         return [n < self.rec.item.source.trust_level for n in range(5)]
 
@@ -169,3 +173,71 @@ def cards(user: User, recs: list[NewsRecommendation]) -> list[Card]:
         )
         for rec in recs
     ]
+
+
+# --- quadro de pautas (E49) ---
+
+IdeaStatus = StoryIdea.Status
+BOARD_COLUMNS = (
+    (IdeaStatus.OPEN, "Abertas", "Qualquer pessoa da equipe pode pegar."),
+    (IdeaStatus.ASSIGNED, "Atribuídas", "Com alguém, ainda sem rascunho."),
+    (IdeaStatus.IN_PROGRESS, "Em produção", "Com rascunho no editor."),
+    (IdeaStatus.DONE, "Concluídas", "Viraram publicação."),
+)
+DONE_LIMIT = 20
+
+
+@dataclass
+class IdeaCard:
+    idea: StoryIdea
+    can_edit: bool
+    can_take: bool
+    can_release: bool
+    can_start_draft: bool
+    can_delete: bool
+    is_mine: bool
+
+
+def idea_card(user: User, idea: StoryIdea) -> IdeaCard:
+    return IdeaCard(
+        idea=idea,
+        can_edit=permissions.can_edit_story_idea(user, idea),
+        can_take=permissions.can_take_story_idea(user, idea),
+        can_release=permissions.can_release_story_idea(user, idea),
+        can_start_draft=permissions.can_start_draft(user, idea),
+        can_delete=permissions.can_delete_story_idea(user, idea),
+        is_mine=idea.assigned_to_id == user.pk,
+    )
+
+
+def board(user: User, only_mine: bool = False) -> list[dict]:
+    ideas = StoryIdea.objects.select_related(
+        "proposed_by", "assigned_to", "item__source", "article"
+    ).prefetch_related("topics")
+    if only_mine:
+        ideas = ideas.filter(Q(assigned_to=user) | Q(proposed_by=user))
+    columns = []
+    for status, label, help_text in BOARD_COLUMNS:
+        column = ideas.filter(status=status)
+        if status == IdeaStatus.DONE:
+            column = column.order_by("-done_at")[:DONE_LIMIT]
+        else:
+            column = column.order_by("-updated_at")
+        columns.append(
+            {
+                "key": status,
+                "label": label,
+                "help": help_text,
+                "cards": [idea_card(user, idea) for idea in column],
+            }
+        )
+    return columns
+
+
+def my_idea_count(user: User) -> int:
+    """Contador do menu: pautas com a pessoa ainda não concluídas."""
+    if not user.is_authenticated:
+        return 0
+    return StoryIdea.objects.filter(
+        assigned_to=user, status__in=(IdeaStatus.ASSIGNED, IdeaStatus.IN_PROGRESS)
+    ).count()

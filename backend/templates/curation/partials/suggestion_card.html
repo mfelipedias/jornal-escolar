@@ -43,12 +43,7 @@
           {% include "components/tag.html" with kind="topic" label=topic.name %}
         {% endfor %}
         {% if card.disciplines %}
-          <span class="text-meta text-ink-3">
-            {% for discipline in card.disciplines %}
-              {{ discipline.name }}
-              {% if not forloop.last %},{% endif %}
-            {% endfor %}
-          </span>
+          <span class="text-meta text-ink-3">{{ card.discipline_names }}</span>
         {% endif %}
       </p>
     {% endif %}
@@ -64,8 +59,23 @@
     {% if error %}
       <p class="mt-2 text-meta text-danger" role="alert">{{ error }}</p>
     {% endif %}
-    {% if rec.status != "converted" %}
+    {% if rec.status == "converted" %}
+      <p class="mt-3 text-meta text-ink-3" data-converted>
+        Virou pauta.
+        <a href="{% url 'curation:story_ideas' %}?minhas=1"
+           class="text-accent hover:underline">Ver no quadro de pautas</a>
+      </p>
+    {% else %}
       <div class="mt-3 flex flex-wrap gap-2">
+        <form method="post"
+              action="{% url 'curation:suggestion_to_idea' rec.pk %}"
+              hx-post="{% url 'curation:suggestion_to_idea' rec.pk %}"
+              hx-target="#sugestao-{{ rec.pk }}"
+              hx-swap="outerHTML">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="btn-primary min-h-11 sm:min-h-0">Virar pauta</button>
+        </form>
         {% if rec.status == "suggested" %}
           {% include "curation/partials/suggestion_button.html" with action="ignorar" label="Ignorar" style="btn-ghost" %}
           {% include "curation/partials/suggestion_button.html" with action="salvar" label="Salvar" style="btn-secondary" %}

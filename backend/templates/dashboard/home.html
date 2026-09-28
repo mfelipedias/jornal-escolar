@@ -69,21 +69,6 @@
       {% endwith %}
     </div>
   </section>
-  {% if suggestions %}
-    <section aria-labelledby="sec-sugestoes" class="mt-10" data-home-suggestions>
-      <div class="flex items-baseline justify-between gap-2 border-b border-line pb-2">
-        <h2 id="sec-sugestoes" class="font-display text-h3 font-semibold">Sugestões para você</h2>
-        <a href="{% url 'curation:suggestions' %}"
-           class="text-meta text-ink-2 hover:text-accent">Todas as sugestões</a>
-      </div>
-      <ul class="divide-y divide-line">
-        {% url 'dashboard:home' as next_url %}
-        {% for card in suggestions %}
-          {% include "curation/partials/suggestion_card.html" %}
-        {% endfor %}
-      </ul>
-    </section>
-  {% endif %}
   <div class="mt-10 grid gap-10 lg:grid-cols-2">
     <section aria-labelledby="sec-rascunhos" class="min-w-0">
       <div class="flex items-baseline justify-between gap-2 border-b border-line pb-2">
@@ -144,4 +129,19 @@
       {% endif %}
     </section>
   </div>
+  {% if suggestions %}
+    <section aria-labelledby="sec-sugestoes" class="mt-10" data-home-suggestions>
+      <div class="flex items-baseline justify-between gap-2 border-b border-line pb-2">
+        <h2 id="sec-sugestoes" class="font-display text-h3 font-semibold">Sugestões para você</h2>
+        <a href="{% url 'curation:suggestions' %}"
+           class="text-meta text-ink-2 hover:text-accent">Todas as sugestões</a>
+      </div>
+      <ul class="divide-y divide-line">
+        {% url 'dashboard:home' as next_url %}
+        {% for card in suggestions %}
+          {% include "curation/partials/suggestion_card.html" %}
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
 {% endblock content %}

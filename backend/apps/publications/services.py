@@ -593,6 +593,10 @@ def checklist(article: Article) -> list[ChecklistItem]:
     if MediaAsset.objects.filter(pk__in=asset_ids, has_people=True, consent_ok=False).exists():
         add("image_consent_missing", "Há imagem com pessoas sem autorização marcada.")
 
+    if article.origin_news_item_id and not article.sources:
+        # Nasceu de uma notícia (pauta): a fonte precisa aparecer (docs/21).
+        add("source_missing", "Cite ao menos uma fonte: o texto nasceu de uma notícia.")
+
     if not (article.subtitle or "").strip():
         add("subtitle_missing", "Escreva uma linha fina.", blocking=False)
     if article.cover_id and not (article.cover.alt_text or article.cover.is_decorative):
@@ -634,6 +638,9 @@ def _publish_locked(user: User, current: Article) -> list[str]:
     update_search_vector(current)
     create_revision(current, user, ArticleRevision.Reason.PUBLISHED)
     notifications.article_published(current, user)
+    from apps.curation import ideas  # pauta do texto vai para "Concluída" (E49)
+
+    ideas.article_published(current)
     return ["status", *fields, "updated_at"]
 
 

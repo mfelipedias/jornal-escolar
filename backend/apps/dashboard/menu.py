@@ -4,7 +4,7 @@ Itens da Fase 1; Revisões (E31) com o contador de revisões pedidas à pessoa; 
 com o contador de comentários públicos pendentes que a pessoa modera; Editorial (E33) só para
 editor+, agrupando visão geral, todas as publicações, Destaques e Páginas (as duas últimas
 mantêm os endereços da E25). Sugestões (E48) com o contador de sugestões de pauta ainda não
-vistas. Pautas chegam na E49.
+vistas; Pautas (E49) com o contador das pautas com a pessoa.
 """
 
 from dataclasses import dataclass
@@ -40,6 +40,8 @@ ACTIVE_BY_VIEW = {
     "editorial:review": "reviews",
     "engagement:moderation": "comments",
     "curation:suggestions": "suggestions",
+    "curation:story_ideas": "ideas",
+    "curation:story_idea_edit": "ideas",
     "editorial:overview": "editorial",
     "editorial:articles": "editorial",
     "editorial:featured": "editorial",
@@ -56,6 +58,7 @@ def menu_items(user: User, view_name: str = "") -> list[MenuItem]:
         ("reviews", "Revisões", reverse("editorial:queue"), "check", False),
         ("comments", "Comentários", reverse("engagement:moderation"), "message", False),
         ("suggestions", "Sugestões", reverse("curation:suggestions"), "bulb", False),
+        ("ideas", "Pautas", reverse("curation:story_ideas"), "board", False),
     ]
     if permissions.can_access_editorial(user):
         rows.append(("editorial", "Editorial", reverse("editorial:overview"), "grid", False))
@@ -70,6 +73,7 @@ def menu_items(user: User, view_name: str = "") -> list[MenuItem]:
         "reviews": selectors.pending_review_count(user),
         "comments": engagement_selectors.pending_count(user),
         "suggestions": curation_selectors.suggestion_count(user),
+        "ideas": curation_selectors.my_idea_count(user),
     }
     return [
         MenuItem(

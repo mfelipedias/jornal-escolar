@@ -15,6 +15,7 @@ from .models import (
     NewsItemClassification,
     NewsRecommendation,
     NewsSource,
+    StoryIdea,
 )
 
 
@@ -228,6 +229,36 @@ class NewsRecommendationAdmin(admin.ModelAdmin):
     list_select_related = ("item", "user")
     search_fields = ("item__title",)
     fields = ("item", "user", "score", "status", "created_at", "acted_at")
+    readonly_fields = fields
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
+        return False
+
+
+@admin.register(StoryIdea)
+class StoryIdeaAdmin(admin.ModelAdmin):
+    """Só leitura (docs/18): as pautas são do quadro do painel (E49)."""
+
+    list_display = ("title", "status", "assigned_to", "proposed_by", "updated_at")
+    list_filter = ("status",)
+    list_select_related = ("assigned_to", "proposed_by")
+    search_fields = ("title", "notes")
+    fields = (
+        "title",
+        "notes",
+        "status",
+        "proposed_by",
+        "assigned_to",
+        "item",
+        "article",
+        "topics",
+        "disciplines",
+        "created_at",
+        "done_at",
+    )
     readonly_fields = fields
 
     def has_add_permission(self, request: HttpRequest) -> bool:

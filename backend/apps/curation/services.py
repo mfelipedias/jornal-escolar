@@ -42,6 +42,7 @@ from .models import (
     NewsItem,
     NewsRecommendation,
     NewsSource,
+    StoryIdea,
 )
 from .seed_data import SOURCES
 
@@ -402,7 +403,9 @@ def purge_old_items(now: datetime | None = None) -> int:
     """
     cutoff = (now or timezone.now()) - timedelta(days=RETENTION_DAYS)
     kept = NewsRecommendation.objects.filter(status__in=NewsRecommendation.KEPT).values("item")
+    in_ideas = StoryIdea.objects.filter(item__isnull=False).values("item")
     old = NewsItem.objects.filter(fetched_at__lt=cutoff).exclude(pk__in=kept)
+    old = old.exclude(pk__in=in_ideas)
     _, per_model = old.delete()
     return per_model.get(NewsItem._meta.label, 0)
 

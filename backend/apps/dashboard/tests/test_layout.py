@@ -14,14 +14,12 @@ BASE_KEYS = [
     "reviews",
     "comments",
     "suggestions",
+    "ideas",
     "profile",
     "account",
     "site",
 ]
-LATER_PHASES = (
-    "/painel/pautas/",
-    "/painel/editorial/",
-)
+LATER_PHASES = ("/painel/editorial/",)
 
 
 def test_menu_for_staff_has_only_current_items(staff_user):
@@ -48,6 +46,7 @@ def test_only_admin_sees_administration(admin_user, editor_user):
         ("editorial:queue", "Revisões"),
         ("engagement:moderation", "Comentários"),
         ("curation:suggestions", "Sugestões"),
+        ("curation:story_ideas", "Pautas"),
     ],
 )
 def test_panel_pages_use_dashboard_layout(client, staff_user, url_name, active):
