@@ -1,13 +1,14 @@
 """Curadoria de notícias externas (docs/21, docs/06 "curation.*").
 
 A E45 cria as fontes e os itens coletados; a E46, a deduplicação por título e a retenção; a E47,
-a classificação por tópico e disciplina. Recomendação e pautas chegam nas etapas seguintes.
+a classificação por tópico e disciplina; a E48, as sugestões por professor. Pautas: E49.
 Só guardamos metadados: título, resumo curto do próprio feed, link e data. Nunca o texto
 integral, nunca imagens (só o endereço delas).
 """
 
 from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
@@ -187,3 +188,55 @@ class NewsItemClassification(models.Model):
 
     def __str__(self) -> str:
         return f"{self.topic or self.discipline} ({self.score:.2f}, {self.get_method_display()})"
+
+
+class NewsRecommendation(TimeStampedModel):
+    """Notícia sugerida a um professor, com o score e o que ele fez com ela (docs/21,
+    "Recomendação"). Uma por pessoa e notícia."""
+
+    class Status(models.TextChoices):
+        SUGGESTED = "suggested", "Sugerida"
+        IGNORED = "ignored", "Ignorada"
+        SAVED = "saved", "Salva"
+        INTERESTING = "interesting", "Interessante"
+        CONVERTED = "converted", "Virou pauta"
+
+    # Estes seguram a notícia depois dos 60 dias de retenção (docs/21, "Higiene").
+    KEPT = (Status.SAVED, Status.INTERESTING, Status.CONVERTED)
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="professor",
+        on_delete=models.CASCADE,
+        related_name="news_recommendations",
+    )
+    item = models.ForeignKey(
+        NewsItem,
+        verbose_name="notícia",
+        on_delete=models.CASCADE,
+        related_name="recommendations",
+    )
+    score = models.FloatField("score")
+    status = models.CharField(
+        "situação", max_length=12, choices=Status.choices, default=Status.SUGGESTED
+    )
+    acted_at = models.DateTimeField(
+        "ação do professor em",
+        null=True,
+        blank=True,
+        help_text="Vazio quando a sugestão expirou sozinha: não conta como ignorar.",
+    )
+
+    class Meta:
+        verbose_name = "sugestão de notícia"
+        verbose_name_plural = "sugestões de notícias"
+        ordering = ["-score", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "item"], name="curation_recommendation_unique_user_item"
+            )
+        ]
+        indexes = [models.Index(fields=["user", "status"])]
+
+    def __str__(self) -> str:
+        return f"{self.item} → {self.user} ({self.get_status_display()})"

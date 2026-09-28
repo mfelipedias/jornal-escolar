@@ -1,0 +1,89 @@
+{% extends "layouts/dashboard.html" %}
+{% comment %}
+  Sugestões de pauta (docs/15, docs/21 "Tela de sugestões"; E48): notícias recentes das fontes
+  cadastradas, escolhidas pelos tópicos e disciplinas do perfil. Abas Para você, Salvas e
+  Ignoradas; filtros por tópico, fonte e idioma.
+{% endcomment %}
+{% block title %}Sugestões · {{ jornal.name }}{% endblock title %}
+{% block content %}
+  <h1 class="font-display text-h1 font-semibold">Sugestões de pauta</h1>
+  <p class="mt-2 max-w-reading text-ui text-ink-2">
+    Notícias recentes que combinam com os tópicos e disciplinas do seu perfil. Use como ponto de partida para um texto seu: o que isso significa para a nossa escola?
+  </p>
+  <nav class="mt-6" aria-label="Abas de sugestões">
+    <ul class="flex flex-wrap gap-2">
+      {% for tab in tabs %}
+        <li>
+          <a href="{{ tab.url }}"
+             class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-ui
+                    {% if tab.active %}border-accent bg-accent-soft text-accent-2{% else %}border-line bg-white text-ink-2 hover:border-accent hover:text-accent{% endif %}"
+             {% if tab.active %}aria-current="true"{% endif %}>
+            {{ tab.label }}
+            <span class="text-meta
+                         {% if tab.active %}text-accent-2{% else %}text-ink-3{% endif %}">{{ tab.count }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  <form method="get"
+        class="mt-4 flex flex-wrap items-end gap-3 rounded-card border border-line bg-paper-2 px-4 py-3"
+        data-filters>
+    <input type="hidden" name="aba" value="{{ current }}">
+    <label class="flex flex-col gap-1 text-meta text-ink-2">
+      Tópico
+      <select name="topico" class="field">
+        <option value="">Todos</option>
+        {% for topic in options.topics %}
+          <option value="{{ topic.slug }}"
+                  {% if filters.topic and filters.topic.pk == topic.pk %}selected{% endif %}>{{ topic.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="flex flex-col gap-1 text-meta text-ink-2">
+      Fonte
+      <select name="fonte" class="field">
+        <option value="">Todas</option>
+        {% for source in options.sources %}
+          <option value="{{ source.pk }}"
+                  {% if filters.source and filters.source.pk == source.pk %}selected{% endif %}>{{ source.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="flex flex-col gap-1 text-meta text-ink-2">
+      Idioma
+      <select name="idioma" class="field">
+        <option value="">Todos</option>
+        {% for value, label in languages %}
+          <option value="{{ value }}" {% if filters.language == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit" class="btn-secondary min-h-11 sm:min-h-0">Filtrar</button>
+    {% if filters.active %}
+      <a href="{% url 'curation:suggestions' %}?aba={{ current }}"
+         class="text-meta text-accent hover:underline">Limpar filtros</a>
+    {% endif %}
+  </form>
+  {% if cards %}
+    <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-white"
+        data-suggestion-list>
+      {% for card in cards %}
+        {% include "curation/partials/suggestion_card.html" %}
+      {% endfor %}
+    </ul>
+    {% include "components/pagination.html" %}
+  {% elif filters.active %}
+    {% include "components/empty_state.html" with title="Nada com esses filtros" text="Tente outro tópico, outra fonte ou limpe os filtros." %}
+  {% elif current == "para-voce" and not has_interests %}
+    {% url 'accounts:profile_edit' as profile_url %}
+    {% include "components/empty_state.html" with title="Conte o que você ensina" text="Marque disciplinas e tópicos no seu perfil para receber sugestões de pauta." action_url=profile_url action_label="Abrir o perfil" %}
+  {% elif current == "para-voce" %}
+    {% include "components/empty_state.html" with title="Nenhuma sugestão agora" text="As fontes são lidas a cada duas horas. Novas notícias dos seus tópicos aparecem aqui." %}
+  {% elif current == "salvas" %}
+    {% include "components/empty_state.html" with title="Nenhuma notícia salva" text="Salve uma sugestão para voltar a ela depois." %}
+  {% else %}
+    {% include "components/empty_state.html" with title="Nenhuma sugestão ignorada" text="Ignorar tira a notícia da lista e diminui as sugestões do mesmo tópico." %}
+  {% endif %}
+  <p class="mt-8 text-meta text-ink-3">As notícias pertencem às fontes. O jornal exibe apenas título, resumo e link.</p>
+{% endblock content %}

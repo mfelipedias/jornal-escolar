@@ -75,11 +75,13 @@ Desde a E44, as tarefas que rodam sozinhas ficam num **worker**: um programa que
 | Tarefa | Quando (Brasília) | O que faz | Comando equivalente |
 |---|---|---|---|
 | `heartbeat` | a cada hora, minuto 0 | tarefa de teste: registra "Worker vivo" no log | — |
-| `cleanup` | todo dia, 4h30 | leituras com mais de 90 dias, comentários rejeitados há 30 dias, dados técnicos de comentários com 30 dias | `cleanup` |
+| `cleanup` | todo dia, 4h30 | leituras com mais de 90 dias, comentários rejeitados há 30 dias, dados técnicos de comentários com 30 dias, notícias coletadas há mais de 60 dias (menos as salvas, interessantes ou que viraram pauta) | `cleanup` |
 | `remind_pending_comments` | todo dia, 7h | avisa editores de comentários de leitores pendentes há 3 dias | `notify_pending_comments` |
 | `remind_stale_reviews` | todo dia, 7h10 | avisa revisor e autores de revisões paradas há 5 dias ([04](04-fluxo-editorial.md)) | `notify_stale_reviews` |
 | `fetch_news` | a cada 30 minutos (5 e 35 de cada hora) | enfileira uma `fetch_news_source` para cada fonte de notícias ativa cujo intervalo já passou ([21](21-curadoria-de-noticias.md)) | `fetch_news --vencidas` |
-| `fetch_news_source` | quando `fetch_news` enfileira | coleta um feed e grava as notícias novas | `fetch_news --fonte ID` |
+| `fetch_news_source` | quando `fetch_news` enfileira | coleta um feed, grava e classifica as notícias novas e as sugere a quem se interessa | `fetch_news --fonte ID` |
+| `reclassify_news` | quando o admin muda palavras-chave, tópicos ou padrões de fonte (E47) | classifica de novo as notícias guardadas e recalcula as sugestões | `classify_news` |
+| `notify_new_suggestions` | segunda, 7h20 | aviso no sino para quem recebeu sugestões de pauta na semana (E48) | — |
 | `purge_worker_history` | domingo, 5h | apaga o registro das tarefas concluídas há mais de 30 dias (as que falharam ficam) | — |
 
 A limpeza das 4h30 fica depois do backup das 3h. `WORKER_HEARTBEAT_CRON` (em UTC) troca o horário do batimento; `* * * * *` serve para ver o agendamento funcionando.

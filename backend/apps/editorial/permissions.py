@@ -306,3 +306,11 @@ def can_feature(user: AnyUser) -> bool:
 def can_edit_pages(user: AnyUser) -> bool:
     """Editar e publicar as páginas institucionais (Sobre, Privacidade, Como participar)."""
     return is_editor(user)
+
+
+# --- curadoria de notícias (Fase 4, docs/21) ---
+
+
+def can_view_suggestions(user: AnyUser) -> bool:
+    """Ver as próprias sugestões de pauta e agir sobre elas: toda a equipe."""
+    return is_staff_member(user)

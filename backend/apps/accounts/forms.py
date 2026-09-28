@@ -148,6 +148,7 @@ class ProfileForm(PhotoFormMixin):
     topics = forms.ModelMultipleChoiceField(queryset=Topic.objects.none(), required=False)
     new_topic = forms.CharField(label="Sugerir um tópico", max_length=80, required=False)
     accepts_english = forms.BooleanField(required=False)
+    include_low_trust = forms.BooleanField(required=False)
     show_reviewer_credit = forms.BooleanField(required=False)
     reviewers_may_publish = forms.BooleanField(required=False)
     show_reads = forms.BooleanField(required=False)
@@ -159,6 +160,7 @@ class ProfileForm(PhotoFormMixin):
         "is_public",
         "slug",
         "accepts_english",
+        "include_low_trust",
         "show_reviewer_credit",
         "reviewers_may_publish",
         "show_reads",
@@ -189,6 +191,7 @@ class ProfileForm(PhotoFormMixin):
                     "areas": list(profile.areas.values_list("pk", flat=True)),
                     "topics": list(profile.topics.values_list("pk", flat=True)),
                     "accepts_english": profile.accepts_english,
+                    "include_low_trust": profile.include_low_trust,
                     "show_reviewer_credit": profile.show_reviewer_credit,
                     "reviewers_may_publish": profile.reviewers_may_publish,
                     "show_reads": profile.show_reads,

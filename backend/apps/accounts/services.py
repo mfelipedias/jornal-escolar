@@ -288,6 +288,10 @@ def save_profile(
         profile.topics.set(topics)
     if update_credits:
         update_past_credits(user)
+    # Tópicos, disciplinas e preferências mudam as sugestões de pauta (docs/21).
+    from apps.curation import recommend
+
+    recommend.recommend_for_user(user)
     return profile
 
 

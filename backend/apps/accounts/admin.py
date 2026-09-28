@@ -45,7 +45,13 @@ class TeacherProfileInline(admin.StackedInline):
         "disciplines",
         "areas",
         "topics",
-        ("show_reviewer_credit", "reviewers_may_publish", "show_reads", "accepts_english"),
+        (
+            "show_reviewer_credit",
+            "reviewers_may_publish",
+            "show_reads",
+            "accepts_english",
+            "include_low_trust",
+        ),
     )
     filter_horizontal = ("disciplines", "areas", "topics")
 

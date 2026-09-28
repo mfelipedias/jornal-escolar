@@ -1,0 +1,13 @@
+{% comment %}
+  Botão de ação de uma sugestão. Parâmetros: rec, action, label, style (classe do botão),
+  next_url.
+{% endcomment %}
+<form method="post"
+      action="{% url 'curation:suggestion_action' rec.pk action %}"
+      hx-post="{% url 'curation:suggestion_action' rec.pk action %}"
+      hx-target="#sugestao-{{ rec.pk }}"
+      hx-swap="outerHTML">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next_url }}">
+  <button type="submit" class="{{ style }} min-h-11 sm:min-h-0">{{ label }}</button>
+</form>

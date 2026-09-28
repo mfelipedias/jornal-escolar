@@ -148,6 +148,7 @@ class Notification(models.Model):
         COMMENT_PENDING = "comment_pending", "Comentário aguardando"
         REVIEW_COMMENT = "review_comment", "Comentário na revisão"
         REVIEW_STALE = "review_stale", "Revisão parada"
+        SUGGESTIONS = "suggestions", "Sugestões de pauta"
         SYSTEM = "system", "Sistema"
 
     user = models.ForeignKey(

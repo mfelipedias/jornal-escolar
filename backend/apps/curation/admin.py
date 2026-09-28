@@ -9,7 +9,13 @@ from django.views.decorators.http import require_POST
 
 from . import services
 from .classify import VISIBLE_SCORE
-from .models import FAILURES_ALERT, NewsItem, NewsItemClassification, NewsSource
+from .models import (
+    FAILURES_ALERT,
+    NewsItem,
+    NewsItemClassification,
+    NewsRecommendation,
+    NewsSource,
+)
 
 
 class HealthFilter(admin.SimpleListFilter):
@@ -211,3 +217,21 @@ class NewsItemAdmin(admin.ModelAdmin):
     def has_hide_permission(self, request: HttpRequest) -> bool:
         opts = self.opts
         return request.user.has_perm(f"{opts.app_label}.change_{opts.model_name}")
+
+
+@admin.register(NewsRecommendation)
+class NewsRecommendationAdmin(admin.ModelAdmin):
+    """Só leitura, para conferir por que alguém recebeu (ou não) uma sugestão (E48)."""
+
+    list_display = ("item", "user", "score", "status", "created_at", "acted_at")
+    list_filter = ("status", "user")
+    list_select_related = ("item", "user")
+    search_fields = ("item__title",)
+    fields = ("item", "user", "score", "status", "created_at", "acted_at")
+    readonly_fields = fields
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
+        return False

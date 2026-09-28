@@ -6,14 +6,17 @@ tarefa separada: um feed lento ou quebrado não atrasa os outros.
 
 reclassify_news (E47) não tem horário: o admin a pede quando mudam palavras-chave, tópicos ou os
 padrões de uma fonte, e ela classifica de novo todas as notícias guardadas.
+
+notify_new_suggestions (E48), toda segunda às 7h20 (Brasília): aviso no sino para quem recebeu
+sugestões de pauta na semana e ainda não mexeu nelas.
 """
 
 from procrastinate.contrib.django import app
 from procrastinate.exceptions import AlreadyEnqueued
 
-from apps.core.tasks import _run
+from apps.core.tasks import _run, local_cron
 
-from . import services
+from . import recommend, services
 from .models import NewsSource
 
 
@@ -53,3 +56,9 @@ def reclassify_news() -> str:
         return f"{total} notícia(s) reclassificada(s), {classified} com tópico ou disciplina"
 
     return _run("reclassify_news", None, job)
+
+
+@app.periodic(cron=local_cron(7, 20, day_of_week="1"))
+@app.task(name="notify_new_suggestions", queueing_lock="notify_new_suggestions")
+def notify_new_suggestions(timestamp: int) -> int:
+    return _run("notify_new_suggestions", timestamp, recommend.notify_new_suggestions)

@@ -60,6 +60,7 @@ Uma página com seções, um botão salvar. Sem abas.
 |---|---|---|
 | Tópicos | chips com busca; sugestão de novo tópico vai para aprovação do admin | "Usados para sugerir pautas para você" |
 | Aceito sugestões em inglês | toggle (padrão ligado) | Fase 4 |
+| Incluir fontes de menor confiança | toggle (padrão desligado) | Fase 4 (E48): fontes com confiança 1 ou 2 ([21](21-curadoria-de-noticias.md)) |
 
 ### Formação e links
 

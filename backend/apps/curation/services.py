@@ -10,6 +10,8 @@ Deduplicação (E46), valendo entre fontes diferentes:
   para títulos marcantes (normalize.is_distinctive_title). Fica a que chegou primeiro.
 Retenção (E46): purge_old_items apaga o que foi coletado há mais de 60 dias.
 Classificação (E47): cada notícia nova é classificada na hora (classify.py).
+Sugestões (E48): depois de gravar, as notícias novas viram sugestões para quem se interessa
+(recommend.py).
 
 Segurança (docs/23): só http e https, tempo limite, feed de no máximo 5 MB, no máximo
 5 redirecionamentos e nenhum pedido para endereços de rede interna (protege o servidor se alguém
@@ -21,7 +23,7 @@ import ipaddress
 import logging
 import socket
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 import feedparser
@@ -33,8 +35,14 @@ from procrastinate.exceptions import AlreadyEnqueued
 
 from apps.core.site_settings import get_setting
 
-from . import classify, normalize
-from .models import RETENTION_DAYS, TITLE_DEDUP_WINDOW, NewsItem, NewsSource
+from . import classify, normalize, recommend
+from .models import (
+    RETENTION_DAYS,
+    TITLE_DEDUP_WINDOW,
+    NewsItem,
+    NewsRecommendation,
+    NewsSource,
+)
 from .seed_data import SOURCES
 
 logger = logging.getLogger(__name__)
@@ -71,6 +79,7 @@ class FetchResult:
     skipped: int = 0
     not_modified: bool = False
     error: str = ""
+    new_item_ids: list[int] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -225,9 +234,9 @@ def _title_taken(candidate: _Candidate) -> bool:
 
 def _store_entries(
     client: httpx.Client, source: NewsSource, parsed: feedparser.FeedParserDict, now: datetime
-) -> tuple[int, int, int, int]:
-    """Grava os itens novos. Devolve (novos, já conhecidos, com título repetido, ignorados por
-    falta de título/link)."""
+) -> tuple[list[int], int, int, int]:
+    """Grava os itens novos e os classifica. Devolve (ids dos novos, já conhecidos, com título
+    repetido, ignorados por falta de título/link)."""
     outlet_names = (source.name, parsed.feed.get("title", ""))
     candidates: list[_Candidate] = []
     skipped = 0
@@ -272,7 +281,7 @@ def _store_entries(
             zip(links, pool.map(lambda url: resolve_url(client, url), links), strict=True)
         )
 
-    new = 0
+    new: list[int] = []
     seen: set[str] = set()
     classifier: classify.Classifier | None = None
     for candidate in pending:
@@ -310,7 +319,7 @@ def _store_entries(
         if title_taken:
             repeated += 1
         elif created:
-            new += 1
+            new.append(item.pk)
             classifier = classifier or classify.Classifier()
             classifier.save(item)
         else:
@@ -353,9 +362,12 @@ def fetch_source(source: NewsSource, client: httpx.Client | None = None) -> Fetc
             result.not_modified = True
         else:
             parsed = parse_feed(body, headers)
-            result.new, result.known, result.repeated, result.skipped = _store_entries(
+            result.new_item_ids, result.known, result.repeated, result.skipped = _store_entries(
                 client, source, parsed, now
             )
+            result.new = len(result.new_item_ids)
+            if result.new_item_ids:
+                recommend.recommend_items(result.new_item_ids)
     except FetchError as exc:
         result.error = str(exc)
     except Exception:
@@ -386,10 +398,12 @@ def purge_old_items(now: datetime | None = None) -> int:
     coleta, que nunca é anterior à de publicação: assim uma notícia antiga que ainda aparece no
     feed não é apagada e coletada de novo a cada meia hora. Pode rodar quantas vezes quiser.
 
-    Na E48, as notícias salvas, marcadas como interessantes ou que viraram pauta passam a ficar.
+    Ficam as que alguém salvou, marcou como interessante ou transformou em pauta (E48).
     """
     cutoff = (now or timezone.now()) - timedelta(days=RETENTION_DAYS)
-    _, per_model = NewsItem.objects.filter(fetched_at__lt=cutoff).delete()
+    kept = NewsRecommendation.objects.filter(status__in=NewsRecommendation.KEPT).values("item")
+    old = NewsItem.objects.filter(fetched_at__lt=cutoff).exclude(pk__in=kept)
+    _, per_model = old.delete()
     return per_model.get(NewsItem._meta.label, 0)
 
 
@@ -407,7 +421,9 @@ def reclassify_items(since: datetime | None = None) -> tuple[int, int]:
     if since is not None:
         items = items.filter(fetched_at__gte=since)
     total = items.count()
-    return total, classify.classify_items(items.iterator(chunk_size=500))
+    classified = classify.classify_items(items.iterator(chunk_size=500))
+    recommend.recommend_items()  # os scores das sugestões dependem da classificação
+    return total, classified
 
 
 def schedule_reclassification() -> None:

@@ -1,0 +1,84 @@
+{% comment %}
+  Uma sugestão de notícia (docs/21, "Tela de sugestões"; E48).
+  Parâmetros: card (curation/selectors.py, Card), next_url; opcionais done (mensagem depois de
+  uma ação) e error. As ações trocam só este card pelo HTMX; sem JavaScript, voltam à tela.
+{% endcomment %}
+{% with rec=card.rec item=card.item %}
+  <li id="sugestao-{{ rec.pk }}"
+      class="px-4 py-4 sm:px-5"
+      data-suggestion="{{ rec.pk }}"
+      data-status="{{ rec.status }}">
+    <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-meta text-ink-3">
+      <span class="font-semibold text-ink-2">{{ item.source.name }}</span>
+      <span class="inline-flex gap-0.5 text-accent"
+            title="Confiança {{ item.source.trust_level }} de 5">
+        <span class="sr-only">Confiança {{ item.source.trust_level }} de 5</span>
+        {% for on in card.trust_dots %}
+          <span aria-hidden="true" class="{% if not on %}text-line{% endif %}">●</span>
+        {% endfor %}
+      </span>
+      <span aria-hidden="true">·</span>
+      <time datetime="{{ item.published_at|date:'c' }}">{{ item.published_at|date:"j M Y" }}</time>
+      <span aria-hidden="true">·</span>
+      {% if item.language == "en" %}
+        <span class="rounded-full bg-area-azul-soft px-2 font-semibold text-area-azul"
+              data-language="en">inglês</span>
+      {% else %}
+        <span>português</span>
+      {% endif %}
+      {% if rec.status == "interesting" %}
+        <span class="rounded-full bg-accent-soft px-2 font-semibold text-accent-2">interessante</span>
+      {% endif %}
+    </p>
+    <h3 class="mt-1.5 font-display text-body font-semibold text-balance text-ink">
+      <a href="{{ item.canonical_url }}"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="hover:text-accent">{{ item.title }}<span class="ml-1 text-ink-3" aria-hidden="true">↗</span><span class="sr-only"> (abre o site da fonte)</span></a>
+    </h3>
+    {% if item.summary %}<p class="mt-1 line-clamp-3 max-w-reading text-ui text-ink-2">{{ item.summary }}</p>{% endif %}
+    {% if card.topics or card.disciplines %}
+      <p class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        {% for topic in card.topics %}
+          {% include "components/tag.html" with kind="topic" label=topic.name %}
+        {% endfor %}
+        {% if card.disciplines %}
+          <span class="text-meta text-ink-3">
+            {% for discipline in card.disciplines %}
+              {{ discipline.name }}
+              {% if not forloop.last %},{% endif %}
+            {% endfor %}
+          </span>
+        {% endif %}
+      </p>
+    {% endif %}
+    {% if card.colleagues_interested %}
+      <p class="mt-2 text-meta font-medium text-area-verde" data-colleagues>
+        {{ card.colleagues_interested }} colega{{ card.colleagues_interested|pluralize }}
+        acharam interessante
+      </p>
+    {% endif %}
+    {% if done %}
+      <p class="mt-2 text-meta font-medium text-area-verde" role="status">{{ done }}</p>
+    {% endif %}
+    {% if error %}
+      <p class="mt-2 text-meta text-danger" role="alert">{{ error }}</p>
+    {% endif %}
+    {% if rec.status != "converted" %}
+      <div class="mt-3 flex flex-wrap gap-2">
+        {% if rec.status == "suggested" %}
+          {% include "curation/partials/suggestion_button.html" with action="ignorar" label="Ignorar" style="btn-ghost" %}
+          {% include "curation/partials/suggestion_button.html" with action="salvar" label="Salvar" style="btn-secondary" %}
+          {% include "curation/partials/suggestion_button.html" with action="interessante" label="Interessante" style="btn-secondary" %}
+        {% elif rec.status == "saved" %}
+          {% include "curation/partials/suggestion_button.html" with action="interessante" label="Interessante" style="btn-secondary" %}
+          {% include "curation/partials/suggestion_button.html" with action="restaurar" label="Tirar das salvas" style="btn-ghost" %}
+        {% elif rec.status == "interesting" %}
+          {% include "curation/partials/suggestion_button.html" with action="restaurar" label="Tirar das salvas" style="btn-ghost" %}
+        {% else %}
+          {% include "curation/partials/suggestion_button.html" with action="restaurar" label="Voltar para sugestões" style="btn-secondary" %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </li>
+{% endwith %}

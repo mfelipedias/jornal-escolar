@@ -99,6 +99,7 @@ def export_user_data(user: User) -> dict[str, Any]:
             "areas": list(profile.areas.values_list("name", flat=True)),
             "interesses": list(profile.topics.values_list("name", flat=True)),
             "aceita_sugestoes_em_ingles": profile.accepts_english,
+            "inclui_fontes_de_menor_confianca": profile.include_low_trust,
             "mostrar_credito_como_revisor": profile.show_reviewer_credit,
             "revisores_podem_publicar_por_mim": profile.reviewers_may_publish,
             "mostrar_leituras": profile.show_reads,
@@ -119,6 +120,18 @@ def export_user_data(user: User) -> dict[str, Any]:
         for credit in ArticleContributor.objects.filter(user=user)
         .select_related("article")
         .order_by("article_id", "role")
+    ]
+    # Só o que a pessoa fez com as sugestões (docs/21); as ainda não mexidas são do sistema.
+    data["sugestoes_de_pauta"] = [
+        {
+            "noticia": rec.item.title,
+            "link": rec.item.canonical_url,
+            "situacao": rec.get_status_display(),
+            "em": _date(rec.acted_at),
+        }
+        for rec in user.news_recommendations.filter(acted_at__isnull=False)
+        .select_related("item")
+        .order_by("acted_at")
     ]
     data["publicacoes_criadas"] = [
         {**_article_ref(article), "criada_em": _date(article.created_at)}
@@ -396,6 +409,7 @@ def anonymize_user(actor: User | None, person: User, *, request: HttpRequest | N
     profile.disciplines.clear()
     profile.areas.clear()
     profile.topics.clear()
+    person.news_recommendations.all().delete()  # sugestões e o que a pessoa fez com elas
 
     # Login desativado para sempre: sem senha, sem Microsoft, sem links, sem sessões.
     services.end_other_sessions(person, None)

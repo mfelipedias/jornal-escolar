@@ -20,6 +20,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Classificação das notícias coletadas (E47, docs/21): cada notícia nova recebe tópicos e disciplinas prováveis, com uma nota de 0 a 1. Vale o padrão da fonte (tudo o que vem da Pesquisa FAPESP é "Divulgação científica", por exemplo) e as palavras-chave de cada tópico, procuradas sem acento no título (vale mais) e no resumo. Siglas como IA e SUS só contam em maiúsculas. As disciplinas vêm dos tópicos. Com as fontes reais, cerca de uma em cada quatro notícias ganha um tópico que aparecerá na tela de sugestões (E48).
 - Django Admin: a notícia coletada mostra os tópicos e disciplinas encontrados, com a nota e as palavras que bateram; a lista filtra por tópico e por "Sem tópico". Ao mudar as palavras-chave de um tópico ou os padrões de uma fonte, o worker classifica de novo todas as notícias guardadas. Comando `classify_news` faz o mesmo na hora.
 - Palavras-chave sugeridas dos tópicos mais precisas e com termos em inglês, para as fontes Nature e MIT Technology Review (vale para instalações novas; nas existentes, edite o tópico no admin).
+- Sugestões de pauta (E48, docs/21): no painel, o item **Sugestões** mostra notícias recentes que combinam com os tópicos e disciplinas do seu perfil, com fonte, confiança, data, idioma, resumo e link para o site original. Ações em um clique: **Ignorar** (depois de 3 ignoradas do mesmo tópico, esse tópico aparece menos), **Salvar** e **Interessante** (notícias parecidas sobem). Abas "Para você", "Salvas" e "Ignoradas" e filtros por tópico, fonte e idioma. No máximo 30 sugestões ao mesmo tempo; as mais antigas saem sozinhas.
+- O início do painel mostra as 3 melhores sugestões, e toda segunda às 7h20 o sino avisa quantas sugestões novas chegaram na semana.
+- Editores veem nas sugestões quantos colegas acharam cada notícia interessante.
+- Perfil: nova opção "Incluir fontes de menor confiança" (fontes com confiança 1 ou 2, desligada). "Aceito sugestões em inglês" passa a valer.
+- Notícias salvas, interessantes ou que viraram pauta não são apagadas pela limpeza dos 60 dias. A exportação de dados inclui o que a pessoa fez com as sugestões, e anonimizar uma conta apaga as sugestões dela.
 
 ## [1.2.0] - 2026-09-17
 

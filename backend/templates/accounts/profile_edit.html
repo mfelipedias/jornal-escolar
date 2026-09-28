@@ -173,6 +173,16 @@
                    {% if form.accepts_english.value %}checked{% endif %}>
             <span class="text-ui text-ink">Aceito sugestões de pauta em inglês</span>
           </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox"
+                   name="{{ form.include_low_trust.html_name }}"
+                   class="mt-1 accent-accent"
+                   {% if form.include_low_trust.value %}checked{% endif %}>
+            <span class="text-ui text-ink">
+              Incluir fontes de menor confiança
+              <span class="block text-meta text-ink-3">Fontes que o administrador marcou com confiança 1 ou 2.</span>
+            </span>
+          </label>
         </section>
         <section aria-labelledby="sec-formacao" class="space-y-6">
           <h2 id="sec-formacao"

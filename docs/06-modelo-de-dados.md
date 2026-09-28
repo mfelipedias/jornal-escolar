@@ -68,6 +68,7 @@ Nome mantido por tradição; vale para todos os cargos.
 | areas | M2M KnowledgeArea | |
 | topics | M2M Topic | Interesses; usados pela curadoria |
 | accepts_english | bool | Sugestões em inglês (Fase 4), padrão true |
+| include_low_trust | bool | Sugestões de fontes com confiança ≤ 2 (E48), padrão false |
 | is_public | bool | |
 | show_reviewer_credit | bool | |
 | reviewers_may_publish | bool | Padrão ao pedir revisão |

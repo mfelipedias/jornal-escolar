@@ -111,7 +111,7 @@ TOPICS = [
     ("Mudanças Climáticas", ["mudança do clima", "mudanças climáticas", "aquecimento global", "carbono", "emissões", "COP", "climate change", "global warming"], ["Geografia", "Biologia", "Física"]),
     ("Saúde", ["saúde", "doença", "vacina", "SUS", "saúde mental"], ["Biologia", "Educação Física"]),
     ("Alimentação", ["alimentação", "nutrição", "comida", "merenda", "dieta"], ["Biologia", "Química"]),
-    ("Astronomia", ["astronomia", "espaço", "planeta", "NASA", "telescópio", "astronomy", "planet", "telescope"], ["Física", "Geografia"]),
+    ("Astronomia", ["astronomia", "exploração espacial", "planeta", "NASA", "telescópio", "astronomy", "planet", "telescope"], ["Física", "Geografia"]),
     ("Energia", ["energia", "solar", "eólica", "eletricidade", "renovável"], ["Física", "Química", "Geografia"]),
     ("Literatura", ["literatura", "livro", "autor", "poesia", "romance"], ["Língua Portuguesa", "Leitura e Produção de Texto", "Sala de Leitura"]),
     ("Cinema", ["cinema", "filme", "documentário", "série", "audiovisual"], ["Arte", "Sociologia"]),

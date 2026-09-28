@@ -209,6 +209,11 @@ class TeacherProfile(TimeStampedModel):
         "taxonomy.Topic", verbose_name="interesses", related_name="profiles", blank=True
     )
     accepts_english = models.BooleanField("aceita sugestões em inglês", default=True)
+    include_low_trust = models.BooleanField(
+        "inclui fontes de menor confiança",
+        default=False,
+        help_text="Sugestões de fontes com confiança 1 ou 2 (docs/21).",
+    )
     is_public = models.BooleanField("perfil público", default=True)
     show_reviewer_credit = models.BooleanField("mostrar crédito como revisor", default=True)
     reviewers_may_publish = models.BooleanField(
