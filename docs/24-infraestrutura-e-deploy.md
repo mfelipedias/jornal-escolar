@@ -50,6 +50,7 @@ Variáveis de ambiente (`django-environ`), documentadas em `infra/env/.env.examp
 | `DATABASE_URL` | `postgres://jornal:...@db:5432/jornal` |
 | `MEDIA_ROOT`, `MEDIA_URL` | `/data/media`, `/media/` |
 | `SITE_URL` | `https://jornal.projetosrosa.com.br` |
+| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Gmail e senha de app para os códigos por e-mail ([35](35-guia-email.md)); vazios escondem o cadastro próprio |
 | `MS_CLIENT_ID`, `MS_CLIENT_SECRET` | Registro do app na Microsoft; guia em [32](32-guia-login-microsoft.md) |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | Backup; guia em [31](31-guia-backup.md) |
 | `BACKUP_PASSPHRASE` | Senha que criptografa os backups; guardar fora do servidor |
@@ -75,7 +76,7 @@ Desde a E44, as tarefas que rodam sozinhas ficam num **worker**: um programa que
 | Tarefa | Quando (Brasília) | O que faz | Comando equivalente |
 |---|---|---|---|
 | `heartbeat` | a cada hora, minuto 0 | tarefa de teste: registra "Worker vivo" no log | — |
-| `cleanup` | todo dia, 4h30 | leituras com mais de 90 dias, comentários rejeitados há 30 dias, dados técnicos de comentários com 30 dias, notícias coletadas há mais de 60 dias (menos as salvas, interessantes ou que viraram pauta) | `cleanup` |
+| `cleanup` | todo dia, 4h30 | leituras com mais de 90 dias, comentários rejeitados há 30 dias, dados técnicos de comentários com 30 dias, notícias coletadas há mais de 60 dias (menos as salvas, interessantes ou que viraram pauta), códigos de e-mail vencidos há mais de 7 dias | `cleanup` |
 | `remind_pending_comments` | todo dia, 7h | avisa editores de comentários de leitores pendentes há 3 dias | `notify_pending_comments` |
 | `remind_stale_reviews` | todo dia, 7h10 | avisa revisor e autores de revisões paradas há 5 dias ([04](04-fluxo-editorial.md)) | `notify_stale_reviews` |
 | `fetch_news` | a cada 30 minutos (5 e 35 de cada hora) | enfileira uma `fetch_news_source` para cada fonte de notícias ativa cujo intervalo já passou ([21](21-curadoria-de-noticias.md)) | `fetch_news --vencidas` |

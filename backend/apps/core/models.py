@@ -116,6 +116,7 @@ class AuditLog(models.Model):
     class Action(models.TextChoices):
         LOGIN = "login", "Entrada no sistema"
         USER_CREATED = "user_created", "Conta criada"
+        USER_SIGNED_UP = "user_signed_up", "Cadastro próprio"
         ROLE_CHANGED = "role_changed", "Papel alterado"
         USER_DEACTIVATED = "user_deactivated", "Conta desativada"
         USER_REACTIVATED = "user_reactivated", "Conta reativada"

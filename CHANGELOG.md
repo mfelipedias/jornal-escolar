@@ -6,6 +6,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- Cadastro próprio (C1, docs/27 quinta rodada): na tela de entrar, **Criar conta** leva a `/cadastro/`. O professor informa nome e e-mail institucional (só `@prof.educacao.sp.gov.br` e `@professor.educacao.sp.gov.br`), recebe um código de 6 dígitos por e-mail, digita o código, cria a senha e entra direto no passo a passo do perfil. O código vale 15 minutos e aceita 5 tentativas. Quem já tem conta recebe um lembrete no e-mail, e a tela não revela quem está cadastrado. A conta nova fica aguardando aprovação.
+- Envio de e-mail pelo Gmail com senha de app, com guia passo a passo em `docs/35-guia-email.md` e o comando `send_test_email` para testar. Sem o Gmail configurado, o cadastro fica escondido; no desenvolvimento, os e-mails aparecem no terminal.
+- Configuração "Cadastro próprio ligado" no Django Admin, para desligar o cadastro sem mexer no servidor.
+- A limpeza diária também apaga os códigos de e-mail vencidos há mais de 7 dias.
+
 ## [1.3.0] - 2026-09-28
 
 ### Adicionado

@@ -47,6 +47,18 @@ Regras no sistema:
 - Só e-mails de domínios permitidos (`AUTH_ALLOWED_DOMAINS`, inicialmente `professor.educacao.sp.gov.br` e `educacao.sp.gov.br`) e **previamente cadastrados** pelo admin entram. Sem cadastro automático.
 - Nenhum dado além de e-mail e nome é lido da Microsoft.
 
+### Cadastro próprio (Fase 4b)
+
+Decisão de 2026-09-28 ([27](27-decisoes-pendentes-e-perguntas.md), quinta rodada), que revê o "sem cadastro automático":
+
+- `/cadastro/` aceita só e-mails de `SIGNUP_ALLOWED_DOMAINS` (`prof.educacao.sp.gov.br` e `professor.educacao.sp.gov.br`). O e-mail é a prova de que a pessoa é professor da rede.
+- Código de 6 dígitos por e-mail ([35](35-guia-email.md)), gerado com `secrets`, guardado só como HMAC-SHA256 com o `SECRET_KEY`; vale 15 minutos, aceita 5 tentativas erradas e é invalidado quando outro é pedido. A tentativa errada é gravada fora da transação da criação da conta, para o limite valer.
+- Limites: 3 códigos por e-mail e 10 por IP a cada hora; 30 conferências de código por IP a cada 15 minutos. Campo-isca contra robôs.
+- A tela responde igual exista ou não conta com o e-mail; quem já tem conta recebe no e-mail um lembrete (sem código).
+- A conta nasce com `is_approved = False` e só publica depois da aprovação de um editor (C2). Evento `user_signed_up` na auditoria, só com o domínio.
+- Códigos vencidos há mais de 7 dias são apagados pelo `cleanup` diário.
+- Sem Gmail configurado, ou com "Cadastro próprio ligado" desmarcado, a tela responde 404 e o link some do login.
+
 ### Senha (reserva)
 
 - Para quem não conseguir usar a conta Microsoft ou para o admin.
@@ -55,7 +67,7 @@ Regras no sistema:
 - Validadores do Django (mínimo 10 caracteres, não comum, não similar ao e-mail). Hash Argon2.
 - Limite de tentativas: 5 erros por 15 min por e-mail e 30 por 15 min por IP. **Ajuste da E09:** o limite por IP era 5, mas a escola inteira sai pela mesma conexão; 5 erros de uma pessoa bloqueariam todos os professores. Em produção, `TRUSTED_CLIENT_IP_HEADER=CF-Connecting-IP` faz o limite usar o IP real atrás da Cloudflare.
 - Login Microsoft identifica a pessoa pelo `userPrincipalName`, nunca pelo campo `mail`: em aplicativos multi-tenant, o `mail` pode ser preenchido pelo administrador de qualquer organização Microsoft e permitiria se passar por um professor cadastrado. Contas convidadas (`#EXT#`) são recusadas.
-- As telas de cadastro, recuperação de senha por e-mail e gestão de e-mails do allauth respondem 404. O `/admin/login/` redireciona para `/entrar/`, que tem o limite de tentativas.
+- As telas de cadastro, recuperação de senha por e-mail e gestão de e-mails **do allauth** respondem 404; o cadastro próprio e a recuperação de senha são telas do projeto (Fase 4b). O `/admin/login/` redireciona para `/entrar/`, que tem o limite de tentativas.
 
 ### Sessões
 
@@ -140,3 +152,4 @@ Revisada na E28. `[x]` = feito e verificado no código (teste automático quando
 - 2026-09-14: E38: cookie anônimo `jv` (UUID v4, 1 ano, `SameSite=Lax`, `HttpOnly`, `Secure` em produção) emitido pela página da publicação só para quem não entrou; descrito no texto padrão da página de privacidade (o `seed_site` troca o texto da E28 se ninguém o editou). Reações feitas com a conta entram na exportação de dados; as do cookie não ligam a ninguém.
 - 2026-09-14: E40: comentários públicos com limites testados, links e e-mails removidos do corpo, texto escapado; `ip_hash` e código anônimo apagados em 30 dias, rejeitados também (comando `cleanup`). Texto padrão da privacidade descreve os comentários (sem e-mail ou telefone, nome público, remoção pelo e-mail de contato); o `seed_site` troca o texto da E38 se ninguém o editou. Exportação inclui as respostas da equipe; anonimizar tira o nome delas.
 - 2026-09-15: E41: limite de comentários por IP subiu para 60 por hora (a escola sai por um IP só) e entrou o de 10 por pessoa por hora. Moderação de comentários registrada no `AuditLog` (`comment_moderated`), só com ids e situação.
+- 2026-09-28: cadastro próprio com código por e-mail (Fase 4b, C1).

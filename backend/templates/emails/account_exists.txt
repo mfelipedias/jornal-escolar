@@ -1,0 +1,13 @@
+{% autoescape off %}Você já tem conta no {{ site_name }}
+Olá, {{ name }}!
+
+Alguém (talvez você) tentou criar uma conta no {{ site_name }} com este e-mail, mas você já tem uma.
+
+Para entrar: {{ login_url }}
+Se esqueceu a senha, use "Esqueci minha senha" na tela de entrar.
+
+Se não foi você, é só ignorar este e-mail. Nada mudou na sua conta.
+
+{{ site_name }}
+{{ site_url }}
+{% endautoescape %}

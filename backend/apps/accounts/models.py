@@ -90,6 +90,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=True,
         help_text="Desmarque para bloquear o acesso sem apagar a conta.",
     )
+    is_approved = models.BooleanField(
+        "aprovada",
+        default=True,
+        help_text="Contas criadas pelo cadastro próprio esperam a aprovação de um editor "
+        "(docs/27, quinta rodada). As criadas pelo admin nascem aprovadas.",
+    )
     is_staff = models.BooleanField(
         "acesso ao Django Admin",
         default=False,
@@ -305,3 +311,47 @@ class AccessLink(models.Model):
     @property
     def is_valid(self) -> bool:
         return self.status == self.Status.VALID and self.user.is_active
+
+
+EMAIL_CODE_VALIDITY = timedelta(minutes=15)
+EMAIL_CODE_MAX_ATTEMPTS = 5
+
+
+class EmailCode(models.Model):
+    """Código de 6 dígitos enviado por e-mail (Fase 4b): confirma o e-mail no cadastro próprio
+    e autoriza trocar a senha em "Esqueci minha senha". Guardamos só o hash do código."""
+
+    class Purpose(models.TextChoices):
+        SIGNUP = "signup", "Cadastro"
+        PASSWORD_RESET = "password_reset", "Nova senha"
+
+    email = models.EmailField("e-mail", db_index=True)
+    purpose = models.CharField("finalidade", max_length=16, choices=Purpose.choices)
+    full_name = models.CharField("nome informado", max_length=150, blank=True)
+    code_hash = models.CharField(max_length=64, editable=False)
+    attempts = models.PositiveSmallIntegerField("tentativas erradas", default=0)
+    created_at = models.DateTimeField("enviado em", auto_now_add=True)
+    expires_at = models.DateTimeField("expira em")
+    used_at = models.DateTimeField("usado em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "código por e-mail"
+        verbose_name_plural = "códigos por e-mail"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.get_purpose_display()}: {self.email}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.email = normalize_email(self.email)
+        if self.expires_at is None:
+            self.expires_at = timezone.now() + EMAIL_CODE_VALIDITY
+        super().save(*args, **kwargs)
+
+    @property
+    def is_valid(self) -> bool:
+        return (
+            self.used_at is None
+            and self.attempts < EMAIL_CODE_MAX_ATTEMPTS
+            and self.expires_at > timezone.now()
+        )

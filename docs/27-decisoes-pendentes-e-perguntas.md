@@ -85,6 +85,15 @@ Em 2026-09-12 o dono do projeto respondeu às perguntas da primeira versão dest
 | Visual do site (não perguntado; pedido espontâneo do dono ao ver o site) | "Está o design muito sério. É um jornal escolar, deve ser visualmente atrativo aos alunos. Replaneje movimentos, cores, modernização, logo, favicon etc. Você é o profissional." | Redesign na Fase 3b (R1–R5) com a direção "Pátio": fonte de display nova, acento mais vivo, cores de área saturadas em blocos, marca nova (avião de papel de jornal), favicons completos, animações de entrada e microinterações (todas desligadas com `prefers-reduced-motion`). Revoga do [09](09-design-system.md) as regras "nada de animação de entrada", "sem gradientes" e "sem sombras pesadas". Mantém: sem infantilização, contraste AA, nome da escola em lugar nenhum. → [09](09-design-system.md), [26](26-plano-de-desenvolvimento.md) |
 | Carregamento da página | "Enquanto carrega eu vejo um emoji e uma página toda quebrada até ela se reconstruir; fica feia e demora." | Causa: no modo dev o Vite injeta o CSS por JavaScript, então o HTML aparece sem estilo até o script rodar. Correção na R1: CSS como entrada própria carregada por `<link>` antes do JS, preload das fontes e fallbacks com métricas. → [09](09-design-system.md) |
 
+## Quinta rodada (2026-09-28)
+
+| Pergunta | Resposta | Decisão |
+|---|---|---|
+| Login com Google ou passkeys (pedido do dono, depois descartado) | "Esquece isso. Vamos usar por enquanto só cadastros feitos dentro do próprio sistema." | Sem Google e sem passkeys. O login Microsoft continua no código, desligado enquanto não houver registro do app. |
+| Quem cria a conta (revê P1) | "O professor cria seu próprio cadastro (permitindo só e-mails @prof e @professor), recebe um código por e-mail para criar a senha e logar; depois faz o passo a passo do restante do cadastro." | **Cadastro aberto** em `/cadastro/` só para `@prof.educacao.sp.gov.br` e `@professor.educacao.sp.gov.br` (`SIGNUP_ALLOWED_DOMAINS`). Código de 6 dígitos por e-mail, senha criada junto, e em seguida o assistente de primeiro acesso ([14](14-configuracao-de-perfil.md)). O admin continua podendo cadastrar qualquer pessoa (coordenação, monitores). → [23](23-seguranca-e-lgpd.md), Fase 4b em [26](26-plano-de-desenvolvimento.md) |
+| Envio de e-mail (revê P7) | Gmail do dono, com senha de app (escolhido entre Brevo e Gmail) | E-mail pelo SMTP do Gmail (`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`). Só e-mails de conta: código de cadastro, recuperação de senha e conta aprovada. Os avisos do dia a dia continuam no sino. Guia em [35](35-guia-email.md). Sem e-mail configurado, o cadastro e o "esqueci minha senha" ficam escondidos. |
+| Quem se cadastra já publica? | "Admin aprova antes" | Conta criada pelo cadastro nasce **aguardando aprovação**: entra, completa o perfil e vê "aguardando aprovação"; não escreve nem acessa o resto do painel. Editores e admin aprovam ou recusam no painel editorial e recebem aviso no sino. Contas criadas pelo admin nascem aprovadas. → [02](02-personas-papeis-permissoes.md) |
+
 ## Decisões que continuam abertas
 
 Nenhuma. Tudo o que não foi decidido tem um padrão definido e pode mudar depois sem impacto estrutural.
@@ -96,3 +105,4 @@ Nenhuma. Tudo o que não foi decidido tem um padrão definido e pode mudar depoi
 - 2026-09-12: segunda rodada de respostas incorporada; guias 31 e 32 criados.
 - 2026-09-12: terceira rodada: Microsoft adiada, termo redigido pelo projeto (33).
 - 2026-09-15: quarta rodada: redesign visual e carregamento sem salto.
+- 2026-09-28: quinta rodada: cadastro próprio com código por e-mail (Gmail), aprovação por editor/admin; P1 e P7 revistos.

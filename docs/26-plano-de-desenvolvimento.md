@@ -99,6 +99,16 @@ Pedido do dono do projeto em 2026-09-15 ([27](27-decisoes-pendentes-e-perguntas.
 | E48 | Recomendação; tela de sugestões com ações; fontes em inglês por preferência | [21](21-curadoria-de-noticias.md) | Ignorar reduz sugestões do tópico |
 | E49 | `StoryIdea`: quadro, criação, conversão em rascunho | [15](15-painel-professor.md) | Rascunho nasce com fonte |
 
+## Fase 4b — Cadastro próprio (→ v1.4.0)
+
+Pedido do dono em 2026-09-28 ([27](27-decisoes-pendentes-e-perguntas.md), quinta rodada): o professor cria a própria conta, sem depender do admin nem de registro de app na Microsoft ou no Google.
+
+| # | Etapa | Referência | Aceite |
+|---|---|---|---|
+| C1 | E-mail pelo Gmail (SMTP, guia, comando `send_test_email`); `/cadastro/` com nome e e-mail só em `SIGNUP_ALLOWED_DOMAINS`, código de 6 dígitos por e-mail (15 min, 5 tentativas), senha criada com o código, conta nascendo aguardando aprovação e indo para o assistente de primeiro acesso; honeypot, limites e resposta igual para e-mail já cadastrado | [23](23-seguranca-e-lgpd.md), [35](35-guia-email.md) | E-mail de outro domínio é recusado; código errado 5 vezes invalida; quem já tem conta não descobre isso pela tela |
+| C2 | Conta aguardando aprovação: vê só perfil, conta e a tela de espera; fila "Contas novas" no painel editorial com aprovar/recusar; aviso no sino a editores e admin; e-mail de aprovação; auditoria | [02](02-personas-papeis-permissoes.md), [18](18-painel-administrativo.md) | Conta pendente não cria rascunho; aprovada passa a criar |
+| C3 | "Esqueci minha senha" por código no e-mail; tela de entrar com "Criar conta" e "Esqueci minha senha"; docs 14, 23 e 34 | [23](23-seguranca-e-lgpd.md) | Código de outra pessoa ou vencido não troca a senha |
+
 ## Fase 5 — IA (congelada)
 
 Etapas E50 a E55 permanecem descritas na versão anterior deste documento (histórico do git) e em [22](22-ia.md). Não serão detalhadas nem executadas até decisão do dono do projeto.
@@ -136,3 +146,5 @@ Etapas E50 a E55 permanecem descritas na versão anterior deste documento (hist�
 - 2026-09-28: E47 feita: `NewsItemClassification` com padrão da fonte (0,4) e palavras-chave (título 2 pontos, resumo 1, score de 0,3 a 0,9), disciplinas derivadas dos tópicos, classificação na coleta e reclassificação pelo worker quando o admin muda palavras-chave ou padrões. Aceite: 104 de 383 notícias reais com tópico visível. Detalhes em [21](21-curadoria-de-noticias.md). Próxima: E48.
 - 2026-09-28: E48 feita: `NewsRecommendation` com a fórmula do [21](21-curadoria-de-noticias.md), sugestões calculadas na coleta, ao salvar o perfil e ao reclassificar, limite de 30 ativas, tela de sugestões com abas, filtros e ações, bloco no início do painel, aviso semanal, preferência de fontes de menor confiança. Aceite (ignorar reduz sugestões do tópico) testado. A linha "Gerenciar fontes de notícia" da matriz de [02](02-personas-papeis-permissoes.md) deixou de ser fora do escopo (é o Django Admin, desde a E45). Próxima: E49.
 - 2026-09-28: E49 feita e **Fase 4 concluída**: `StoryIdea`, quadro de pautas, "Virar pauta" nas sugestões, pauta à mão, "Criar rascunho" com a notícia nas fontes, disciplinas, tópicos e `origin_news_item`, checklist exigindo fonte, pauta concluída ao publicar, ajuste manual da classificação. A matriz de [02](02-personas-papeis-permissoes.md) não tem mais linhas fora do escopo além de "Buscar e filtrar" (visitante). Próxima: `make release` para a v1.3.0. A Fase 5 continua congelada.
+- 2026-09-28: v1.3.0 lançada. Dono pediu cadastro próprio dos professores com código por e-mail e aprovação do admin: **Fase 4b** (C1–C3) criada, revendo as decisões P1 (só o admin cria contas) e P7 (sem e-mail) de [27](27-decisoes-pendentes-e-perguntas.md).
+- 2026-09-28: C1 feita: e-mail pelo Gmail (guia [35](35-guia-email.md), comando `send_test_email`), `/cadastro/` com código de 6 dígitos, conta nascendo com `is_approved = False` e indo ao assistente de primeiro acesso. Os testes acharam um defeito corrigido na hora: a tentativa errada era desfeita junto com a transação da criação da conta, e o limite de 5 tentativas não valia. Próxima: C2.

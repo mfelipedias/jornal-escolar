@@ -1,0 +1,14 @@
+{% autoescape off %}Seu código para criar a conta no {{ site_name }}: {{ code }}
+Olá{% if name %}, {{ name }}{% endif %}!
+
+Seu código para criar a conta no {{ site_name }} é:
+
+    {{ code }}
+
+Ele vale por {{ minutes }} minutos. Digite o código na tela de cadastro e crie a sua senha.
+
+Se você não pediu este cadastro, é só ignorar este e-mail.
+
+{{ site_name }}
+{{ site_url }}
+{% endautoescape %}

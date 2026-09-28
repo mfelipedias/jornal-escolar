@@ -157,6 +157,34 @@ AUTH_ALLOWED_DOMAINS = [
     )
     if domain.strip()
 ]
+
+# --- E-mail (Fase 4b, docs/35): só códigos de cadastro, nova senha e conta aprovada ---
+# SMTP do Gmail com "senha de app". Sem usuário e senha, o cadastro próprio e o "Esqueci minha
+# senha" ficam escondidos (EMAIL_CONFIGURED); o dev troca pelo console.
+EMAIL_HOST = env.str("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_USE_TLS = True
+EMAIL_TIMEOUT = 15
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
+EMAIL_CONFIGURED = bool(EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# O Gmail só aceita como remetente o próprio endereço; o nome que aparece é o do jornal.
+DEFAULT_FROM_EMAIL = env.str(
+    "DEFAULT_FROM_EMAIL",
+    default=f"Jornal Escolar <{EMAIL_HOST_USER or 'nao-responda@localhost'}>",
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# Domínios aceitos no cadastro próprio (docs/27, quinta rodada).
+SIGNUP_ALLOWED_DOMAINS = [
+    domain.strip().lower()
+    for domain in env.list(
+        "SIGNUP_ALLOWED_DOMAINS",
+        default=["prof.educacao.sp.gov.br", "professor.educacao.sp.gov.br"],
+    )
+    if domain.strip()
+]
+
 MS_CLIENT_ID = env.str("MS_CLIENT_ID", default="")
 MS_CLIENT_SECRET = env.str("MS_CLIENT_SECRET", default="")
 MICROSOFT_LOGIN_CONFIGURED = bool(MS_CLIENT_ID and MS_CLIENT_SECRET)

@@ -41,6 +41,9 @@ x-django-env: &django-env
   MS_CLIENT_ID: ${MS_CLIENT_ID:-}
   MS_CLIENT_SECRET: ${MS_CLIENT_SECRET:-}
   AUTH_ALLOWED_DOMAINS: ${AUTH_ALLOWED_DOMAINS:-professor.educacao.sp.gov.br,educacao.sp.gov.br}
+  EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+  EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+  SIGNUP_ALLOWED_DOMAINS: ${SIGNUP_ALLOWED_DOMAINS:-prof.educacao.sp.gov.br,professor.educacao.sp.gov.br}
 
 services:
   db:

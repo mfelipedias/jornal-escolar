@@ -55,7 +55,19 @@
       Entrar com senha
     </button>
   </form>
-  <p class="mt-7 rounded-field bg-paper-2 px-4 py-3 text-center text-meta text-ink-2">
-    Esqueceu a senha ou ainda não tem acesso? Fale com o administrador do jornal.
-  </p>
+  {% if signup_available %}
+    <p class="mt-7 rounded-field bg-paper-2 px-4 py-3 text-center text-ui text-ink-2"
+       data-signup-link>
+      Professor ainda sem conta?
+      <a href="{% url 'accounts:signup' %}"
+         class="font-semibold text-accent hover:underline">Criar conta</a>
+    </p>
+    <p class="mt-3 text-center text-meta text-ink-3">
+      Esqueceu a senha? Fale com o administrador do jornal.
+    </p>
+  {% else %}
+    <p class="mt-7 rounded-field bg-paper-2 px-4 py-3 text-center text-meta text-ink-2">
+      Esqueceu a senha ou ainda não tem acesso? Fale com o administrador do jornal.
+    </p>
+  {% endif %}
 {% endblock auth_content %}

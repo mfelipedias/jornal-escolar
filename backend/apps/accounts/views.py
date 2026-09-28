@@ -5,6 +5,7 @@ from uuid import UUID
 from allauth.account.views import LoginView as AllauthLoginView
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -12,9 +13,9 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
-from . import services
-from .forms import AccessLinkPasswordForm
-from .models import AccessLink
+from . import services, signup
+from .forms import AccessLinkPasswordForm, SignupConfirmForm, SignupRequestForm
+from .models import AccessLink, EmailCode
 
 
 class LoginView(AllauthLoginView):
@@ -25,6 +26,7 @@ class LoginView(AllauthLoginView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context["microsoft_login_enabled"] = services.microsoft_login_enabled()
+        context["signup_available"] = signup.signup_available()
         return context
 
 
@@ -68,3 +70,94 @@ def access_link(request: HttpRequest, token: UUID) -> HttpResponse:
 def not_found(request: HttpRequest, *args: Any, **kwargs: Any):
     """Recursos do allauth que não usamos (cadastro, e-mail, recuperação por e-mail)."""
     raise Http404
+
+
+# --- Cadastro próprio (Fase 4b, C1) ---
+
+SIGNUP_SESSION_KEY = "signup_email"
+
+
+def _signup_guard(request: HttpRequest) -> HttpResponse | None:
+    if request.user.is_authenticated:
+        return redirect("dashboard:home")
+    if not signup.signup_available():
+        raise Http404
+    return None
+
+
+@never_cache
+@require_http_methods(["GET", "POST"])
+def signup_request(request: HttpRequest) -> HttpResponse:
+    """/cadastro/: nome e e-mail; o código vai por e-mail (docs/27, quinta rodada)."""
+    if (response := _signup_guard(request)) is not None:
+        return response
+    form = SignupRequestForm(request.POST or None)
+    status = 200
+    if request.method == "POST":
+        if form.is_valid() and form.cleaned_data["website"]:
+            # Campo-isca preenchido: robô. Finge que deu certo e não envia nada.
+            request.session[SIGNUP_SESSION_KEY] = form.cleaned_data["email"].lower()
+            return redirect("accounts:signup_confirm")
+        if form.is_valid():
+            try:
+                signup.request_signup(
+                    form.cleaned_data["email"], form.cleaned_data["full_name"], request
+                )
+            except ValidationError as exc:
+                _add_errors(form, exc)
+            except signup.RateLimited as exc:
+                form.add_error(None, str(exc))
+                status = 429
+            else:
+                request.session[SIGNUP_SESSION_KEY] = form.cleaned_data["email"].lower()
+                return redirect("accounts:signup_confirm")
+        if status == 200:
+            status = 400
+    context = {"form": form, "domains": signup.domain_message()}
+    return render(request, "accounts/signup.html", context, status=status)
+
+
+def _add_errors(form, exc: ValidationError) -> None:
+    """Erros do serviço no formulário: no campo quando ele existe, senão no topo."""
+    if not hasattr(exc, "error_dict"):
+        form.add_error(None, exc)
+        return
+    for field, errors in exc.error_dict.items():
+        for error in errors:
+            form.add_error(field if field in form.fields else None, error)
+
+
+@never_cache
+@sensitive_post_parameters("new_password1", "new_password2", "code")
+@require_http_methods(["GET", "POST"])
+def signup_confirm(request: HttpRequest) -> HttpResponse:
+    """/cadastro/confirmar/: código + senha. Cria a conta e leva ao assistente."""
+    if (response := _signup_guard(request)) is not None:
+        return response
+    email = request.session.get(SIGNUP_SESSION_KEY)
+    if not email:
+        return redirect("accounts:signup")
+    pending = EmailCode.objects.filter(email=email, purpose=EmailCode.Purpose.SIGNUP).first()
+    name = pending.full_name if pending else ""
+    form = SignupConfirmForm(signup.provisional_user(email, name), request.POST or None)
+    status = 200
+    if request.method == "POST":
+        if form.is_valid():
+            try:
+                user = signup.complete_signup(
+                    email, form.cleaned_data["code"], form.cleaned_data["new_password1"], request
+                )
+            except ValidationError as exc:
+                _add_errors(form, exc)
+            except signup.RateLimited as exc:
+                form.add_error(None, str(exc))
+                status = 429
+            else:
+                request.session.pop(SIGNUP_SESSION_KEY, None)
+                auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                messages.success(request, "Conta criada. Agora conte um pouco sobre você.")
+                return redirect("accounts:onboarding", step=1)
+        if status == 200:
+            status = 400
+    context = {"form": form, "email": email}
+    return render(request, "accounts/signup_confirm.html", context, status=status)

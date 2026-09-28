@@ -115,6 +115,7 @@ def test_cleanup_apaga_leituras_antigas_e_pode_rodar_de_novo():
         "comentarios_rejeitados": 0,
         "comentarios_sem_dados_tecnicos": 0,
         "noticias_antigas": 0,
+        "codigos_de_email": 0,
     }
     assert ArticleRead.objects.count() == 1
 

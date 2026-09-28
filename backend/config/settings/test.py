@@ -15,3 +15,7 @@ WEATHER_API_BASE = ""
 
 # A coleta de notícias nos testes usa httpx.MockTransport e endereços falsos, sem DNS.
 CURATION_BLOCK_PRIVATE_HOSTS = False
+
+# E-mails ficam em django.core.mail.outbox; nenhum sai de verdade.
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+EMAIL_CONFIGURED = True

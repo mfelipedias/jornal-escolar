@@ -83,6 +83,15 @@ REGISTRY: dict[str, SettingSpec] = {
             "estiverem configurados no servidor.",
         ),
         SettingSpec(
+            "auth.self_signup",
+            "Cadastro próprio ligado",
+            "bool",
+            True,
+            "Professores com e-mail @prof ou @professor criam a própria conta, que espera a "
+            "aprovação de um editor. Só aparece se o e-mail (Gmail) estiver configurado no "
+            "servidor (docs/35).",
+        ),
+        SettingSpec(
             "editorial.self_publish",
             "Quem publica",
             "choice",

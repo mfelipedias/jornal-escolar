@@ -31,6 +31,7 @@ from django.db import close_old_connections, connection
 from procrastinate import JobContext
 from procrastinate.contrib.django import app
 
+from apps.accounts import signup
 from apps.curation import services as curation
 from apps.editorial import services as editorial
 from apps.engagement import services as engagement
@@ -92,6 +93,7 @@ def cleanup(timestamp: int) -> dict[str, int]:
             "comentarios_rejeitados": rejected,
             "comentarios_sem_dados_tecnicos": cleared,
             "noticias_antigas": curation.purge_old_items(),
+            "codigos_de_email": signup.purge_old_codes(),
         }
 
     return _run("cleanup", timestamp, job)

@@ -299,3 +299,42 @@ class ProfileForm(PhotoFormMixin):
 
     def profile_fields(self) -> dict:
         return {key: self.cleaned_data[key] for key in self.PROFILE_FIELDS}
+
+
+# --- Cadastro próprio (Fase 4b, C1) ---
+
+
+class SignupRequestForm(forms.Form):
+    """/cadastro/: nome e e-mail institucional. "website" é o campo-isca contra robôs."""
+
+    full_name = forms.CharField(
+        label="Nome completo",
+        max_length=150,
+        error_messages={"required": "Escreva o seu nome."},
+    )
+    email = forms.EmailField(
+        label="E-mail institucional",
+        max_length=254,
+        error_messages={
+            "required": "Escreva o seu e-mail.",
+            "invalid": "Confira o e-mail.",
+        },
+    )
+    website = forms.CharField(required=False)
+
+    def clean_full_name(self) -> str:
+        name = " ".join(self.cleaned_data["full_name"].split())
+        if len(name) < 3:
+            raise forms.ValidationError("Escreva o seu nome completo.")
+        return name
+
+
+class SignupConfirmForm(AccessLinkPasswordForm):
+    """/cadastro/confirmar/: código do e-mail e a senha nova."""
+
+    code = forms.CharField(
+        label="Código de 6 dígitos",
+        max_length=12,
+        error_messages={"required": "Digite o código que chegou no seu e-mail."},
+    )
+    field_order = ["code", "new_password1", "new_password2"]
