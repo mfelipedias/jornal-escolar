@@ -1,4 +1,5 @@
-"""Cadastro próprio com código por e-mail (Fase 4b, C1; docs/27 quinta rodada, docs/23).
+"""Cadastro próprio e "Esqueci minha senha" com código por e-mail (Fase 4b, C1 e C3; docs/27
+quinta rodada, docs/23).
 
 1. A pessoa informa nome e e-mail institucional (só SIGNUP_ALLOWED_DOMAINS).
 2. Recebe um código de 6 dígitos, que vale 15 minutos e aceita 5 tentativas erradas.
@@ -195,6 +196,46 @@ def complete_signup(
             request=request,
         )
         approval.notify_new_signup(user)
+    return user
+
+
+# --- "Esqueci minha senha" (C3) ---
+
+
+def request_password_reset(email: str, request: HttpRequest | None = None) -> None:
+    """Manda o código só se houver conta ativa com o e-mail (de qualquer domínio: o admin
+    cadastra coordenação e monitores com outros e-mails). A tela responde sempre igual."""
+    email = normalize_email(email)
+    _limit(request, email, Purpose.PASSWORD_RESET)
+    user = User.objects.filter(email=email, is_active=True).first()
+    if user is None:
+        return
+    code = issue_code(email, Purpose.PASSWORD_RESET)
+    send_email(
+        email, "password_reset_code", {"name": user.public_name, "code": code, "minutes": 15}
+    )
+
+
+def complete_password_reset(
+    email: str, code: str, password: str, request: HttpRequest | None = None
+) -> User:
+    """Troca a senha com o código. A conferência fica fora da transação (tentativas)."""
+    record = check_code(email, Purpose.PASSWORD_RESET, code, request)
+    user = User.objects.filter(email=record.email, is_active=True).first()
+    if user is None:
+        raise ValidationError({"code": MSG_WRONG_CODE})
+    validate_password(password, user)
+    with transaction.atomic():
+        record = EmailCode.objects.select_for_update().get(pk=record.pk)
+        if not record.is_valid:
+            raise ValidationError({"code": MSG_WRONG_CODE})
+        record.used_at = timezone.now()
+        record.save(update_fields=["used_at"])
+        user.set_password(password)
+        user.save(update_fields=["password"])
+        # Quem estava logado com a senha antiga (em outro aparelho) sai.
+        services.end_other_sessions(user, None)
+        audit.record(audit.Action.PASSWORD_RESET, actor=user, target=user, request=request)
     return user
 
 

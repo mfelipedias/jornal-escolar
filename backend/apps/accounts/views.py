@@ -14,8 +14,13 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
 from . import services, signup
-from .forms import AccessLinkPasswordForm, SignupConfirmForm, SignupRequestForm
-from .models import AccessLink, EmailCode
+from .forms import (
+    AccessLinkPasswordForm,
+    PasswordResetRequestForm,
+    SignupConfirmForm,
+    SignupRequestForm,
+)
+from .models import AccessLink, EmailCode, User
 
 
 class LoginView(AllauthLoginView):
@@ -27,6 +32,7 @@ class LoginView(AllauthLoginView):
         context = super().get_context_data(**kwargs)
         context["microsoft_login_enabled"] = services.microsoft_login_enabled()
         context["signup_available"] = signup.signup_available()
+        context["password_reset_available"] = signup.password_reset_available()
         return context
 
 
@@ -161,3 +167,70 @@ def signup_confirm(request: HttpRequest) -> HttpResponse:
             status = 400
     context = {"form": form, "email": email}
     return render(request, "accounts/signup_confirm.html", context, status=status)
+
+
+# --- "Esqueci minha senha" (Fase 4b, C3) ---
+
+RESET_SESSION_KEY = "password_reset_email"
+
+
+def _reset_guard(request: HttpRequest) -> None:
+    if not signup.password_reset_available():
+        raise Http404
+
+
+@never_cache
+@require_http_methods(["GET", "POST"])
+def password_reset(request: HttpRequest) -> HttpResponse:
+    """/entrar/esqueci/: e-mail da conta; o código vai por e-mail. Resposta sempre igual."""
+    _reset_guard(request)
+    form = PasswordResetRequestForm(request.POST or None)
+    status = 200
+    if request.method == "POST":
+        if form.is_valid():
+            email = form.cleaned_data["email"].lower()
+            try:
+                signup.request_password_reset(email, request)
+            except signup.RateLimited as exc:
+                form.add_error(None, str(exc))
+                status = 429
+            else:
+                request.session[RESET_SESSION_KEY] = email
+                return redirect("accounts:password_reset_confirm")
+        if status == 200:
+            status = 400
+    return render(request, "accounts/password_reset.html", {"form": form}, status=status)
+
+
+@never_cache
+@sensitive_post_parameters("new_password1", "new_password2", "code")
+@require_http_methods(["GET", "POST"])
+def password_reset_confirm(request: HttpRequest) -> HttpResponse:
+    """/entrar/esqueci/confirmar/: código + senha nova. Entra direto depois."""
+    _reset_guard(request)
+    email = request.session.get(RESET_SESSION_KEY)
+    if not email:
+        return redirect("accounts:password_reset")
+    person = User.objects.filter(email=email).first() or signup.provisional_user(email)
+    form = SignupConfirmForm(person, request.POST or None)
+    status = 200
+    if request.method == "POST":
+        if form.is_valid():
+            try:
+                user = signup.complete_password_reset(
+                    email, form.cleaned_data["code"], form.cleaned_data["new_password1"], request
+                )
+            except ValidationError as exc:
+                _add_errors(form, exc)
+            except signup.RateLimited as exc:
+                form.add_error(None, str(exc))
+                status = 429
+            else:
+                request.session.pop(RESET_SESSION_KEY, None)
+                auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                messages.success(request, "Senha nova criada. Você já está dentro do jornal.")
+                return redirect("dashboard:home")
+        if status == 200:
+            status = 400
+    context = {"form": form, "email": email}
+    return render(request, "accounts/password_reset_confirm.html", context, status=status)

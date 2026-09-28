@@ -91,6 +91,10 @@ Uma página com seções, um botão salvar. Sem abas.
 - A foto é recortada em quadrado no navegador e de novo no servidor (caso chegue sem recorte). A foto antiga é apagada ao trocar.
 - "Sair de todas as outras sessões" apaga as sessões da pessoa guardadas no banco, menos a atual. Trocar a senha também encerra as outras.
 
+## Cadastro próprio (Fase 4b)
+
+Além das contas criadas pelo admin, o professor pode criar a própria conta em `/cadastro/` com o e-mail `@prof.educacao.sp.gov.br` ou `@professor.educacao.sp.gov.br`: recebe um código de 6 dígitos por e-mail, cria a senha e cai direto no assistente de primeiro acesso deste documento (as mesmas etapas). No fim do assistente, a conta ainda aguardando aprovação vai para `/painel/aguardando/` em vez do jornal. Enquanto espera, edita o perfil e a conta; depois da aprovação de um editor, recebe aviso no sino e por e-mail. Detalhes em [23](23-seguranca-e-lgpd.md) e [27](27-decisoes-pendentes-e-perguntas.md).
+
 ## Histórico
 
 - 2026-09-12: versão inicial (com perfil de aluno e convite por e-mail).
@@ -98,3 +102,4 @@ Uma página com seções, um botão salvar. Sem abas.
 - 2026-09-14: E23. Rota e regra de exibição do assistente (`onboarded_at`); cargo só para leitura no passo 1; links aceitam `http` e `https`, como a página pública já fazia; troca de endereço com aviso; detalhes de foto e sessões. "Atualizar créditos anteriores" já atualiza os créditos; o registro em `EditorialEvent` fica para a E29, quando o modelo existir.
 - 2026-09-14: E29: "atualizar créditos anteriores" grava um `EditorialEvent` `contributor_changed` em cada publicação alterada.
 - 2026-09-14: E34: "Conta" ganha "Seus dados" (baixar em JSON ou em ZIP com a foto de perfil) e "Excluir a conta" (caixa de confirmação; o pedido vira um aviso no painel de cada administrador e a tela mostra a data do último pedido). A conta continua ativa até o admin anonimizá-la.
+- 2026-09-28: cadastro próprio leva ao mesmo assistente; conta pendente termina na tela de espera.

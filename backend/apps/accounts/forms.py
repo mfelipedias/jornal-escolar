@@ -338,3 +338,13 @@ class SignupConfirmForm(AccessLinkPasswordForm):
         error_messages={"required": "Digite o código que chegou no seu e-mail."},
     )
     field_order = ["code", "new_password1", "new_password2"]
+
+
+class PasswordResetRequestForm(forms.Form):
+    """/entrar/esqueci/: só o e-mail da conta."""
+
+    email = forms.EmailField(
+        label="E-mail da sua conta",
+        max_length=254,
+        error_messages={"required": "Escreva o seu e-mail.", "invalid": "Confira o e-mail."},
+    )

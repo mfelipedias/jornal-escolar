@@ -119,6 +119,7 @@ class AuditLog(models.Model):
         USER_SIGNED_UP = "user_signed_up", "Cadastro próprio"
         USER_APPROVED = "user_approved", "Conta aprovada"
         USER_REJECTED = "user_rejected", "Cadastro recusado"
+        PASSWORD_RESET = "password_reset", "Senha redefinida por código"
         ROLE_CHANGED = "role_changed", "Papel alterado"
         USER_DEACTIVATED = "user_deactivated", "Conta desativada"
         USER_REACTIVATED = "user_reactivated", "Conta reativada"

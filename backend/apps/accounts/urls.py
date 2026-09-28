@@ -11,6 +11,12 @@ urlpatterns = [
     path("entrar/", views.login, name="login"),
     path("sair/", logout, name="logout"),
     path("acesso/<uuid:token>/", views.access_link, name="access_link"),
+    path("entrar/esqueci/", views.password_reset, name="password_reset"),
+    path(
+        "entrar/esqueci/confirmar/",
+        views.password_reset_confirm,
+        name="password_reset_confirm",
+    ),
     path("cadastro/", views.signup_request, name="signup"),
     path("cadastro/confirmar/", views.signup_confirm, name="signup_confirm"),
     path("painel/perfil/", panel_views.profile_edit, name="profile_edit"),

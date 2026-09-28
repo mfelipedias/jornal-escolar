@@ -63,7 +63,7 @@ Decisão de 2026-09-28 ([27](27-decisoes-pendentes-e-perguntas.md), quinta rodad
 
 - Para quem não conseguir usar a conta Microsoft ou para o admin.
 - Ativação por "link de primeiro acesso" gerado pelo admin (token de uso único, 7 dias), entregue por qualquer canal.
-- Reset de senha: sem e-mail, o admin gera um novo link. Não existe "esqueci minha senha" automático.
+- Reset de senha: "Esqueci minha senha" em `/entrar/esqueci/` (Fase 4b, C3), com o mesmo código de 6 dígitos por e-mail, limites e resposta igual exista ou não a conta. Vale para qualquer conta ativa, de qualquer domínio. Trocar a senha derruba as outras sessões e gera `password_reset` na auditoria. Sem e-mail configurado, o link some e o admin gera um novo link de acesso, como antes.
 - Validadores do Django (mínimo 10 caracteres, não comum, não similar ao e-mail). Hash Argon2.
 - Limite de tentativas: 5 erros por 15 min por e-mail e 30 por 15 min por IP. **Ajuste da E09:** o limite por IP era 5, mas a escola inteira sai pela mesma conexão; 5 erros de uma pessoa bloqueariam todos os professores. Em produção, `TRUSTED_CLIENT_IP_HEADER=CF-Connecting-IP` faz o limite usar o IP real atrás da Cloudflare.
 - Login Microsoft identifica a pessoa pelo `userPrincipalName`, nunca pelo campo `mail`: em aplicativos multi-tenant, o `mail` pode ser preenchido pelo administrador de qualquer organização Microsoft e permitiria se passar por um professor cadastrado. Contas convidadas (`#EXT#`) são recusadas.
@@ -153,3 +153,4 @@ Revisada na E28. `[x]` = feito e verificado no código (teste automático quando
 - 2026-09-14: E40: comentários públicos com limites testados, links e e-mails removidos do corpo, texto escapado; `ip_hash` e código anônimo apagados em 30 dias, rejeitados também (comando `cleanup`). Texto padrão da privacidade descreve os comentários (sem e-mail ou telefone, nome público, remoção pelo e-mail de contato); o `seed_site` troca o texto da E38 se ninguém o editou. Exportação inclui as respostas da equipe; anonimizar tira o nome delas.
 - 2026-09-15: E41: limite de comentários por IP subiu para 60 por hora (a escola sai por um IP só) e entrou o de 10 por pessoa por hora. Moderação de comentários registrada no `AuditLog` (`comment_moderated`), só com ids e situação.
 - 2026-09-28: cadastro próprio com código por e-mail (Fase 4b, C1).
+- 2026-09-28: C2 e C3: conta pendente sem acesso ao painel; "Esqueci minha senha" por código.
