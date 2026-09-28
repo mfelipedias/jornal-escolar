@@ -8,13 +8,15 @@ Deduplicação (E46), valendo entre fontes diferentes:
 - mesmo endereço: url_hash único (o link limpo, depois dos redirecionamentos);
 - mesmo título: title_hash igual ao de outra notícia publicada até 7 dias antes ou depois, só
   para títulos marcantes (normalize.is_distinctive_title). Fica a que chegou primeiro.
-Retenção (E46): purge_old_items apaga o que foi coletado há mais de 60 dias. Classificação: E47.
+Retenção (E46): purge_old_items apaga o que foi coletado há mais de 60 dias.
+Classificação (E47): cada notícia nova é classificada na hora (classify.py).
 
 Segurança (docs/23): só http e https, tempo limite, feed de no máximo 5 MB, no máximo
 5 redirecionamentos e nenhum pedido para endereços de rede interna (protege o servidor se alguém
 cadastrar, por engano ou de propósito, um endereço como http://localhost).
 """
 
+import contextlib
 import ipaddress
 import logging
 import socket
@@ -27,10 +29,11 @@ import httpx
 from django.conf import settings
 from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
+from procrastinate.exceptions import AlreadyEnqueued
 
 from apps.core.site_settings import get_setting
 
-from . import normalize
+from . import classify, normalize
 from .models import RETENTION_DAYS, TITLE_DEDUP_WINDOW, NewsItem, NewsSource
 from .seed_data import SOURCES
 
@@ -271,6 +274,7 @@ def _store_entries(
 
     new = 0
     seen: set[str] = set()
+    classifier: classify.Classifier | None = None
     for candidate in pending:
         canonical = normalize.canonicalize_url(finals[candidate.link])
         if len(canonical) > 1000:
@@ -298,13 +302,17 @@ def _store_entries(
             with transaction.atomic():
                 title_taken = candidate.distinctive and _title_taken(candidate)
                 if not title_taken:
-                    _, created = NewsItem.objects.get_or_create(url_hash=digest, defaults=defaults)
+                    item, created = NewsItem.objects.get_or_create(
+                        url_hash=digest, defaults=defaults
+                    )
         except IntegrityError:
             created = False
         if title_taken:
             repeated += 1
         elif created:
             new += 1
+            classifier = classifier or classify.Classifier()
+            classifier.save(item)
         else:
             known += 1
     return new, known, repeated, skipped
@@ -390,6 +398,28 @@ def delete_source_items(source: NewsSource) -> int:
     (docs/21, "Confiabilidade e direitos"). A fonte continua cadastrada."""
     _, per_model = NewsItem.objects.filter(source=source).delete()
     return per_model.get(NewsItem._meta.label, 0)
+
+
+def reclassify_items(since: datetime | None = None) -> tuple[int, int]:
+    """Classifica de novo as notícias guardadas (todas, ou as coletadas desde `since`), depois
+    de mudar palavras-chave, tópicos ou padrões de fonte. Devolve (notícias, classificadas)."""
+    items = NewsItem.objects.select_related("source").order_by("pk")
+    if since is not None:
+        items = items.filter(fetched_at__gte=since)
+    total = items.count()
+    return total, classify.classify_items(items.iterator(chunk_size=500))
+
+
+def schedule_reclassification() -> None:
+    """Pede ao worker para reclassificar tudo depois que a transação atual gravar. Várias
+    mudanças seguidas no admin viram uma tarefa só."""
+    from .tasks import reclassify_news  # evita import circular (tasks usa services)
+
+    def defer() -> None:
+        with contextlib.suppress(AlreadyEnqueued):
+            reclassify_news.defer()
+
+    transaction.on_commit(defer)
 
 
 @dataclass

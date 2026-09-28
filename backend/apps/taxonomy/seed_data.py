@@ -103,15 +103,15 @@ ARTICLE_TYPES = [
 
 # Tópicos: nome, palavras-chave (Fase 4) e disciplinas sugeridas (por nome).
 TOPICS = [
-    ("Inteligência Artificial", ["inteligência artificial", "IA", "aprendizado de máquina", "ChatGPT", "algoritmo"], ["Tecnologia e Inovação", "Matemática", "Filosofia"]),
+    ("Inteligência Artificial", ["inteligência artificial", "IA", "aprendizado de máquina", "ChatGPT", "algoritmo", "artificial intelligence", "AI", "machine learning"], ["Tecnologia e Inovação", "Matemática", "Filosofia"]),
     ("Programação", ["programação", "código", "Python", "software", "desenvolvimento"], ["Tecnologia e Inovação", "Matemática"]),
-    ("Ciência de Dados", ["dados", "estatística", "gráfico", "pesquisa", "big data"], ["Matemática", "Tecnologia e Inovação"]),
-    ("Robótica", ["robótica", "robô", "Arduino", "automação", "sensores"], ["Tecnologia e Inovação", "Física"]),
+    ("Ciência de Dados", ["ciência de dados", "estatística", "análise de dados", "big data", "data science"], ["Matemática", "Tecnologia e Inovação"]),
+    ("Robótica", ["robótica", "robô", "Arduino", "automação", "sensores", "robot", "robotics"], ["Tecnologia e Inovação", "Física"]),
     ("Meio Ambiente", ["meio ambiente", "sustentabilidade", "reciclagem", "poluição", "biodiversidade"], ["Biologia", "Geografia", "Química"]),
-    ("Mudanças Climáticas", ["clima", "aquecimento global", "carbono", "emissões", "COP"], ["Geografia", "Biologia", "Física"]),
+    ("Mudanças Climáticas", ["mudança do clima", "mudanças climáticas", "aquecimento global", "carbono", "emissões", "COP", "climate change", "global warming"], ["Geografia", "Biologia", "Física"]),
     ("Saúde", ["saúde", "doença", "vacina", "SUS", "saúde mental"], ["Biologia", "Educação Física"]),
     ("Alimentação", ["alimentação", "nutrição", "comida", "merenda", "dieta"], ["Biologia", "Química"]),
-    ("Astronomia", ["astronomia", "espaço", "planeta", "NASA", "telescópio"], ["Física", "Geografia"]),
+    ("Astronomia", ["astronomia", "espaço", "planeta", "NASA", "telescópio", "astronomy", "planet", "telescope"], ["Física", "Geografia"]),
     ("Energia", ["energia", "solar", "eólica", "eletricidade", "renovável"], ["Física", "Química", "Geografia"]),
     ("Literatura", ["literatura", "livro", "autor", "poesia", "romance"], ["Língua Portuguesa", "Leitura e Produção de Texto", "Sala de Leitura"]),
     ("Cinema", ["cinema", "filme", "documentário", "série", "audiovisual"], ["Arte", "Sociologia"]),
@@ -122,8 +122,8 @@ TOPICS = [
     ("Profissões", ["profissão", "carreira", "mercado de trabalho", "curso técnico", "faculdade"], ["Projeto de Vida"]),
     ("Direitos Humanos", ["direitos humanos", "igualdade", "racismo", "inclusão", "diversidade"], ["Sociologia", "Filosofia", "História"]),
     ("Política e Cidadania", ["política", "eleição", "cidadania", "democracia", "voto"], ["Sociologia", "História", "Filosofia"]),
-    ("Economia", ["economia", "inflação", "emprego", "renda", "mercado"], ["Geografia", "Educação Financeira", "Sociologia"]),
-    ("História do Brasil", ["história do Brasil", "Independência", "República", "colonização", "memória"], ["História"]),
+    ("Economia", ["economia", "inflação", "emprego", "renda", "mercado financeiro"], ["Geografia", "Educação Financeira", "Sociologia"]),
+    ("História do Brasil", ["história do Brasil", "Independência", "República", "colonização", "memória histórica"], ["História"]),
     ("Cultura Afro-brasileira e Indígena", ["cultura afro-brasileira", "povos indígenas", "quilombo", "consciência negra", "etnia"], ["História", "Sociologia", "Arte"]),
     ("Educação Financeira", ["dinheiro", "poupança", "orçamento", "juros", "consumo consciente"], ["Educação Financeira", "Matemática"]),
     ("Empreendedorismo", ["empreendedorismo", "negócio", "startup", "inovação", "ideia"], ["Projeto de Vida", "Tecnologia e Inovação", "Educação Financeira"]),
@@ -132,5 +132,5 @@ TOPICS = [
     ("Fotografia", ["fotografia", "foto", "câmera", "imagem", "exposição"], ["Arte"]),
     ("Teatro", ["teatro", "peça", "ator", "encenação", "palco"], ["Arte", "Língua Portuguesa"]),
     ("Matemática no cotidiano", ["matemática", "cálculo", "porcentagem", "geometria", "problema"], ["Matemática"]),
-    ("Divulgação científica", ["ciência", "pesquisa científica", "descoberta", "cientista", "experimento"], ["Biologia", "Física", "Química"]),
+    ("Divulgação científica", ["ciência", "pesquisa científica", "descoberta", "cientista", "experimento", "scientists", "study"], ["Biologia", "Física", "Química"]),
 ]  # fmt: skip

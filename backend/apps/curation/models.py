@@ -1,15 +1,16 @@
 """Curadoria de notícias externas (docs/21, docs/06 "curation.*").
 
-A E45 cria as fontes e os itens coletados; a E46, a deduplicação por título e a retenção.
-Classificação, recomendação e pautas chegam nas etapas seguintes da Fase 4. Só guardamos
-metadados: título, resumo curto do próprio feed, link e data. Nunca o texto integral, nunca
-imagens (só o endereço delas).
+A E45 cria as fontes e os itens coletados; a E46, a deduplicação por título e a retenção; a E47,
+a classificação por tópico e disciplina. Recomendação e pautas chegam nas etapas seguintes.
+Só guardamos metadados: título, resumo curto do próprio feed, link e data. Nunca o texto
+integral, nunca imagens (só o endereço delas).
 """
 
 from datetime import datetime, timedelta
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Q
 
 from apps.core.models import TimeStampedModel
 
@@ -122,3 +123,67 @@ class NewsItem(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.title
+
+
+class NewsItemClassification(models.Model):
+    """Tópico ou disciplina provável de uma notícia, com o score e o método (docs/21,
+    "Classificação"). Uma linha por notícia, alvo e método; o score que vale é o maior entre os
+    métodos. As linhas automáticas são refeitas a cada classificação; as manuais ficam."""
+
+    class Method(models.TextChoices):
+        SOURCE_DEFAULT = "source_default", "Padrão da fonte"
+        KEYWORD = "keyword", "Palavra-chave"
+        MANUAL = "manual", "Ajuste manual"
+
+    item = models.ForeignKey(
+        NewsItem,
+        verbose_name="notícia",
+        on_delete=models.CASCADE,
+        related_name="classifications",
+    )
+    topic = models.ForeignKey(
+        "taxonomy.Topic",
+        verbose_name="tópico",
+        on_delete=models.CASCADE,
+        related_name="news_classifications",
+        null=True,
+        blank=True,
+    )
+    discipline = models.ForeignKey(
+        "taxonomy.Discipline",
+        verbose_name="disciplina",
+        on_delete=models.CASCADE,
+        related_name="news_classifications",
+        null=True,
+        blank=True,
+    )
+    score = models.FloatField("score", validators=[MinValueValidator(0), MaxValueValidator(1)])
+    method = models.CharField("método", max_length=20, choices=Method.choices)
+    matched = models.CharField(
+        "palavras encontradas", max_length=300, blank=True, help_text="Só no método palavra-chave."
+    )
+    created_at = models.DateTimeField("criada em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "classificação de notícia"
+        verbose_name_plural = "classificações de notícias"
+        ordering = ["-score"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(topic__isnull=True) ^ Q(discipline__isnull=True),
+                name="curation_classification_topic_xor_discipline",
+            ),
+            models.UniqueConstraint(
+                fields=["item", "topic", "method"],
+                condition=Q(topic__isnull=False),
+                name="curation_classification_unique_topic",
+            ),
+            models.UniqueConstraint(
+                fields=["item", "discipline", "method"],
+                condition=Q(discipline__isnull=False),
+                name="curation_classification_unique_discipline",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.topic or self.discipline} ({self.score:.2f}, {self.get_method_display()})"

@@ -3,6 +3,9 @@
 A cada 30 minutos, fetch_news enfileira uma tarefa fetch_news_source para cada fonte ativa cujo
 intervalo (padrão de 2 horas, ajustável por fonte no admin) já passou. Cada fonte vira uma
 tarefa separada: um feed lento ou quebrado não atrasa os outros.
+
+reclassify_news (E47) não tem horário: o admin a pede quando mudam palavras-chave, tópicos ou os
+padrões de uma fonte, e ela classifica de novo todas as notícias guardadas.
 """
 
 from procrastinate.contrib.django import app
@@ -41,3 +44,12 @@ def fetch_news_source(source_id: int) -> str:
         return services.fetch_source(source).describe()
 
     return _run("fetch_news_source", None, job)
+
+
+@app.task(name="reclassify_news", queueing_lock="reclassify_news")
+def reclassify_news() -> str:
+    def job() -> str:
+        total, classified = services.reclassify_items()
+        return f"{total} notícia(s) reclassificada(s), {classified} com tópico ou disciplina"
+
+    return _run("reclassify_news", None, job)

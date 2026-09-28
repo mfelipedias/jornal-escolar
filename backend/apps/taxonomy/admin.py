@@ -3,6 +3,8 @@ from django.contrib import admin, messages
 from django.db.models import Count, QuerySet
 from django.http import HttpRequest
 
+from apps.curation import services as curation
+
 from .models import ArticleType, Discipline, KnowledgeArea, Topic
 
 
@@ -88,7 +90,18 @@ class TopicAdmin(admin.ModelAdmin):
     @admin.action(description="Aprovar (ativar) tópicos selecionados")
     def approve_topics(self, request: HttpRequest, queryset: QuerySet[Topic]) -> None:
         updated = queryset.filter(is_active=False).update(is_active=True)
+        if updated:
+            curation.schedule_reclassification()
         self.message_user(request, f"{updated} tópico(s) aprovado(s).", messages.SUCCESS)
+
+    def save_related(self, request, form, formsets, change) -> None:
+        # Palavras-chave e disciplinas mudam a classificação das notícias (docs/21).
+        super().save_related(request, form, formsets, change)
+        if {"keywords", "disciplines", "is_active"} & set(form.changed_data):
+            curation.schedule_reclassification()
+            self.message_user(
+                request, "As notícias guardadas serão classificadas de novo em instantes."
+            )
 
 
 @admin.register(ArticleType)

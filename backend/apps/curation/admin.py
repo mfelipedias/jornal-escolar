@@ -8,7 +8,8 @@ from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 
 from . import services
-from .models import FAILURES_ALERT, NewsItem, NewsSource
+from .classify import VISIBLE_SCORE
+from .models import FAILURES_ALERT, NewsItem, NewsItemClassification, NewsSource
 
 
 class HealthFilter(admin.SimpleListFilter):
@@ -97,6 +98,14 @@ class NewsSourceAdmin(admin.ModelAdmin):
             messages.SUCCESS,
         )
 
+    def save_related(self, request, form, formsets, change) -> None:
+        super().save_related(request, form, formsets, change)
+        if {"default_topics", "default_disciplines"} & set(form.changed_data):
+            services.schedule_reclassification()
+            self.message_user(
+                request, "As notícias guardadas serão classificadas de novo em instantes."
+            )
+
     def get_urls(self):
         view = self.admin_site.admin_view(require_POST(self.fetch_now_view))
         return [
@@ -113,10 +122,50 @@ class NewsSourceAdmin(admin.ModelAdmin):
         return HttpResponseRedirect(reverse("admin:curation_newssource_change", args=[source.pk]))
 
 
+class ClassificationInline(admin.TabularInline):
+    model = NewsItemClassification
+    fields = ("topic", "discipline", "score", "method", "matched")
+    readonly_fields = fields
+    extra = 0
+    can_delete = False
+    verbose_name_plural = f"classificação (as sugestões mostram score {VISIBLE_SCORE} ou mais)"
+
+    def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
+        return False
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[NewsItemClassification]:
+        return super().get_queryset(request).select_related("topic", "discipline")
+
+
+class TopicFilter(admin.SimpleListFilter):
+    title = f"tópico (score {VISIBLE_SCORE} ou mais)"
+    parameter_name = "topico"
+
+    def lookups(self, request, model_admin):
+        from apps.taxonomy.models import Topic
+
+        return [
+            ("nenhum", "Sem tópico"),
+            *Topic.objects.filter(is_active=True).values_list("pk", "name"),
+        ]
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        visible = NewsItemClassification.objects.filter(
+            topic__isnull=False, score__gte=VISIBLE_SCORE
+        )
+        if value == "nenhum":
+            return queryset.exclude(pk__in=visible.values("item"))
+        if value and value.isdigit():
+            return queryset.filter(pk__in=visible.filter(topic_id=value).values("item"))
+        return queryset
+
+
 @admin.register(NewsItem)
 class NewsItemAdmin(admin.ModelAdmin):
     list_display = ("title", "source", "published_at", "language", "is_hidden")
-    list_filter = ("source", "language", "is_hidden", "published_at")
+    list_filter = (TopicFilter, "source", "language", "is_hidden", "published_at")
+    inlines = [ClassificationInline]
     list_select_related = ("source",)
     search_fields = ("title", "summary", "canonical_url")
     date_hierarchy = "published_at"
