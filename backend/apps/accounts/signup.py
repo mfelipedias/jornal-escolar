@@ -27,7 +27,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.core import audit
+from apps.core import audit, mail
 from apps.core.ratelimit import hit
 from apps.core.site_settings import get_setting
 
@@ -54,11 +54,11 @@ class RateLimited(Exception):
 
 def signup_available() -> bool:
     """O cadastro só aparece com e-mail configurado e ligado nas configurações."""
-    return settings.EMAIL_CONFIGURED and bool(get_setting("auth.self_signup"))
+    return mail.email_configured() and bool(get_setting("auth.self_signup"))
 
 
 def password_reset_available() -> bool:
-    return settings.EMAIL_CONFIGURED
+    return mail.email_configured()
 
 
 def domain_allowed(email: str) -> bool:
@@ -110,7 +110,7 @@ def send_email(to: str, template: str, context: dict) -> None:
         **context,
     }
     subject, _, body = render_to_string(f"emails/{template}.txt", context).partition("\n")
-    send_mail(subject.strip(), body.strip() + "\n", None, [to])
+    send_mail(subject.strip(), body.strip() + "\n", mail.from_address(), [to])
 
 
 def request_signup(email: str, full_name: str, request: HttpRequest | None = None) -> None:

@@ -161,3 +161,56 @@ class AuditLog(models.Model):
 
     def __str__(self) -> str:
         return self.get_action_display()
+
+
+class EmailSettings(models.Model):
+    """Servidor de envio de e-mail editado no Django Admin (Fase 4b, C1b; docs/35).
+
+    Registro único (pk=1). Preenchido, vale no lugar das variáveis EMAIL_* do .env. A senha é
+    guardada cifrada com uma chave derivada do SECRET_KEY (apps/core/mail.py) e nunca volta
+    para a tela.
+    """
+
+    class Security(models.TextChoices):
+        TLS = "tls", "STARTTLS (porta 587, o padrão do Gmail)"
+        SSL = "ssl", "SSL/TLS direto (porta 465)"
+        NONE = "none", "Nenhuma (só para testes na rede interna)"
+
+    host = models.CharField("servidor de saída (SMTP)", max_length=200, default="smtp.gmail.com")
+    port = models.PositiveIntegerField("porta", default=587)
+    security = models.CharField(
+        "segurança", max_length=8, choices=Security.choices, default=Security.TLS
+    )
+    username = models.CharField(
+        "usuário (e-mail que envia)",
+        max_length=254,
+        blank=True,
+        help_text="No Gmail, o próprio endereço. Os e-mails saem com este remetente.",
+    )
+    password_encrypted = models.TextField(blank=True, editable=False)
+    from_name = models.CharField(
+        "nome do remetente", max_length=80, blank=True, help_text="Vazio usa o nome do site."
+    )
+    updated_at = models.DateTimeField("atualizado em", auto_now=True)
+
+    class Meta:
+        verbose_name = "e-mail de envio"
+        verbose_name_plural = "e-mail de envio"
+
+    def __str__(self) -> str:
+        return "E-mail de envio"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        from .mail import clear_cache
+
+        self.pk = 1
+        super().save(*args, **kwargs)
+        clear_cache()
+
+    @property
+    def has_password(self) -> bool:
+        return bool(self.password_encrypted)
+
+    @property
+    def is_complete(self) -> bool:
+        return bool(self.host and self.port and self.username and self.password_encrypted)

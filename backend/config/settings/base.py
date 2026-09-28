@@ -159,16 +159,19 @@ AUTH_ALLOWED_DOMAINS = [
 ]
 
 # --- E-mail (Fase 4b, docs/35): só códigos de cadastro, nova senha e conta aprovada ---
-# SMTP do Gmail com "senha de app". Sem usuário e senha, o cadastro próprio e o "Esqueci minha
-# senha" ficam escondidos (EMAIL_CONFIGURED); o dev troca pelo console.
+# A tela "E-mail de envio" do Django Admin tem prioridade; estas variáveis são a reserva (SMTP
+# do Gmail com "senha de app"). Sem nenhuma das duas, o cadastro próprio e o "Esqueci minha
+# senha" ficam escondidos (apps/core/mail.py, email_configured).
 EMAIL_HOST = env.str("EMAIL_HOST", default="smtp.gmail.com")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = True
 EMAIL_TIMEOUT = 15
 EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
-EMAIL_CONFIGURED = bool(EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = "apps.core.mail.ConfiguredEmailBackend"
+# Dev: sem configuração, os e-mails vão para o terminal. Dev e testes: cadastro sempre visível.
+EMAIL_FALLBACK_CONSOLE = False
+EMAIL_FORCE_CONFIGURED = False
 # O Gmail só aceita como remetente o próprio endereço; o nome que aparece é o do jornal.
 DEFAULT_FROM_EMAIL = env.str(
     "DEFAULT_FROM_EMAIL",

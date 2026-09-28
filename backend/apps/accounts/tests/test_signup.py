@@ -197,10 +197,10 @@ def test_cadastro_desligado_ou_sem_email_some(client, settings):
     setting.value = True
     setting.save()
     clear_cache()
-    settings.EMAIL_CONFIGURED = False
+    settings.EMAIL_FORCE_CONFIGURED = False
     assert client.get(SIGNUP).status_code == 404
 
-    settings.EMAIL_CONFIGURED = True
+    settings.EMAIL_FORCE_CONFIGURED = True
     assert "Criar conta" in client.get("/entrar/").content.decode()
 
 
@@ -225,6 +225,6 @@ def test_comando_de_teste_do_email(settings):
     assert mail.outbox[-1].to == ["eu@exemplo.org"]
     assert "enviado" in out.getvalue()
 
-    settings.EMAIL_CONFIGURED = False
+    settings.EMAIL_FORCE_CONFIGURED = False
     with pytest.raises(CommandError, match="E-mail não configurado"):
         call_command("send_test_email", "eu@exemplo.org")

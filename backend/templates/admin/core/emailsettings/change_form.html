@@ -1,0 +1,40 @@
+{% extends "admin/change_form.html" %}
+{% comment %}
+  E-mail de envio (Fase 4b, C1b; docs/35): depois de salvar, "Enviar e-mail de teste" usa a
+  configuração em uso e mostra na hora se funcionou ou o erro do servidor.
+{% endcomment %}
+{% block after_field_sets %}
+  {{ block.super }}
+  <p class="help">
+    Passo a passo para o Gmail em docs/35-guia-email.md: ligue a verificação em duas etapas,
+    crie uma "senha de app" e cole aqui. Salve antes de testar.
+  </p>
+{% endblock after_field_sets %}
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+  {% if original.pk %}
+    <fieldset class="module aligned">
+      <h2>Testar o envio</h2>
+      <div class="form-row">
+        <label for="email-test-to">Enviar para</label>
+        <input id="email-test-to"
+               type="email"
+               name="to"
+               form="email-test-form"
+               value="{{ request.user.email }}">
+        <button type="submit" form="email-test-form" class="button">Enviar e-mail de teste</button>
+      </div>
+    </fieldset>
+  {% endif %}
+{% endblock submit_buttons_bottom %}
+{% block admin_change_form_document_ready %}
+  {{ block.super }}
+  {% if original.pk %}
+    <form id="email-test-form"
+          method="post"
+          action="{% url 'admin:core_emailsettings_test' original.pk %}"
+          hidden>
+      {% csrf_token %}
+    </form>
+  {% endif %}
+{% endblock admin_change_form_document_ready %}

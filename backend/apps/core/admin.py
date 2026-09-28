@@ -1,13 +1,14 @@
 from typing import Any
 
 from django import forms
-from django.contrib import admin
-from django.http import HttpRequest, HttpResponse
-from django.urls import reverse
+from django.contrib import admin, messages
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.urls import path, reverse
 from django.utils.html import format_html
+from django.views.decorators.http import require_POST
 
-from . import audit, site_settings
-from .models import AuditLog, SiteSetting, StaticPage
+from . import audit, mail, site_settings
+from .models import AuditLog, EmailSettings, SiteSetting, StaticPage
 
 
 def build_value_field(spec: site_settings.SettingSpec) -> forms.Field:
@@ -161,3 +162,128 @@ class AuditLogAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request: HttpRequest, obj: AuditLog | None = None) -> bool:
         return False
+
+
+# --- E-mail de envio (Fase 4b, C1b; docs/35) ---
+
+
+class EmailSettingsForm(forms.ModelForm):
+    """A senha é só de escrita: vazia mantém a atual, e nunca volta para a tela."""
+
+    password = forms.CharField(
+        label="Senha",
+        required=False,
+        strip=False,
+        widget=forms.PasswordInput(render_value=False, attrs={"autocomplete": "new-password"}),
+        help_text="No Gmail, a senha de app de 16 letras (docs/35), sem espaços. "
+        "Deixe vazio para manter a senha já salva.",
+    )
+    clear_password = forms.BooleanField(
+        label="Apagar a senha salva",
+        required=False,
+        help_text="Desliga o envio por esta tela; volta a valer o que estiver no .env.",
+    )
+
+    class Meta:
+        model = EmailSettings
+        fields = ("host", "port", "security", "username", "from_name")
+
+    def clean_password(self) -> str:
+        return self.cleaned_data["password"].replace(" ", "")
+
+    def clean(self) -> dict[str, Any]:
+        cleaned = super().clean()
+        port = cleaned.get("port")
+        if port is not None and not 1 <= port <= 65535:
+            self.add_error("port", "Porta entre 1 e 65535.")
+        return cleaned
+
+
+@admin.register(EmailSettings)
+class EmailSettingsAdmin(admin.ModelAdmin):
+    form = EmailSettingsForm
+    change_form_template = "admin/core/emailsettings/change_form.html"
+    readonly_fields = ("status", "saved_password")
+    fieldsets = (
+        (None, {"fields": ("status",)}),
+        ("Servidor", {"fields": ("host", "port", "security")}),
+        (
+            "Conta que envia",
+            {"fields": ("username", "saved_password", "password", "clear_password", "from_name")},
+        ),
+    )
+
+    @admin.display(description="em uso agora")
+    def status(self, obj: EmailSettings) -> str:
+        config = mail.active_config()
+        if config is None:
+            return "Nenhum e-mail configurado: o cadastro próprio está escondido."
+        if config.source == "admin":
+            return f"Esta tela ({config.username})."
+        return f"As variáveis do .env ({config.username}). Preencha esta tela para trocar."
+
+    @admin.display(description="senha salva")
+    def saved_password(self, obj: EmailSettings) -> str:
+        if not obj.has_password:
+            return "nenhuma"
+        if not mail.decrypt(obj.password_encrypted):
+            return "salva, mas não abre com o SECRET_KEY atual: digite de novo"
+        return "sim (escondida)"
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
+
+    def changelist_view(
+        self, request: HttpRequest, extra_context: dict[str, Any] | None = None
+    ) -> HttpResponse:
+        """Registro único: a lista abre direto a tela de edição."""
+        row = EmailSettings.objects.filter(pk=1).first() or EmailSettings.objects.create()
+        return HttpResponseRedirect(reverse("admin:core_emailsettings_change", args=[row.pk]))
+
+    def save_model(self, request: HttpRequest, obj: EmailSettings, form: Any, change: bool) -> None:
+        password = form.cleaned_data.get("password") or ""
+        changed = [name for name in form.changed_data if name not in ("password", "clear_password")]
+        if form.cleaned_data.get("clear_password"):
+            obj.password_encrypted = ""
+            changed.append("senha apagada")
+        elif password:
+            obj.password_encrypted = mail.encrypt(password)
+            changed.append("senha trocada")
+        super().save_model(request, obj, form, change)
+        if changed:
+            audit.record(
+                audit.Action.SETTING_CHANGED,
+                actor=request.user,
+                target=obj,
+                # Sem a senha, nem cifrada.
+                changes={"key": "email", "campos": changed},
+                request=request,
+            )
+
+    def get_urls(self):
+        view = self.admin_site.admin_view(require_POST(self.send_test_view))
+        return [
+            path("<int:object_id>/testar/", view, name="core_emailsettings_test"),
+            *super().get_urls(),
+        ]
+
+    def send_test_view(self, request: HttpRequest, object_id: int) -> HttpResponseRedirect:
+        back = HttpResponseRedirect(reverse("admin:core_emailsettings_change", args=[1]))
+        if not self.has_change_permission(request):
+            messages.error(request, "Você não tem permissão para testar o e-mail.")
+            return back
+        to = (request.POST.get("to") or request.user.email).strip()
+        config = mail.active_config()
+        if config is None:
+            messages.error(request, "Salve servidor, usuário e senha antes de testar.")
+            return back
+        try:
+            mail.send_test(config, to)
+        except Exception as exc:  # o servidor explica o problema na mensagem
+            messages.error(request, f"Não foi possível enviar ({config.host}): {exc}")
+        else:
+            messages.success(request, f"E-mail de teste enviado para {to}. Confira a caixa.")
+        return back
