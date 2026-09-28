@@ -6,6 +6,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [1.4.0] - 2026-09-28
+
 ### Adicionado
 
 - Cadastro próprio (C1, docs/27 quinta rodada): na tela de entrar, **Criar conta** leva a `/cadastro/`. O professor informa nome e e-mail institucional (só `@prof.educacao.sp.gov.br` e `@professor.educacao.sp.gov.br`), recebe um código de 6 dígitos por e-mail, digita o código, cria a senha e entra direto no passo a passo do perfil. O código vale 15 minutos e aceita 5 tentativas. Quem já tem conta recebe um lembrete no e-mail, e a tela não revela quem está cadastrado. A conta nova fica aguardando aprovação.
