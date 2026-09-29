@@ -169,7 +169,24 @@ def _run_with_prod_settings(*args: str) -> subprocess.CompletedProcess:
     )
 
 
-def test_check_deploy_sem_avisos_com_configuracao_de_producao():
+@pytest.fixture
+def vite_manifest():
+    """Em produção o manifest do Vite vem do build da imagem (docs/24). Sem build (CI, clone
+    novo), o check reclamaria dele: criamos um vazio só durante o teste, se faltar."""
+    manifest = settings.BASE_DIR / "static" / "dist" / "manifest.json"
+    created_dir = not manifest.parent.exists()
+    created = not manifest.exists()
+    if created:
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        manifest.write_text("{}", encoding="utf-8")
+    yield
+    if created:
+        manifest.unlink()
+    if created_dir:
+        manifest.parent.rmdir()
+
+
+def test_check_deploy_sem_avisos_com_configuracao_de_producao(vite_manifest):
     result = _run_with_prod_settings("check", "--deploy", "--fail-level", "WARNING")
 
     assert result.returncode == 0, result.stdout + result.stderr

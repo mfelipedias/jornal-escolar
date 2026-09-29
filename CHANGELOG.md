@@ -14,6 +14,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - O teste que garante que o nome da escola nunca aparece no site agora compara só o hash da palavra, sem escrever o nome no código.
 
+### Corrigido
+
+- A CI do GitHub falhava desde a v1.3.0 no teste do `check --deploy`: ele exigia o build do frontend, que só existe na imagem de produção. O teste agora cria um manifest vazio quando o build não existe.
+
 ## [1.4.0] - 2026-09-28
 
 ### Adicionado
