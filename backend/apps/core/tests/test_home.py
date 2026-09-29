@@ -5,6 +5,7 @@ from django.conf import settings
 
 from apps.core.context_processors import split_wordmark
 from apps.core.site_settings import REGISTRY
+from tests.school_guard import mentions_school
 
 SITE_DEFAULTS = {
     "footer_credit": REGISTRY["site.footer_credit"].default,
@@ -67,7 +68,7 @@ def test_footer_credit_email_and_version(home):
 
 def test_school_name_never_appears(home):
     lowered = home.lower()
-    assert "[omitido]" not in lowered
+    assert not mentions_school(home)
     assert "jornal da rosa" not in lowered
 
 

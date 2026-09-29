@@ -3,6 +3,7 @@ name = "jornal-escolar"
 # A versão oficial do sistema fica no arquivo VERSION da raiz (docs/30).
 version = "0.0.1"
 description = "Jornal digital escolar"
+license = "MIT"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "django[argon2]>=5.2,<6.0",

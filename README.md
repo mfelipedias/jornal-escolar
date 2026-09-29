@@ -1,5 +1,8 @@
 # Jornal Escolar
 
+[![CI](https://github.com/mfelipedias/jornal-escolar/actions/workflows/ci.yml/badge.svg)](https://github.com/mfelipedias/jornal-escolar/actions/workflows/ci.yml)
+[![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
+
 Jornal digital da comunidade escolar: professores e equipe publicam textos, alunos aparecem como autores creditados e qualquer pessoa lê, busca, reage e comenta (com moderação).
 
 - Endereço: `https://jornal.projetosrosa.com.br` (em preparação)
@@ -112,6 +115,13 @@ infra/      Produção: Dockerfile, Compose, Caddy, backup e modelos de .env
 docs/       Planejamento e decisões
 ```
 
-## Créditos
+## Contribuir e segurança
+
+- Como contribuir: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Encontrou uma falha de segurança? Não abra issue pública; siga [`SECURITY.md`](SECURITY.md).
+
+## Licença e créditos
+
+Código sob a licença [MIT](LICENSE): pode usar, adaptar e redistribuir, mantendo o crédito.
 
 Desenvolvido por Professor Marcos Felipe A. D. da Silva.

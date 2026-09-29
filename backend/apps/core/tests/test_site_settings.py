@@ -5,6 +5,7 @@ from apps.core import site_settings
 from apps.core.admin import SiteSettingForm
 from apps.core.models import SiteSetting
 from apps.core.site_settings import REGISTRY, get_setting, get_settings
+from tests.school_guard import mentions_school
 
 pytestmark = pytest.mark.django_db
 
@@ -56,7 +57,7 @@ def test_ensure_defaults_is_idempotent_and_keeps_edits():
 
 def test_school_name_is_not_a_default():
     for spec in REGISTRY.values():
-        assert "[omitido]" not in str(spec.default).lower()
+        assert not mentions_school(str(spec.default))
 
 
 def test_masthead_uses_setting_from_database(client):

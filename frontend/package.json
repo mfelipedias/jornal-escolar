@@ -1,6 +1,7 @@
 {
   "name": "jornal-escolar-frontend",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Build de CSS e JS do Jornal Escolar (Vite + Tailwind). Saída em backend/static/dist.",
   "scripts": {

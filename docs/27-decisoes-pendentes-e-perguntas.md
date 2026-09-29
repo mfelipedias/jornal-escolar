@@ -21,7 +21,7 @@ Em 2026-09-12 o dono do projeto respondeu às perguntas da primeira versão dest
 **Decisão:** alunos sem conta. Crédito com política de nome `first_initial` por padrão e marcação obrigatória de autorização pelo professor. Redigir o termo de autorização com a direção é tarefa da Fase 0 (E06b). → [23](23-seguranca-e-lgpd.md)
 
 ### P6. Identidade visual e nome
-**Resposta:** sem identidade definida; tema claro e colorido; nome simples e autoexplicativo; escola [nome da escola omitido].
+**Resposta:** sem identidade definida; tema claro e colorido; nome simples e autoexplicativo; nome da escola informado (omitido no repositório público).
 **Decisão:** nome **"Jornal da Rosa"**, tagline "Jornal digital da comunidade escolar" (a tagline inicial citava a escola; revista na segunda rodada, abaixo). Acento em rosa profundo, fundo claro, cores de área mais vivas. Marca: wordmark em Newsreader com um glifo de rosa simples, desenhado na E04. **Revisto na E01:** nome passou a "Jornal Escolar" e o glifo a uma folha de jornal (ver tabela da segunda rodada). → [09](09-design-system.md)
 
 ### P7. E-mail
@@ -35,7 +35,7 @@ Em 2026-09-12 o dono do projeto respondeu às perguntas da primeira versão dest
 ### Perguntas secundárias
 | Pergunta | Resposta | Decisão |
 |---|---|---|
-| Nome e tagline | Você decide; escola [nome da escola omitido] | "Jornal da Rosa", depois trocado por "Jornal Escolar" (ver tabela da segunda rodada) |
+| Nome e tagline | Você decide; nome da escola informado (omitido no repositório público) | "Jornal da Rosa", depois trocado por "Jornal Escolar" (ver tabela da segunda rodada) |
 | Fontes RSS | Gratuitas | Lista sugerida em [21](21-curadoria-de-noticias.md), sem APIs pagas |
 | Sugestões em inglês | Sim | Preferência por usuário, ligada por padrão |
 | Funcionários não docentes | Sim: coordenação, direção, monitores | Campo `staff_kind`; "Quem escreve" lista toda a equipe |

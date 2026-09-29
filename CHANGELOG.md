@@ -6,6 +6,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- Repositório público: licença MIT (`LICENSE`), `SECURITY.md` (como avisar sobre falhas de segurança em particular), `CONTRIBUTING.md` e selos de CI e licença no README.
+
+### Alterado
+
+- O teste que garante que o nome da escola nunca aparece no site agora compara só o hash da palavra, sem escrever o nome no código.
+
 ## [1.4.0] - 2026-09-28
 
 ### Adicionado
