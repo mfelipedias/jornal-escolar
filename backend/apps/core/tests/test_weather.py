@@ -155,7 +155,7 @@ def test_masthead_shows_weather_under_date(client, widget):
     # Ao lado da busca (tablet e computador) e abrindo a barra de seções (celular).
     assert masthead.count("Tempo agora na escola:") == 2
     assert "max-sm:hidden" in masthead
-    assert '<li class="flex items-center pr-2 sm:hidden">' in masthead
+    assert '<li class="flex items-center pr-2 sm:hidden" data-weather>' in masthead
     # Embaixo da data e antes do botão de busca.
     date = masthead.index("hidden text-meta text-ink-3 lg:block")
     assert date < masthead.index("Tempo agora na escola:") < masthead.index("masthead-search")

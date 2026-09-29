@@ -6,8 +6,9 @@
   as_item (embrulha num <li class="flex items-center">, para usar dentro de uma lista).
 {% endcomment %}
 {% if weather %}
-  {% if as_item %}<li class="flex items-center {{ css }}">{% endif %}
-  <p class="flex items-center gap-1.5 text-meta whitespace-nowrap text-ink-3 {% if not as_item %}{{ css }}{% endif %}">
+  {% if as_item %}<li class="flex items-center {{ css }}" data-weather>{% endif %}
+  <p data-weather
+     class="flex items-center gap-1.5 text-meta whitespace-nowrap text-ink-3 {% if not as_item %}{{ css }}{% endif %}">
     <span class="sr-only">Tempo agora na escola:</span>
     <svg class="size-4 shrink-0 text-accent"
          viewBox="0 0 24 24"

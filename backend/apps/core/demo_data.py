@@ -603,3 +603,106 @@ cardápios semanais.
 Na semana de provas, o intervalo da manhã passou a ser às 9h40.""",
     },
 ]
+
+# --- Curadoria de notícias (Fase 4): fontes e notícias INVENTADAS, em domínios de exemplo ---
+# Servem para as telas de sugestões e de pautas terem conteúdo na demonstração e nos prints do
+# README. Nenhuma notícia real, nenhum veículo real.
+
+NEWS_SOURCES = [
+    {
+        "key": "ciencia",
+        "name": "Agência Ciência em Pauta (exemplo)",
+        "feed_url": "https://noticias.exemplo.org/feed/",
+        "site_url": "https://noticias.exemplo.org/",
+        "language": "pt",
+        "trust_level": 5,
+        "default_topics": ["Divulgação científica"],
+    },
+    {
+        "key": "science",
+        "name": "Science Weekly (example)",
+        "feed_url": "https://science.example.org/rss/",
+        "site_url": "https://science.example.org/",
+        "language": "en",
+        "trust_level": 4,
+        "default_topics": [],
+    },
+]
+
+# (fonte, dias atrás, título, resumo)
+NEWS_ITEMS = [
+    (
+        "ciencia",
+        0,
+        "Telescópio montado por estudantes registra os anéis de Saturno do pátio da escola",
+        "Com peças de baixo custo, um clube de astronomia do ensino médio conseguiu fotografar "
+        "o planeta e agora quer ensinar outras escolas a fazer o mesmo.",
+    ),
+    (
+        "ciencia",
+        1,
+        "Painéis solares em escolas públicas cortam a conta de energia pela metade",
+        "Levantamento com 40 escolas mostra que a energia solar se pagou em quatro anos. "
+        "Pesquisadores sugerem usar os dados de consumo em aulas de Física e Matemática.",
+    ),
+    (
+        "ciencia",
+        1,
+        "Cientistas explicam por que o céu fica alaranjado em dias de queimada",
+        "A fumaça espalha a luz azul e deixa passar o vermelho e o laranja. O fenômeno é o "
+        "mesmo que colore o pôr do sol e pode ser reproduzido num experimento simples.",
+    ),
+    (
+        "ciencia",
+        2,
+        "Olimpíada de astronomia abre inscrições para estudantes do ensino médio",
+        "A prova tem questões de observação do céu e de lançamento de foguetes feitos com "
+        "garrafa PET. Escolas podem inscrever equipes até o fim do mês.",
+    ),
+    (
+        "ciencia",
+        3,
+        "Turbina eólica de papelão vira experimento de energia em sala de aula",
+        "Professores mostram como medir a energia gerada por uma miniturbina com um "
+        "multímetro e comparar formatos de pás.",
+    ),
+    (
+        "ciencia",
+        2,
+        "Robô feito com Arduino mede a qualidade do ar dentro da sala de aula",
+        "O projeto usa sensores de gás carbônico e acende uma luz quando é hora de abrir as "
+        "janelas. O código foi publicado para outras escolas usarem.",
+    ),
+    (
+        "ciencia",
+        4,
+        "Juros do cartão: como montar um orçamento sem cair no rotativo",
+        "Economistas explicam o rotativo com exemplos do dia a dia e sugerem planilhas simples "
+        "para famílias e estudantes.",
+    ),
+    (
+        "science",
+        1,
+        "NASA telescope spots water vapor on a distant planet",
+        "Astronomers used the telescope to study the atmosphere of a planet twice the size of "
+        "Earth, a step toward finding worlds that could host life.",
+    ),
+]
+
+# Pautas de exemplo: (quem propõe, título, notas, tópicos, situação)
+STORY_IDEAS = [
+    (
+        "joao",
+        "Guia de estudos para o ENEM feito pelos próprios alunos",
+        "Juntar as dicas das turmas do 3º ano e publicar em partes até a prova.",
+        ["ENEM e Vestibular"],
+        "open",
+    ),
+    (
+        "luciana",
+        "Sarau de poesia: bastidores do ensaio",
+        "Acompanhar um ensaio e entrevistar quem vai se apresentar pela primeira vez.",
+        ["Literatura"],
+        "in_progress",
+    ),
+]

@@ -8,6 +8,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Imagens no README (`docs/img/`): a página inicial no computador e no celular, uma publicação, as sugestões de pauta e o quadro de pautas, todas feitas com dados fictícios.
+- Comando `screenshots` (`make screenshots`, só no desenvolvimento) que refaz essas imagens com o navegador a partir do `seed_demo`, escondendo o bloco do clima.
+- O `seed_demo` passa a criar duas fontes e oito notícias inventadas (em domínios de exemplo), já classificadas e sugeridas às pessoas fictícias, e pautas de exemplo nas quatro colunas do quadro. O `seed_demo --apagar` leva tudo junto.
 - Repositório público: licença MIT (`LICENSE`), `SECURITY.md` (como avisar sobre falhas de segurança em particular), `CONTRIBUTING.md` e selos de CI e licença no README.
 
 ### Alterado

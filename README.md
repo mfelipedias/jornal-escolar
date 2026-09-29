@@ -5,6 +5,8 @@
 
 Jornal digital da comunidade escolar: professores e equipe publicam textos, alunos aparecem como autores creditados e qualquer pessoa lê, busca, reage e comenta (com moderação).
 
+![Página inicial do Jornal Escolar no computador e no celular](docs/img/capa.webp)
+
 - Endereço: `https://jornal.projetosrosa.com.br` (em preparação)
 - Planejamento completo: [`docs/`](docs/README.md)
 - Plano de desenvolvimento por etapas: [`docs/26`](docs/26-plano-de-desenvolvimento.md)
@@ -16,6 +18,18 @@ Jornal digital da comunidade escolar: professores e equipe publicam textos, alun
 - **Painel da equipe:** editor de textos com imagens e créditos de alunos (com autorização), revisão opcional por colegas, avisos no sino, moderação de comentários e painel editorial com alertas.
 - **Curadoria de pautas:** o sistema lê feeds de fontes confiáveis, classifica as notícias por tópico e sugere a cada professor as que combinam com o perfil dele. Uma sugestão vira pauta no quadro da redação, e a pauta vira rascunho já com a fonte citada.
 - **Contas:** o professor cria a própria conta com o e-mail `@prof` ou `@professor.educacao.sp.gov.br`, confirma com um código enviado por e-mail e espera a aprovação de um editor. O admin também cria contas (coordenação, monitores). "Esqueci minha senha" funciona por código no e-mail.
+
+## Como é
+
+Imagens feitas com os dados fictícios do `seed_demo`: pessoas, textos, notícias e pautas são inventados.
+
+| Página de uma publicação | Sugestões de pauta para o professor |
+|---|---|
+| ![Publicação com capa, créditos de alunos e professores](docs/img/publicacao.webp) | ![Notícias sugeridas pelos tópicos do perfil, com ações Virar pauta, Ignorar, Salvar e Interessante](docs/img/sugestoes.webp) |
+
+**Quadro de pautas da redação:** abertas, atribuídas, em produção e concluídas.
+
+![Quadro de pautas com quatro colunas](docs/img/pautas.webp)
 
 ## Tecnologias
 
@@ -67,7 +81,7 @@ Cada serviço tem seu próprio container, como em produção: dá para atualizar
 | `docker compose exec web uv run python manage.py classify_news` | Classifica de novo as notícias guardadas (depois de mudar palavras-chave dos tópicos) |
 | `docker compose exec web uv run python manage.py send_test_email voce@exemplo.com` | Manda um e-mail de teste com a configuração de e-mail em uso |
 | `docker compose exec web uv run python manage.py seed_demo` | **Só no desenvolvimento:** equipe e publicações fictícias, capas, agenda e destaques para ver o site cheio. Recusa rodar em produção |
-| `docker compose exec web uv run python manage.py seed_demo --apagar` | Apaga tudo o que o `seed_demo` criou (pessoas fictícias, publicações e imagens) |
+| `docker compose exec web uv run python manage.py seed_demo --apagar` | Apaga tudo o que o `seed_demo` criou (pessoas fictícias, publicações, imagens, notícias e pautas de exemplo) |
 | `docker compose exec web uv run pytest` | Roda os testes |
 | `docker compose down -v` | **Apaga tudo**, inclusive o banco |
 
@@ -97,8 +111,22 @@ Lista completa de atalhos com `make`:
 | `make logs` | Mostra os logs dos containers |
 | `make down` | Para os containers |
 | `make db-reset` | Apaga e recria o banco de desenvolvimento |
+| `make screenshots` | Refaz as imagens deste README a partir do `seed_demo` (veja abaixo) |
 
 Verificação rápida: http://localhost:8000/healthz/ deve responder `{"status": "ok", "version": "..."}`.
+
+### Atualizar as imagens do README
+
+Quando o visual mudar, as imagens de `docs/img/` são refeitas por um comando, fora do Docker e num banco só com a demonstração:
+
+```
+make assets
+uv run --directory backend python manage.py seed_demo
+uv run --directory backend playwright install chromium   # só na primeira vez
+make screenshots
+```
+
+O comando sobe um servidor próprio, entra no painel como a professora fictícia, esconde o bloco do clima (para não mostrar a cidade da escola) e grava arquivos WebP leves.
 
 ## Colocar no ar
 

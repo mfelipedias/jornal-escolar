@@ -41,7 +41,8 @@ def test_cria_site_de_demonstracao_e_e_idempotente(dev, client):
     assert people.exclude(avatar=None).exists()
 
     articles = Article.objects.filter(created_by__in=people)
-    assert articles.count() == len(demo_data.ARTICLES)
+    # Mais o rascunho criado pela pauta "em produção" (demo_data.STORY_IDEAS).
+    assert articles.count() == len(demo_data.ARTICLES) + 1
     published = articles.filter(status=Article.Status.PUBLISHED)
     assert published.count() >= 15
     assert articles.filter(status=Article.Status.DRAFT).exists()
@@ -107,3 +108,60 @@ def test_apagar_remove_so_o_que_o_seed_criou(dev, django_capture_on_commit_callb
     assert list(Article.objects.all()) == [real_article]
     assert User.objects.filter(pk=real_user.pk).exists()
     assert not any(default_storage.exists(path) for path in paths)
+
+
+def test_curadoria_ficticia_sugestoes_e_pautas(dev, client):
+    from apps.curation.models import NewsItem, NewsRecommendation, NewsSource, StoryIdea
+
+    call_command("seed_demo")
+    call_command("seed_demo")  # idempotente
+
+    sources = NewsSource.objects.all()
+    assert sources.count() == len(demo_data.NEWS_SOURCES)
+    # Só domínios de exemplo, nunca um veículo real; e o worker não tenta coletar.
+    assert all(".example.org" in s.feed_url or ".exemplo.org" in s.feed_url for s in sources)
+    assert not any(s.is_due(s.last_fetched_at) for s in sources)
+    assert NewsItem.objects.count() == len(demo_data.NEWS_ITEMS)
+
+    carla = User.objects.get(email=demo.email_for("carla"))
+    assert NewsRecommendation.objects.filter(user=carla, status="suggested").count() >= 3
+    statuses = set(StoryIdea.objects.values_list("status", flat=True))
+    assert statuses == {"open", "assigned", "in_progress", "done"}
+
+    client.force_login(carla)
+    assert "Painéis solares" in client.get("/painel/sugestoes/").content.decode()
+    assert "Guia de estudos para o ENEM" in client.get("/painel/pautas/").content.decode()
+
+
+def test_apagar_leva_noticias_e_pautas_da_demonstracao(dev, django_capture_on_commit_callbacks):
+    from apps.curation.models import NewsItem, NewsSource, StoryIdea
+
+    real = NewsSource.objects.create(name="Fonte de verdade", feed_url="https://real.org/feed")
+    call_command("seed_demo")
+
+    with django_capture_on_commit_callbacks(execute=True):
+        call_command("seed_demo", "--apagar")
+
+    assert list(NewsSource.objects.all()) == [real]
+    assert not NewsItem.objects.exists()
+    assert not StoryIdea.objects.exists()
+
+
+def test_prints_recusam_sem_debug_ou_sem_demonstracao(settings):
+    settings.DEBUG = False
+    with pytest.raises(CommandError, match="só roda em desenvolvimento"):
+        call_command("screenshots")
+
+    settings.DEBUG = True
+    with pytest.raises(CommandError, match="rode"):
+        call_command("screenshots")
+
+
+def test_capa_junta_computador_e_celular():
+    from PIL import Image
+
+    from apps.core.management.commands.screenshots import compose_cover
+
+    cover = compose_cover(Image.new("RGB", (1280, 800), "white"), Image.new("RGB", (390, 844)))
+
+    assert cover.size == (1600, 940)

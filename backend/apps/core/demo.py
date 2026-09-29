@@ -8,6 +8,9 @@ produção (config/settings/prod.py fixa DEBUG=False).
 - Tudo passa pelos mesmos serviços das telas (criar, salvar, checklist, publicar, destaques).
 - Capas e fotos de perfil são desenhadas aqui com o Pillow; nada é baixado da internet.
 - As contas fictícias usam o domínio DEMO_EMAIL_DOMAIN e não têm senha (não entram no site).
+- Curadoria: duas fontes e oito notícias inventadas (domínios exemplo.org/example.org), já
+  classificadas e sugeridas às pessoas fictícias, e pautas de exemplo no quadro. As fontes
+  nunca são coletadas de verdade (intervalo de um ano e endereços que não existem).
 - remove_demo() apaga tudo o que o seed criou, inclusive os arquivos das imagens.
 """
 
@@ -58,6 +61,8 @@ class DemoResult:
     people: int = 0
     articles: int = 0
     images: int = 0
+    news: int = 0
+    ideas: int = 0
     featured: list[int] = field(default_factory=list)
 
 
@@ -286,6 +291,110 @@ def _ensure_featured(people: dict[str, User], result: DemoResult) -> None:
         result.featured = publications.set_featured(editor, ids)
 
 
+# --- curadoria de notícias e pautas ---
+
+DEMO_FETCH_INTERVAL = 60 * 24 * 365  # um ano: o worker nunca tenta coletar estes endereços
+
+
+def _ensure_curation(people: dict[str, User], result: DemoResult) -> None:
+    from apps.curation import classify, ideas, normalize, recommend
+    from apps.curation.models import NewsItem, NewsRecommendation, NewsSource, StoryIdea
+
+    now = timezone.now()
+    sources: dict[str, NewsSource] = {}
+    for data in demo_data.NEWS_SOURCES:
+        source, created = NewsSource.objects.get_or_create(
+            feed_url=data["feed_url"],
+            defaults={
+                "name": data["name"],
+                "site_url": data["site_url"],
+                "language": data["language"],
+                "trust_level": data["trust_level"],
+                "fetch_interval_minutes": DEMO_FETCH_INTERVAL,
+                "last_fetched_at": now,
+                "last_success_at": now,
+            },
+        )
+        if created:
+            source.default_topics.set(Topic.objects.filter(name__in=data["default_topics"]))
+        sources[data["key"]] = source
+
+    new_items = []
+    for key, days, title, summary in demo_data.NEWS_ITEMS:
+        slug = normalize.title_key(title).replace(" ", "-")[:80]
+        url = f"{sources[key].site_url}{slug}/"
+        item, created = NewsItem.objects.get_or_create(
+            url_hash=normalize.url_hash(url),
+            defaults={
+                "source": sources[key],
+                "title": title,
+                "url": url,
+                "canonical_url": url,
+                "title_hash": normalize.title_hash(title),
+                "summary": summary,
+                "published_at": now - timedelta(days=days, hours=2),
+                "fetched_at": now,
+                "language": sources[key].language,
+            },
+        )
+        if created:
+            new_items.append(item)
+    if new_items:
+        classify.classify_items(new_items)
+        recommend.recommend_items([item.pk for item in new_items], now=now)
+        result.news = len(new_items)
+
+    demo_people = list(people.values())
+    if StoryIdea.objects.filter(proposed_by__in=demo_people).exists():
+        return
+    # Da sugestão à pauta: a Carla transforma a primeira sugestão dela em pauta.
+    first = (
+        NewsRecommendation.objects.filter(user=people["carla"], status="suggested")
+        .order_by("-score")
+        .first()
+    )
+    if first is not None:
+        ideas.idea_from_recommendation(people["carla"], first)
+        result.ideas += 1
+    for key, title, notes, topic_names, status in demo_data.STORY_IDEAS:
+        idea = ideas.create_idea(
+            people[key],
+            title=title,
+            notes=notes,
+            topics=Topic.objects.filter(name__in=topic_names),
+            keep=status != "open",
+        )
+        if status == "in_progress":
+            ideas.start_draft(people[key], idea)  # rascunho da demonstração, apagado junto
+        result.ideas += 1
+    # Uma pauta concluída: ligada a uma publicação da demonstração que já está no ar.
+    published = Article.objects.filter(
+        created_by__in=demo_people, status=Article.Status.PUBLISHED
+    ).first()
+    if published is not None:
+        done = ideas.create_idea(published.created_by, title=f"Pauta: {published.title}")
+        StoryIdea.objects.filter(pk=done.pk).update(
+            status=StoryIdea.Status.DONE,
+            assigned_to=published.created_by,
+            article=published,
+            done_at=now,
+        )
+        result.ideas += 1
+
+
+def _remove_curation(users) -> dict[str, int]:
+    from apps.curation.models import NewsSource, StoryIdea
+
+    ideas = StoryIdea.objects.filter(Q(proposed_by__in=users) | Q(assigned_to__in=users))
+    sources = NewsSource.objects.filter(
+        feed_url__in=[data["feed_url"] for data in demo_data.NEWS_SOURCES]
+    )
+    counts = {"pautas": ideas.count(), "fontes de notícias": sources.count()}
+    ideas.delete()
+    sources.delete()  # as notícias, classificações e sugestões vão junto
+    return counts
+
+
 @transaction.atomic
 def seed_demo() -> DemoResult:
     ensure_allowed()
@@ -296,6 +405,7 @@ def seed_demo() -> DemoResult:
     for variant, data in enumerate(demo_data.ARTICLES):
         _create_article(data, people, variant, result)
     _ensure_featured(people, result)
+    _ensure_curation(people, result)
     invalidate_public_content()
     return result
 
@@ -308,6 +418,7 @@ def remove_demo() -> dict[str, int]:
     articles = Article.objects.filter(created_by__in=users)
     assets = MediaAsset.objects.filter(Q(uploaded_by__in=users) | Q(article__in=articles))
     counts = {
+        **_remove_curation(users),
         "imagens": assets.count(),
         "publicações": articles.count(),
         "pessoas": users.count(),

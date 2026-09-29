@@ -8,7 +8,7 @@ COMPOSE = docker compose
 PROD = docker compose -f infra/docker-compose.yml --env-file infra/env/.env
 
 .DEFAULT_GOAL := help
-.PHONY: help install assets-install assets-dev assets hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser release
+.PHONY: help install assets-install assets-dev assets hooks lint format test secret-key dev dev-native db down db-reset logs migrate makemigrations shell superuser release screenshots
 .PHONY: build deploy prod-check prod-logs prod-down prod-superuser backup backups restore
 
 help:
@@ -33,6 +33,7 @@ help:
 	@echo   make shell            abre o shell do Django
 	@echo   make superuser        cria um usuario administrador
 	@echo   make release VERSION=x.y.z   cria a versao: VERSION, CHANGELOG, commit e tag (docs/30)
+	@echo   make screenshots      refaz as imagens do README (precisa de make assets e seed_demo)
 	@echo Producao (docs/34, rodar no servidor):
 	@echo   make build            confere que as imagens compilam para x86 e ARM
 	@echo   make deploy           baixa o codigo novo do GitHub e sobe/atualiza o site
@@ -144,3 +145,6 @@ backups:
 restore:
 	$(PROD) exec backup python restore.py $(FILE)
 	$(PROD) restart web
+
+screenshots:
+	$(MANAGE) screenshots

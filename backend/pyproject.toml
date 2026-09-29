@@ -24,6 +24,7 @@ dependencies = [
 dev = [
     "djlint>=1.36",
     "factory-boy>=3.3",
+    "playwright>=1.63.0",
     "pre-commit>=4.0",
     "pytest>=8.4",
     "pytest-django>=4.11",

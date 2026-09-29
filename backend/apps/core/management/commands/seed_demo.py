@@ -33,6 +33,8 @@ class Command(BaseCommand):
         self.stdout.write(f"Pessoas criadas: {result.people}")
         self.stdout.write(f"Publicações criadas: {result.articles}")
         self.stdout.write(f"Imagens geradas: {result.images}")
+        self.stdout.write(f"Notícias fictícias para as sugestões: {result.news}")
+        self.stdout.write(f"Pautas de exemplo: {result.ideas}")
         if result.featured:
             self.stdout.write(f"Destaques da home definidos: {len(result.featured)}")
         self.stdout.write(
